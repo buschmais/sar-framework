@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.buschmais.sarf</groupId>
+    <artifactId>sar-framework</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <properties>
+        <com.buschmais.jqassistant_version>1.1.4</com.buschmais.jqassistant_version>
+        <com.buschmais.xo_version>0.8.0</com.buschmais.xo_version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <!-- For using an embedded Neo4j instance -->
+            <groupId>com.buschmais.xo</groupId>
+            <artifactId>xo.neo4j.embedded</artifactId>
+        </dependency>
+        <dependency>
+            <!-- The XO API -->
+            <groupId>com.buschmais.xo</groupId>
+            <artifactId>xo.api</artifactId>
+        </dependency>
+        <dependency>
+            <!-- The XO runtime implementation -->
+            <groupId>com.buschmais.xo</groupId>
+            <artifactId>xo.impl</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <!-- The jQA Core Plugin -->
+            <groupId>com.buschmais.jqassistant.core</groupId>
+            <artifactId>jqassistant.core.plugin</artifactId>
+        </dependency>
+        <dependency>
+            <!-- The jQA Plugins -->
+            <groupId>com.buschmais.jqassistant.plugin</groupId>
+            <artifactId>jqassistant.plugin.all</artifactId>
+        </dependency>
+
+        <dependency>
+            <!-- An SLF4j binding -->
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- For using an embedded Neo4j instance -->
+                <groupId>com.buschmais.xo</groupId>
+                <artifactId>xo.neo4j.embedded</artifactId>
+                <version>${com.buschmais.xo_version}</version>
+            </dependency>
+            <dependency>
+                <!-- The XO API -->
+                <groupId>com.buschmais.xo</groupId>
+                <artifactId>xo.api</artifactId>
+                <version>${com.buschmais.xo_version}</version>
+            </dependency>
+            <dependency>
+                <!-- The XO runtime implementation -->
+                <groupId>com.buschmais.xo</groupId>
+                <artifactId>xo.impl</artifactId>
+                <scope>runtime</scope>
+                <version>${com.buschmais.xo_version}</version>
+            </dependency>
+
+            <dependency>
+                <!-- The jQA Core Plugin -->
+                <groupId>com.buschmais.jqassistant.core</groupId>
+                <artifactId>jqassistant.core.plugin</artifactId>
+                <version>${com.buschmais.jqassistant_version}</version>
+            </dependency>
+            <dependency>
+                <!-- The jQA Plugins -->
+                <groupId>com.buschmais.jqassistant.plugin</groupId>
+                <artifactId>jqassistant.plugin.all</artifactId>
+                <version>${com.buschmais.jqassistant_version}</version>
+            </dependency>
+
+            <dependency>
+                <!-- An SLF4j binding -->
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <scope>runtime</scope>
+                <version>1.7.21</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    
+</project>
