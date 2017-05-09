@@ -4,9 +4,6 @@ import com.buschmais.xo.neo4j.api.annotation.Relation;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Outgoing;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 /**
  * @author Stephan Pirnbaum
  */
@@ -14,10 +11,10 @@ import java.lang.annotation.RetentionPolicy;
 public interface ComponentDependsOn {
 
     @Outgoing
-    Component getDependentComponent();
+    ComponentDescriptor getDependentComponent();
 
     @Incoming
-    Component getDependency();
+    ComponentDescriptor getDependency();
 
     void setWeight(int weight);
     int getWeight();

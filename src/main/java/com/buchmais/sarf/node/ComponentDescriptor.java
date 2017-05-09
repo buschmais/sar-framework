@@ -1,5 +1,6 @@
 package com.buchmais.sarf.node;
 
+import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Outgoing;
@@ -11,14 +12,14 @@ import java.util.Set;
  *
  * @author Stephan Pirnbaum
  */
-@Label
-public interface Component {
+@Label("Component")
+public interface ComponentDescriptor {
 
     @Outgoing
-    Set<Component> getDependencies();
+    Set<ComponentDependsOn> getComponentDependencies();
 
     @Incoming
-    Set<Component> getDependentComponents();
+    Set<ComponentDependsOn> getDependentComponents();
 
     /**
      * Get the name of the component
@@ -38,7 +39,7 @@ public interface Component {
      * Get the shape of the component
      *
      * @return The shape of the component
-     * @see Component#setShape(String)
+     * @see ComponentDescriptor#setShape(String)
      */
     String getShape();
 
