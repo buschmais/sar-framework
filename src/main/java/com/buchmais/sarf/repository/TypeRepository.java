@@ -4,6 +4,7 @@ import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.annotation.Repository;
 import com.buschmais.xo.api.annotation.ResultOf;
+import com.buschmais.xo.api.annotation.ResultOf.Parameter;
 import com.buschmais.xo.neo4j.api.TypedNeo4jRepository;
 import com.buschmais.xo.neo4j.api.annotation.Cypher;
 
@@ -14,14 +15,28 @@ import com.buschmais.xo.neo4j.api.annotation.Cypher;
 public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
 
     @ResultOf
-    @Cypher("MATCH (t:Type) RETURN t")
-    Result<TypeDescriptor> getAllInternalTypes();
+    @Cypher("MATCH" +
+            "  (t:Type) " +
+            "WHERE" +
+            "  t.fqn STARTS WITH {basePackage} " +
+            "SET" +
+            "  t:Internal " +
+            "RETURN" +
+            "  t")
+    Result<TypeDescriptor> markAllInternalTypes(@Parameter("basePackage") String basePackage);
 
     @ResultOf
-    @Cypher("MATCH " +
-            "  (t:Type) " +
-            "WHERE " +
+    @Cypher("MATCH" +
+            "  (t:Type:Internal) " +
+            "WHERE" +
             "  t.fqn =~ {regEx} " +
             "RETURN t")
-    Result<TypeDescriptor> getAllTypesInPackageLike(@ResultOf.Parameter("regEx") String packageRegEx);
+    Result<TypeDescriptor> getAllInternalTypesLike(@Parameter("regEx") String packageRegEx);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t:Type{fqn:{fqn}})-[:DECLARES*]->(inner:Type) " +
+            "RETURN" +
+            "  inner")
+    Result<TypeDescriptor> getInnerClassesOf(@Parameter("fqn") String fqn);
 }

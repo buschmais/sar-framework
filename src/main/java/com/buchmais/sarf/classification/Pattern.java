@@ -2,33 +2,36 @@ package com.buchmais.sarf.classification;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.node.PatternDescriptor;
-import com.buschmais.xo.api.XOManager;
+import com.buchmais.sarf.repository.TypeRepository;
+import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
+import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import com.buschmais.xo.api.Query.Result;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Stephan Pirnbaum
  */
-public class Pattern implements Comparable<Pattern> {
-
-    @Getter
-    private String shape;
-
-    @Getter
-    private String name;
+@EqualsAndHashCode(callSuper = true)
+public class Pattern extends Rule {
 
     @Getter
     private String regEx;
 
     private PatternDescriptor patternDescriptor;
 
-    public Pattern(String shape, String name, String regEx) {
-        this.shape = shape;
-        this.name = name;
+    public Pattern(String shape, String name, double weight, String regEx) {
+        super(shape, name, weight);
         this.regEx = regEx;
     }
 
     public static Pattern of(PatternDescriptor patternDescriptor) {
-        Pattern pattern = new Pattern(patternDescriptor.getShape(), patternDescriptor.getName(), patternDescriptor.getRegEx());
+        Pattern pattern = new Pattern(
+                patternDescriptor.getShape(), patternDescriptor.getName(), patternDescriptor.getWeight(), patternDescriptor.getRegEx());
         pattern.patternDescriptor = patternDescriptor;
         return pattern;
     }
@@ -38,6 +41,7 @@ public class Pattern implements Comparable<Pattern> {
         PatternDescriptor patternDescriptor = SARFRunner.xoManager.create(PatternDescriptor.class);
         patternDescriptor.setShape(this.shape);
         patternDescriptor.setName(this.name);
+        patternDescriptor.setWeight(this.weight);
         patternDescriptor.setRegEx(this.regEx);
         SARFRunner.xoManager.currentTransaction().commit();
         this.patternDescriptor = patternDescriptor;
@@ -52,26 +56,23 @@ public class Pattern implements Comparable<Pattern> {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Pattern pattern = (Pattern) o;
-
-        if (shape != null ? !shape.equals(pattern.shape) : pattern.shape != null) return false;
-        if (name != null ? !name.equals(pattern.name) : pattern.name != null) return false;
-        return regEx != null ? regEx.equals(pattern.regEx) : pattern.regEx == null;
+    public Set<TypeDescriptor> getMatchingTypes() {
+        Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
+        TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        Result<TypeDescriptor> result = repository.getAllInternalTypesLike(this.regEx);
+        for (TypeDescriptor t : result) {
+            types.add(t);
+            repository.getInnerClassesOf(t.getFullQualifiedName()).forEach(types::add);
+        }
+        return types;
     }
 
     @Override
-    public int hashCode() {
-        int result = shape != null ? shape.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (regEx != null ? regEx.hashCode() : 0);
-        return result;
-    }
-
-    public int compareTo(Pattern o) {
-        return 0;
+    public int compareTo(Rule o) {
+        int superRes = 0;
+        if ((superRes = super.compareTo((Rule) o)) == 0 && this.getClass().equals(o.getClass())) {
+            return this.getRegEx().compareTo(((Pattern) o).getRegEx());
+        }
+        return superRes;
     }
 }

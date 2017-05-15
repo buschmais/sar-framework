@@ -12,6 +12,10 @@ import java.util.Set;
 @Label("ClassificationCriterion")
 public interface ClassificationCriterionDescriptor {
 
+    void setWeight(double weight);
+
+    double getWeight();
+
     @ClassificationCriterionCreatedDescriptor
     @Outgoing
     Set<ClassificationInfoDescriptor> getClassifications();

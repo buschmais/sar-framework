@@ -1,6 +1,5 @@
 package com.buchmais.sarf.classification;
 
-import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 
@@ -13,7 +12,11 @@ public abstract class ClassificationCriterion implements Comparable<Classificati
 
     ClassificationCriterionDescriptor classificationCriterionDescriptor;
 
-    Integer weight;
+    double weight;
+
+    public ClassificationCriterion(double weight) {
+        this.weight = weight;
+    }
 
     public abstract Set<ComponentDescriptor> classify();
 

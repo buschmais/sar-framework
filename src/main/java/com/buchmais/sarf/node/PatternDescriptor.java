@@ -6,7 +6,7 @@ import com.buschmais.xo.neo4j.api.annotation.Label;
  * @author Stephan Pirnbaum
  */
 @Label("Pattern")
-public interface PatternDescriptor {
+public interface PatternDescriptor extends RuleDescriptor {
 
     void setShape(String shape);
 
@@ -19,4 +19,8 @@ public interface PatternDescriptor {
     void setRegEx(String regEx);
 
     String getRegEx();
+
+    void setWeight(double weight);
+
+    double getWeight();
 }

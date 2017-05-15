@@ -5,31 +5,19 @@ import com.buchmais.sarf.node.ClassificationInfoDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.node.PackageNamingCriterionDescriptor;
 import com.buchmais.sarf.node.PatternDescriptor;
-import com.buchmais.sarf.repository.ComponentRepository;
-import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.xo.api.Query.Result;
-import org.jruby.RubyProcess;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Stephan Pirnbaum
  */
-public class PackageNamingCriterion extends ClassificationCriterion {
+public class PackageNamingCriterion extends RuleBasedCriterion<Pattern> {
 
-    private Set<Pattern> patterns;
-
-    public PackageNamingCriterion() {
-        this.patterns = new TreeSet<>();
-    }
-
-    public boolean addPattern(Pattern pattern) {
-        return this.patterns.add(pattern);
+    public PackageNamingCriterion(double weight) {
+        super(weight);
     }
 
     @Override
@@ -42,26 +30,15 @@ public class PackageNamingCriterion extends ClassificationCriterion {
             return res;
         });
         SARFRunner.xoManager.currentTransaction().begin();
-        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
-        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
-        for (Pattern p : this.patterns) {
-            Result<TypeDescriptor> typeDescriptorResult = typeRepository.getAllTypesInPackageLike(p.getRegEx());
-            Result<ComponentDescriptor> componentDescriptorResult = componentRepository.getComponentOfCurrentIteration(p.getShape(), p.getName());
-            ComponentDescriptor componentDescriptor;
-            if (!componentDescriptorResult.hasResult()) {
-                componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
-                componentDescriptor.setShape(p.getShape());
-                componentDescriptor.setName(p.getName());
-            } else {
-                componentDescriptor = componentDescriptorResult.getSingleResult();
-            }
-            for (TypeDescriptor t : typeDescriptorResult) {
-                ClassificationInfoDescriptor infoDescriptor = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
-                infoDescriptor.setComponent(componentDescriptor);
-                infoDescriptor.setType(t);
-                infoDescriptor.setWeight(this.weight);
-                this.classificationCriterionDescriptor.getClassifications().add(infoDescriptor);
-                System.out.println(t.getFullQualifiedName());
+        for (Pattern p : this.rules) {
+            ComponentDescriptor componentDescriptor = p.getOrCreateComponentOfCurrentIteration();
+            for (TypeDescriptor t : p.getMatchingTypes()) {
+                ClassificationInfoDescriptor info = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
+                info.setComponent(componentDescriptor);
+                info.setType(t);
+                info.setWeight(this.weight * p.getWeight());
+                info.setRule(p.getPatternDescriptor());
+                this.getClassificationCriterionDescriptor().getClassifications().add(info);
             }
             componentDescriptors.add(componentDescriptor);
         }
@@ -70,9 +47,9 @@ public class PackageNamingCriterion extends ClassificationCriterion {
     }
 
     public static PackageNamingCriterion of(PackageNamingCriterionDescriptor packageNamingCriterionDescriptor) {
-        PackageNamingCriterion packageNamingCriterion = new PackageNamingCriterion();
+        PackageNamingCriterion packageNamingCriterion = new PackageNamingCriterion(packageNamingCriterionDescriptor.getWeight());
         for (PatternDescriptor patternDescriptor : packageNamingCriterionDescriptor.getPatterns()) {
-            packageNamingCriterion.addPattern(Pattern.of(patternDescriptor));
+            packageNamingCriterion.addRule(Pattern.of(patternDescriptor));
         }
         return packageNamingCriterion;
     }
@@ -81,7 +58,7 @@ public class PackageNamingCriterion extends ClassificationCriterion {
         SARFRunner.xoManager.currentTransaction().begin();
         PackageNamingCriterionDescriptor descriptor = SARFRunner.xoManager.create(PackageNamingCriterionDescriptor.class);
         descriptor.getPatterns().addAll(
-                this.patterns.stream().map(Pattern::getPatternDescriptor).collect(Collectors.toSet())
+                this.rules.stream().map(Pattern::getPatternDescriptor).collect(Collectors.toSet())
         );
         SARFRunner.xoManager.currentTransaction().commit();
         this.classificationCriterionDescriptor = descriptor;

@@ -49,6 +49,9 @@ public class SARFRunner {
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
         xoManager = factory.createXOManager();
+        xoManager.currentTransaction().begin();
+        xoManager.getRepository(TypeRepository.class).markAllInternalTypes("de.htw");
+        xoManager.currentTransaction().commit();
         startIteration();
         factory.close();
 
@@ -70,14 +73,15 @@ public class SARFRunner {
     }
 
     public static PackageNamingCriterion createPNC() {
-        PackageNamingCriterion packageNamingCriterion = new PackageNamingCriterion();
+        PackageNamingCriterion packageNamingCriterion = new PackageNamingCriterion(1);
         Pattern pattern = new Pattern(
                 "Module",
                 "User",
+                1,
                 "de\\.htw\\.kraftraum\\.trainingszeitverwaltung\\.user\\..*"
         );
         pattern.materialize();
-        packageNamingCriterion.addPattern(pattern);
+        packageNamingCriterion.addRule(pattern);
         packageNamingCriterion.materialize();
         return packageNamingCriterion;
     }

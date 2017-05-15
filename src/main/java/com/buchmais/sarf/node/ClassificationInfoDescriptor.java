@@ -1,5 +1,7 @@
 package com.buchmais.sarf.node;
 
+import com.buchmais.sarf.classification.Pattern;
+import com.buchmais.sarf.classification.Rule;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
@@ -17,11 +19,11 @@ public interface ClassificationInfoDescriptor {
     @Incoming
     ClassificationCriterionDescriptor getClassificationCriterion();
 
-    void setWeight(Integer weight);
+    void setWeight(double weight);
 
-    Integer getWeight();
+    double getWeight();
 
-    @Relation("CLASSIFIED")
+    @Relation("CLASSIFIES")
     @Outgoing
     TypeDescriptor getType();
 
@@ -32,4 +34,12 @@ public interface ClassificationInfoDescriptor {
     ComponentDescriptor getComponent();
 
     void setComponent(ComponentDescriptor componentDescriptor);
+
+    void setRule(RuleDescriptor rule);
+
+    @Relation("USES")
+    @Outgoing
+    RuleDescriptor getRule();
+
+
 }
