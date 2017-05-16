@@ -1,7 +1,5 @@
 package com.buchmais.sarf.node;
 
-import com.buchmais.sarf.classification.Pattern;
-import com.buchmais.sarf.classification.Rule;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
@@ -13,7 +11,7 @@ import static com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
  * @author Stephan Pirnbaum
  */
 @Label("ClassificationInfo")
-public interface ClassificationInfoDescriptor {
+public interface ClassificationInfoDescriptor extends SARFNode {
 
     @ClassificationCriterionCreatedDescriptor
     @Incoming

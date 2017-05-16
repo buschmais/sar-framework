@@ -2,22 +2,24 @@ package com.buchmais.sarf.classification;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.node.RuleDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
  */
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
-@EqualsAndHashCode
-public abstract class Rule implements Comparable<Rule> {
+@EqualsAndHashCode(exclude = "descriptor")
+public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule> {
 
     @Getter
     @XmlAttribute(name = "shape")
@@ -30,6 +32,14 @@ public abstract class Rule implements Comparable<Rule> {
     @Getter
     @XmlAttribute(name = "weight")
     double weight;
+
+    T descriptor;
+
+    public Rule(String shape, String name, double weight) {
+        this.shape = shape;
+        this.name = name;
+        this.weight = weight;
+    }
 
     public ComponentDescriptor getOrCreateComponentOfCurrentIteration() {
         ComponentRepository repository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
@@ -44,6 +54,15 @@ public abstract class Rule implements Comparable<Rule> {
         }
         return componentDescriptor;
     }
+
+    public T getDescriptor() {
+        if (this.descriptor == null) {
+            materialize();
+        }
+        return this.descriptor;
+    }
+
+    protected abstract T materialize();
 
     public abstract Set<TypeDescriptor> getMatchingTypes();
 

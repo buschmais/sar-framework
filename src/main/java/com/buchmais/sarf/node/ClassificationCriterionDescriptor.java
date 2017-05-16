@@ -10,7 +10,7 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @Label("ClassificationCriterion")
-public interface ClassificationCriterionDescriptor {
+public interface ClassificationCriterionDescriptor extends SARFNode {
 
     void setWeight(double weight);
 

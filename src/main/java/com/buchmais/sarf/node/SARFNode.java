@@ -5,8 +5,6 @@ import com.buschmais.xo.neo4j.api.annotation.Label;
 /**
  * @author Stephan Pirnbaum
  */
-@Label(value = "Rule")
-public interface RuleDescriptor extends SARFNode {
-
-
+@Label(value = "SARF")
+public interface SARFNode {
 }

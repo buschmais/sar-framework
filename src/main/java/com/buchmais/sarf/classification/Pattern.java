@@ -17,16 +17,14 @@ import java.util.TreeSet;
 /**
  * @author Stephan Pirnbaum
  */
-@EqualsAndHashCode(callSuper = true, exclude = "patternDescriptor")
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @XmlRootElement(name = "Pattern")
-public class Pattern extends Rule {
+public class Pattern extends Rule<PatternDescriptor> {
 
     @Getter
     @XmlAttribute(name = "regEx")
     private String regEx;
-
-    private PatternDescriptor patternDescriptor;
 
     public Pattern(String shape, String name, double weight, String regEx) {
         super(shape, name, weight);
@@ -36,28 +34,21 @@ public class Pattern extends Rule {
     public static Pattern of(PatternDescriptor patternDescriptor) {
         Pattern pattern = new Pattern(
                 patternDescriptor.getShape(), patternDescriptor.getName(), patternDescriptor.getWeight(), patternDescriptor.getRegEx());
-        pattern.patternDescriptor = patternDescriptor;
+        pattern.descriptor = patternDescriptor;
         return pattern;
     }
 
     public PatternDescriptor materialize() {
-        SARFRunner.xoManager.currentTransaction().begin();
         PatternDescriptor patternDescriptor = SARFRunner.xoManager.create(PatternDescriptor.class);
         patternDescriptor.setShape(this.shape);
         patternDescriptor.setName(this.name);
         patternDescriptor.setWeight(this.weight);
         patternDescriptor.setRegEx(this.regEx);
-        SARFRunner.xoManager.currentTransaction().commit();
-        this.patternDescriptor = patternDescriptor;
+        this.descriptor = patternDescriptor;
         return patternDescriptor;
     }
 
-    public PatternDescriptor getPatternDescriptor() {
-        if (this.patternDescriptor == null) {
-            materialize();
-        }
-        return this.patternDescriptor;
-    }
+
 
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {

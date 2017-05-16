@@ -13,7 +13,7 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @Label("Component")
-public interface ComponentDescriptor {
+public interface ComponentDescriptor extends SARFNode {
 
     @Outgoing
     Set<ComponentDependsOn> getComponentDependencies();

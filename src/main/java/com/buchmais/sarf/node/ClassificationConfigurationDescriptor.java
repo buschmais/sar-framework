@@ -10,7 +10,7 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @Label("ClassificationConfiguration")
-public interface ClassificationConfigurationDescriptor {
+public interface ClassificationConfigurationDescriptor extends SARFNode {
 
     @Relation("CONTAINS")
     @Outgoing
