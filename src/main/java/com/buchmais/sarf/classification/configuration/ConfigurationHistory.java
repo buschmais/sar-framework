@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification;
+package com.buchmais.sarf.classification.configuration;
 
 import java.util.Map;
 import java.util.TreeMap;

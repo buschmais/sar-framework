@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification;
+package com.buchmais.sarf.classification.configuration;
 
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 

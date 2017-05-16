@@ -1,6 +1,7 @@
 package com.buchmais.sarf;
 
-import com.buchmais.sarf.classification.*;
+import com.buchmais.sarf.classification.configuration.ActiveClassificationConfiguration;
+import com.buchmais.sarf.classification.configuration.ConfigurationHistory;
 import com.buchmais.sarf.node.*;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
