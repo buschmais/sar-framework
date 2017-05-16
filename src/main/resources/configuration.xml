@@ -1,92 +1,151 @@
 <Configuration iteration="1">
     <ClassificationCriteria>
-        <NamingConventionCriterion weight="1">
+        <NamingConventionCriterion weight="100">
             <Rules>
                 <Pattern
                         shape="Layer"
                         name="DataLayer"
                         regEx=".*Repository"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Layer"
                         name="DomainLayer"
                         regEx=".*MailSender"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Layer"
                         name="DomainLayer"
                         regEx=".*Service"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Layer"
                         name="DomainLayer"
                         regEx=".*ServiceImpl"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Layer"
                         name="PresentationLayer"
                         regEx=".*Controller"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Layer"
                         name="PresentationLayer"
                         regEx=".*Form"
-                        weight="1"/>
+                        weight="100"/>
             </Rules>
         </NamingConventionCriterion>
-        <PackageNamingCriterion weight="1">
+        <PackageNamingCriterion weight="100">
             <Rules>
                 <Pattern
                         shape="Module"
                         name="Index"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.index.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="KeycardAdministration"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.keycard.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="NewsAdministration"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.news.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="TrainingAdministration"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.training.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="UserAdministration"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.user.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="IConfiguration"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.configuration.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="ISecurity"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.security.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="IUtil"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.util.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="IValidation"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.validation.*"
-                        weight="1"/>
+                        weight="100"/>
                 <Pattern
                         shape="Module"
                         name="IView"
                         regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.view.*"
-                        weight="1"/>
+                        weight="100"/>
             </Rules>
         </PackageNamingCriterion>
+        <DependencyCriterion weight="100">
+            <Rules>
+                <Dependency
+                        shape="Layer"
+                        name="DataLayer"
+                        dependency="javax\.persistence.*"
+                        weight="50"/>
+                <Dependency
+                        shape="Layer"
+                        name="DataLayer"
+                        dependency="org\.hibernate.*"
+                        weight="50"/>
+                <Dependency
+                        shape="Layer"
+                        name="DataLayer"
+                        dependency="org\.springframework\.data.*"
+                        weight="50"/>
+                <Dependency
+                        shape="Layer"
+                        name="DomainLayer"
+                        dependency="javax\.mail.*"
+                        weight="80"/>
+                <Dependency
+                        shape="Layer"
+                        name="DomainLayer"
+                        dependency="org\.apache\.velocity.*"
+                        weight="100"/>
+                <Dependency
+                        shape="Layer"
+                        name="DomainLayer"
+                        dependency="org\.springframework\.mail.*"
+                        weight="100"/>
+                <Dependency
+                        shape="Layer"
+                        name="DomainLayer"
+                        dependency="org\.springframework\.stereotype\.Service.*"
+                        weight="80"/>
+                <Dependency
+                        shape="Layer"
+                        name="PresentationLayer"
+                        dependency="com\.github\.dandelion.*"
+                        weight="50"/>
+                <Dependency
+                        shape="Layer"
+                        name="PresentationLayer"
+                        dependency="javax\.servlet.*"
+                        weight="80"/>
+                <Dependency
+                        shape="Layer"
+                        name="PresentationLayer"
+                        dependency="org\.springframework\.stereotype\.Controller.*"
+                        weight="100"/>
+                <Dependency
+                        shape="Layer"
+                        name="PresentationLayer"
+                        dependency="org\.springframework\.web.*"
+                        weight="100"/>
+            </Rules>
+        </DependencyCriterion>
     </ClassificationCriteria>
 </Configuration>

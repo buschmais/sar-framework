@@ -60,7 +60,7 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
                 ClassificationInfoDescriptor info = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
                 info.setComponent(componentDescriptor);
                 info.setType(t);
-                info.setWeight(this.weight * r.getWeight());
+                info.setWeight(this.weight * r.getWeight() / 100);
                 info.setRule(r.getDescriptor());
                 this.getClassificationCriterionDescriptor().getClassifications().add(info);
             }

@@ -11,10 +11,23 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    <xs:element name="Dependency">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="shape" use="optional"/>
+                    <xs:attribute type="xs:string" name="name" use="optional"/>
+                    <xs:attribute type="xs:string" name="dependency" use="optional"/>
+                    <xs:attribute type="xs:integer" name="weight" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
     <xs:element name="Rules">
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="Pattern" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Dependency" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -34,12 +47,21 @@
             <xs:attribute type="xs:integer" name="weight"/>
         </xs:complexType>
     </xs:element>
+    <xs:element name="DependencyCriterion">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Rules"/>
+            </xs:sequence>
+            <xs:attribute type="xs:integer" name="weight"/>
+        </xs:complexType>
+    </xs:element>
     <xs:element name="ClassificationCriteria">
         <xs:complexType>
             <xs:sequence>
                 <xs:choice maxOccurs="unbounded">
                     <xs:element ref="NamingConventionCriterion"/>
                     <xs:element ref="PackageNamingCriterion"/>
+                    <xs:element ref="DependencyCriterion"/>
                 </xs:choice>
             </xs:sequence>
         </xs:complexType>
