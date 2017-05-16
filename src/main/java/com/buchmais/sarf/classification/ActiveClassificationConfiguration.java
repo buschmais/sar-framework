@@ -1,11 +1,11 @@
 package com.buchmais.sarf.classification;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.jruby.RubyProcess;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Set;

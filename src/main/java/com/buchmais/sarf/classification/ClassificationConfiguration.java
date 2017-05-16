@@ -1,6 +1,9 @@
 package com.buchmais.sarf.classification;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.criterion.ClassNamingCriterion;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
+import com.buchmais.sarf.classification.criterion.PackageNamingCriterion;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import lombok.AccessLevel;

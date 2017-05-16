@@ -1,14 +1,12 @@
-package com.buchmais.sarf.classification;
+package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.Pattern;
 import com.buchmais.sarf.node.ClassNamingCriterionDescriptor;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
-import com.buchmais.sarf.node.ComponentDescriptor;
-import com.buchmais.sarf.node.PackageNamingCriterionDescriptor;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

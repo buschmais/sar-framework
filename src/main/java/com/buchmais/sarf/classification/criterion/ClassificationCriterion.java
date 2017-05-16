@@ -1,15 +1,12 @@
-package com.buchmais.sarf.classification;
+package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.Set;
 
 /**
