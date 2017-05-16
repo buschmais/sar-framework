@@ -6,9 +6,10 @@ import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.*;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
@@ -16,10 +17,13 @@ import java.util.TreeSet;
 /**
  * @author Stephan Pirnbaum
  */
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = "patternDescriptor")
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@XmlRootElement(name = "Pattern")
 public class Pattern extends Rule {
 
     @Getter
+    @XmlAttribute(name = "regEx")
     private String regEx;
 
     private PatternDescriptor patternDescriptor;

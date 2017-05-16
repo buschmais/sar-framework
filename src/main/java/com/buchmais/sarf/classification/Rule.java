@@ -5,26 +5,30 @@ import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.*;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
  */
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
 @EqualsAndHashCode
 public abstract class Rule implements Comparable<Rule> {
 
     @Getter
+    @XmlAttribute(name = "shape")
     String shape;
 
     @Getter
+    @XmlAttribute(name = "name")
     String name;
 
     @Getter
+    @XmlAttribute(name = "weight")
     double weight;
 
     public ComponentDescriptor getOrCreateComponentOfCurrentIteration() {

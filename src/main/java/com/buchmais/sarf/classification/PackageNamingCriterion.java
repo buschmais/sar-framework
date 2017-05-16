@@ -6,7 +6,10 @@ import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.node.PackageNamingCriterionDescriptor;
 import com.buchmais.sarf.node.PatternDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
 /**
  * @author Stephan Pirnbaum
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@XmlRootElement(name = "PackageNamingCriterion")
 public class PackageNamingCriterion extends RuleBasedCriterion<Pattern> {
 
     public PackageNamingCriterion(double weight) {
