@@ -1,6 +1,7 @@
 package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.Dependency;
 import com.buchmais.sarf.classification.Pattern;
 import com.buchmais.sarf.classification.Rule;
 import com.buchmais.sarf.node.ClassificationInfoDescriptor;
@@ -24,7 +25,10 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
 
     @XmlElementWrapper(name = "Rules")
     @XmlElements(
-            @XmlElement(name = "Pattern", type = Pattern.class)
+            {
+                    @XmlElement(name = "Pattern", type = Pattern.class),
+                    @XmlElement(name = "Dependency", type = Dependency.class)
+            }
     )
     @Setter
     Set<T> rules;

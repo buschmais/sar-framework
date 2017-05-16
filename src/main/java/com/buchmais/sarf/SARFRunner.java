@@ -62,6 +62,8 @@ public class SARFRunner {
                 .type(ClassificationInfoDescriptor.class)
                 .type(ClassificationConfigurationRepository.class)
                 .type(ClassNamingCriterionDescriptor.class)
+                .type(DependencyCriterionDescriptor.class)
+                .type(DependencyDescriptor.class)
                 .uri(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"))
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
@@ -69,7 +71,6 @@ public class SARFRunner {
         xoManager.currentTransaction().begin();
         xoManager.getRepository(TypeRepository.class).markAllInternalTypes("de.htw");
         xoManager.currentTransaction().commit();
-        //startIteration();
         ClassificationConfigurationRepository classificationConfigurationRepository = SARFRunner.xoManager.getRepository(ClassificationConfigurationRepository.class);
         if (SARFRunner.activeClassificationConfiguration.getIteration() == 1) {
             SARFRunner.xoManager.currentTransaction().begin();

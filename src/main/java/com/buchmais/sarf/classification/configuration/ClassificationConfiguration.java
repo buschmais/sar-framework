@@ -3,6 +3,7 @@ package com.buchmais.sarf.classification.configuration;
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.ClassNamingCriterion;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
+import com.buchmais.sarf.classification.criterion.DependencyCriterion;
 import com.buchmais.sarf.classification.criterion.PackageNamingCriterion;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
@@ -33,7 +34,8 @@ public abstract class ClassificationConfiguration {
     @XmlElements(
             {
                     @XmlElement(name = "PackageNamingCriterion", type = PackageNamingCriterion.class),
-                    @XmlElement(name = "NamingConventionCriterion", type = ClassNamingCriterion.class)
+                    @XmlElement(name = "NamingConventionCriterion", type = ClassNamingCriterion.class),
+                    @XmlElement(name = "DependencyCriterion", type = DependencyCriterion.class)
             }
     )
     Set<ClassificationCriterion> classificationCriteria;
