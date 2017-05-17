@@ -25,7 +25,7 @@ public abstract class ClassificationCriterion implements Comparable<Classificati
         this.weight = weight;
     }
 
-    public abstract Set<ComponentDescriptor> classify();
+    public abstract Set<ComponentDescriptor> classify(Integer iteration);
 
     public ClassificationCriterionDescriptor getClassificationCriterionDescriptor() {
         if (this.classificationCriterionDescriptor == null) {

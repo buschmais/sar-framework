@@ -37,4 +37,33 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "RETURN" +
             "  DISTINCT c")
     Result<ComponentDescriptor> getComponentOfCurrentIteration(@Parameter("shape") String shape, @Parameter("name") String name);
+
+    @ResultOf
+    @Cypher("MATCH\n" +
+            "  (comp1:SARF:Component {shape:{shape1}, name:{name1}})" +
+            "    <-[:MAPS]-(info2:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
+            "  (type1:Type:Internal)" +
+            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
+            "  (comp1:SARF:Component {shape:{shape1}, name:{name1}})\n" +
+            "WITH \n" +
+            "  count(DISTINCT type1) AS intersection\n" +
+            "MATCH\n" +
+            "  (type1:Type:Internal)" +
+            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
+            "  (comp1:SARF:Component {shape:{shape1}, name:{name1}})\n" +
+            "WITH\n" +
+            "  intersection, collect(type1) AS types\n" +
+            "MATCH\n" +
+            "  (type2:Type:Internal)" +
+            "    <-[:CLASSIFIES]-(info2:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
+            "  (comp2:SARF:Component {shape:{shape2}, name:{name2}})\n" +
+            "WITH \n" +
+            "  intersection, types + collect(type2) AS rows\n" +
+            "UNWIND \n" +
+            "  rows AS row\n" +
+            "RETURN\n" +
+            "  toFloat(intersection)/count(DISTINCT row)")
+    double computeJaccardSimilarity(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
+                                    @Parameter("shape2") String shape2, @Parameter("name2") String nam2,
+                                    @Parameter("iteration") Integer iteration);
 }

@@ -21,6 +21,10 @@ public interface ClassificationInfoDescriptor extends SARFNode {
 
     double getWeight();
 
+    void setIteration(Integer iteration);
+
+    Integer getIteration();
+
     @Relation("CLASSIFIES")
     @Outgoing
     TypeDescriptor getType();

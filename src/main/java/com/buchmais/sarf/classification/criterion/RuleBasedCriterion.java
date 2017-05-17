@@ -43,7 +43,7 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
     }
 
     @Override
-    public Set<ComponentDescriptor> classify() {
+    public Set<ComponentDescriptor> classify(Integer iteration) {
         Set<ComponentDescriptor> componentDescriptors = new TreeSet<>((c1, c2) -> {
             int res = 0;
             if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
@@ -62,6 +62,7 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
                 info.setType(t);
                 info.setWeight(this.weight * r.getWeight() / 100);
                 info.setRule(r.getDescriptor());
+                info.setIteration(iteration);
                 this.getClassificationCriterionDescriptor().getClassifications().add(info);
             }
             componentDescriptors.add(componentDescriptor);

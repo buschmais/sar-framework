@@ -4,11 +4,13 @@ import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.repository.ComponentRepository;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Stephan Pirnbaum
@@ -63,11 +65,43 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
     }
 
     public void execute() {
+        Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
+            int res = 0;
+            if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
+                res = c1.getName().compareTo(c2.getName());
+            }
+            return res;
+        });
         for (ClassificationCriterion cC : this.classificationCriteria) {
-            Set<ComponentDescriptor> res = cC.classify();
+            Set<ComponentDescriptor> res = cC.classify(this.iteration);
             SARFRunner.xoManager.currentTransaction().begin();
             res.forEach(c -> System.out.println(c.getShape() + " " + c.getName()));
+            components.addAll(res);
             SARFRunner.xoManager.currentTransaction().commit();
+        }
+        combine(components);
+    }
+
+    public void combine(Set<ComponentDescriptor> components) {
+        //so we have several solutions, time to make one out of them :)
+        // 2 types of identified components exist:
+        // -user-defined ones
+        // -self-created ones (start with a hash # sign)
+        //
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        for (ComponentDescriptor cD1 : components) {
+            for (ComponentDescriptor cD2 : components) {
+                if (cD1 != cD2) {
+                    SARFRunner.xoManager.currentTransaction().begin();
+                    System.out.println("Jaccard of: " + cD1.getShape() + " " + cD1.getName() + " With: " + cD2.getShape() + " " + cD2.getName());
+                    double jaccard = componentRepository.computeJaccardSimilarity(
+                            cD1.getShape(), cD1.getName(),
+                            cD2.getShape(), cD2.getName(),
+                            this.iteration);
+                    System.out.println(jaccard);
+                    SARFRunner.xoManager.currentTransaction().commit();
+                }
+            }
         }
     }
 }
