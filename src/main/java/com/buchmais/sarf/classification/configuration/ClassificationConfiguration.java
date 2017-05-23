@@ -1,6 +1,7 @@
 package com.buchmais.sarf.classification.configuration;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.classification.criterion.ClassNamingCriterion;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.classification.criterion.DependencyCriterion;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
  * @author Stephan Pirnbaum
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
-public abstract class ClassificationConfiguration {
+public abstract class ClassificationConfiguration implements Materializable<ClassificationConfigurationDescriptor> {
 
     @Getter
     @XmlAttribute(name = "iteration")

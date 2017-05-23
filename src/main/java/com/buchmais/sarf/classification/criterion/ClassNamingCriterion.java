@@ -21,7 +21,7 @@ public class ClassNamingCriterion extends RuleBasedCriterion<Pattern> {
     }
 
     @Override
-    public ClassificationCriterionDescriptor materialize() {
+    public ClassNamingCriterionDescriptor materialize() {
         SARFRunner.xoManager.currentTransaction().begin();
         ClassNamingCriterionDescriptor descriptor = SARFRunner.xoManager.create(ClassNamingCriterionDescriptor.class);
         descriptor.getPatterns().addAll(

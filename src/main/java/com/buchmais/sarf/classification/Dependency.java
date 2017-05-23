@@ -35,7 +35,7 @@ public class Dependency extends Rule<DependencyDescriptor> {
     }
 
     @Override
-    protected DependencyDescriptor materialize() {
+    public DependencyDescriptor materialize() {
         DependencyDescriptor dependencyDescriptor = SARFRunner.xoManager.create(DependencyDescriptor.class);
         dependencyDescriptor.setShape(this.shape);
         dependencyDescriptor.setName(this.name);

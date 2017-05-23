@@ -40,11 +40,11 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
 
     @ResultOf
     @Cypher("MATCH\n" +
-            "  (comp1:SARF:Component {shape:{shape1}, name:{name1}})" +
+            "  (:SARF:Component {shape:{shape2}, name:{name2}})" +
             "    <-[:MAPS]-(info2:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
             "  (type1:Type:Internal)" +
             "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
-            "  (comp1:SARF:Component {shape:{shape1}, name:{name1}})\n" +
+            "  (:SARF:Component {shape:{shape1}, name:{name1}})\n" +
             "WITH \n" +
             "  count(DISTINCT type1) AS intersection\n" +
             "MATCH\n" +
@@ -66,4 +66,46 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
     double computeJaccardSimilarity(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
                                     @Parameter("shape2") String shape2, @Parameter("name2") String nam2,
                                     @Parameter("iteration") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (:SARF:Component{shape:{shape}, name:{name}})" +
+            "    <-[:MAPS]-(:ClassificationInfo{iteration:{iteration}})-[:CLASSIFIES]->" +
+            "  (t:Type) " +
+            "RETURN" +
+            "  count(DISTINCT t)")
+    Long computeComponentCardinality(@Parameter("shape") String shape, @Parameter("name") String string,
+                                       @Parameter("iteration") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (:SARF:Component {shape:{shape2}, name:{name2}})" +
+            "    <-[:MAPS]-(info2:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
+            "  (type:Type:Internal)" +
+            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
+            "  (:SARF:Component {shape:{shape1}, name:{name1}})" +
+            "RETURN" +
+            "  count(DISTINCT type)")
+    Long computeComponentIntersectionCardinality(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
+                                                   @Parameter("shape2") String shape2, @Parameter("name2") String name2,
+                                                   @Parameter("iteration") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (:SARF:Component {shape:{shape2}, name:{name2}})" +
+            "    <-[:MAPS]-(:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
+            "  (type:Type:Internal) " +
+            "WITH" +
+            "  type" +
+            "OPTIONAL MATCH" +
+            "  (type)" +
+            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
+            "  (:SARF:Component {shape:{shape1}, name:{name1}}) " +
+            "WHERE" +
+            "  info1 IS NULL" +
+            "RETURN" +
+            "  count(DISTINCT type)")
+    Long computeComplementCardinality(@Parameter("shape1") String ofShape, @Parameter("name1") String ofName,
+                                      @Parameter("shape2") String inShape, @Parameter("name2") String inName,
+                                      @Parameter("iteration") Integer iteration);
 }

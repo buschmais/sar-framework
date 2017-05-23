@@ -1,5 +1,6 @@
 package com.buchmais.sarf.classification.criterion;
 
+import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import lombok.AccessLevel;
@@ -13,7 +14,7 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
-public abstract class ClassificationCriterion implements Comparable<ClassificationCriterion> {
+public abstract class ClassificationCriterion implements Comparable<ClassificationCriterion>, Materializable<ClassificationCriterionDescriptor> {
 
     ClassificationCriterionDescriptor classificationCriterionDescriptor;
 
@@ -33,8 +34,6 @@ public abstract class ClassificationCriterion implements Comparable<Classificati
         }
         return this.classificationCriterionDescriptor;
     }
-
-    public abstract ClassificationCriterionDescriptor materialize();
 
     @Override
     public int compareTo(ClassificationCriterion o) {

@@ -19,7 +19,7 @@ import java.util.Set;
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
 @EqualsAndHashCode(exclude = "descriptor")
-public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule> {
+public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>, Materializable<RuleDescriptor> {
 
     @Getter
     @XmlAttribute(name = "shape")
@@ -61,8 +61,6 @@ public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>
         }
         return this.descriptor;
     }
-
-    protected abstract T materialize();
 
     public abstract Set<TypeDescriptor> getMatchingTypes();
 

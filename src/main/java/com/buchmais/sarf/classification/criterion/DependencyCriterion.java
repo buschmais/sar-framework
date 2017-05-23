@@ -30,7 +30,7 @@ public class DependencyCriterion extends RuleBasedCriterion<Dependency> {
     }
 
     @Override
-    public ClassificationCriterionDescriptor materialize() {
+    public DependencyCriterionDescriptor materialize() {
         SARFRunner.xoManager.currentTransaction().begin();
         DependencyCriterionDescriptor descriptor = SARFRunner.xoManager.create(DependencyCriterionDescriptor.class);
         descriptor.getDependencies().addAll(
