@@ -91,16 +91,31 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
         for (ComponentDescriptor cD1 : components) {
             for (ComponentDescriptor cD2 : components) {
-                if (cD1 != cD2) {
-                    SARFRunner.xoManager.currentTransaction().begin();
-                    System.out.println("Jaccard of: " + cD1.getShape() + " " + cD1.getName() + " With: " + cD2.getShape() + " " + cD2.getName());
+                SARFRunner.xoManager.currentTransaction().begin();
+                if (cD1 != cD2 && (cD1.getName().startsWith("#") || cD2.getName().startsWith("#"))) {
+                    System.out.println(cD1.getShape() + " " + cD1.getName() + " With: " + cD2.getShape() + " " + cD2.getName());
                     double jaccard = componentRepository.computeJaccardSimilarity(
                             cD1.getShape(), cD1.getName(),
                             cD2.getShape(), cD2.getName(),
                             this.iteration);
-                    System.out.println(jaccard);
-                    SARFRunner.xoManager.currentTransaction().commit();
+                    Long intersection = componentRepository.computeComponentIntersectionCardinality(
+                            cD1.getShape(), cD1.getName(),
+                            cD2.getShape(), cD2.getName(),
+                            this.iteration);
+                    Long cardinality1 = componentRepository.computeComponentCardinality(cD1.getShape(), cD1.getName(), this.iteration);
+                    Long cardinality2 = componentRepository.computeComponentCardinality(cD2.getShape(), cD2.getName(), this.iteration);
+                    Long ofCD1InCD2 = componentRepository.computeComplementCardinality(cD1.getShape(), cD1.getName(), cD2.getShape(), cD2.getName(), iteration);
+                    Long ofCD2InCD1 = componentRepository.computeComplementCardinality(cD2.getShape(), cD2.getName(), cD1.getShape(), cD1.getName(), iteration);
+                    double alpha = 0.8;
+                    double beta = 0.6;
+                    Double tversky = intersection.doubleValue() / (intersection + beta * (alpha * Math.min(ofCD2InCD1, ofCD1InCD2) + (1 - alpha) * Math.max(ofCD2InCD1, ofCD1InCD2)));
+                    System.out.println("Jaccard: " + jaccard);
+                    System.out.println("Cardinality 1: " + cardinality1);
+                    System.out.println("Cardinality 2: " + cardinality2);
+                    System.out.println("Intersection: " + intersection);
+                    System.out.println("Tversky: " + tversky);
                 }
+                SARFRunner.xoManager.currentTransaction().commit();
             }
         }
     }

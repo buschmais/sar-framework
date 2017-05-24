@@ -96,13 +96,13 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "    <-[:MAPS]-(:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
             "  (type:Type:Internal) " +
             "WITH" +
-            "  type" +
+            "  type " +
             "OPTIONAL MATCH" +
             "  (type)" +
             "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
             "  (:SARF:Component {shape:{shape1}, name:{name1}}) " +
             "WHERE" +
-            "  info1 IS NULL" +
+            "  info1 IS NULL " +
             "RETURN" +
             "  count(DISTINCT type)")
     Long computeComplementCardinality(@Parameter("shape1") String ofShape, @Parameter("name1") String ofName,
