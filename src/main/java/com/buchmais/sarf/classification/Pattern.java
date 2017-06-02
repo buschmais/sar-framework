@@ -22,39 +22,24 @@ import java.util.TreeSet;
 @XmlRootElement(name = "Pattern")
 public class Pattern extends Rule<PatternDescriptor> {
 
-    @Getter
-    @XmlAttribute(name = "regEx")
-    private String regEx;
 
-    public Pattern(String shape, String name, double weight, String regEx) {
-        super(shape, name, weight);
-        this.regEx = regEx;
+
+    public Pattern(String shape, String name, double weight, String rule) {
+        super(shape, name, weight, rule);
     }
 
     public static Pattern of(PatternDescriptor patternDescriptor) {
         Pattern pattern = new Pattern(
-                patternDescriptor.getShape(), patternDescriptor.getName(), patternDescriptor.getWeight(), patternDescriptor.getRegEx());
+                patternDescriptor.getShape(), patternDescriptor.getName(), patternDescriptor.getWeight(), patternDescriptor.getRule());
         pattern.descriptor = patternDescriptor;
         return pattern;
     }
-
-    public PatternDescriptor materialize() {
-        PatternDescriptor patternDescriptor = SARFRunner.xoManager.create(PatternDescriptor.class);
-        patternDescriptor.setShape(this.shape);
-        patternDescriptor.setName(this.name);
-        patternDescriptor.setWeight(this.weight);
-        patternDescriptor.setRegEx(this.regEx);
-        this.descriptor = patternDescriptor;
-        return patternDescriptor;
-    }
-
-
 
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {
         Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
         TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
-        Result<TypeDescriptor> result = repository.getAllInternalTypesLike(this.regEx);
+        Result<TypeDescriptor> result = repository.getAllInternalTypesLike(this.rule);
         for (TypeDescriptor t : result) {
             types.add(t);
             repository.getInnerClassesOf(t.getFullQualifiedName()).forEach(types::add);
@@ -63,11 +48,7 @@ public class Pattern extends Rule<PatternDescriptor> {
     }
 
     @Override
-    public int compareTo(Rule o) {
-        int superRes = 0;
-        if ((superRes = super.compareTo((Rule) o)) == 0 && this.getClass().equals(o.getClass())) {
-            return this.getRegEx().compareTo(((Pattern) o).getRegEx());
-        }
-        return superRes;
+    PatternDescriptor instantiateDescriptor() {
+        return SARFRunner.xoManager.create(PatternDescriptor.class);
     }
 }

@@ -15,28 +15,23 @@ import java.util.stream.Collectors;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @XmlRootElement(name = "PackageNamingCriterion")
-public class PackageNamingCriterion extends RuleBasedCriterion<Pattern> {
+public class PackageNamingCriterion extends RuleBasedCriterion<Pattern, PackageNamingCriterionDescriptor> {
 
     public PackageNamingCriterion(double weight) {
         super(weight);
     }
 
+    @Override
+    PackageNamingCriterionDescriptor instantiateDescriptor() {
+        return SARFRunner.xoManager.create(PackageNamingCriterionDescriptor.class);
+    }
+
     public static PackageNamingCriterion of(PackageNamingCriterionDescriptor packageNamingCriterionDescriptor) {
         PackageNamingCriterion packageNamingCriterion = new PackageNamingCriterion(packageNamingCriterionDescriptor.getWeight());
-        for (PatternDescriptor patternDescriptor : packageNamingCriterionDescriptor.getPatterns()) {
+        for (PatternDescriptor patternDescriptor : packageNamingCriterionDescriptor.getRules()) {
             packageNamingCriterion.addRule(Pattern.of(patternDescriptor));
         }
         return packageNamingCriterion;
     }
 
-    public PackageNamingCriterionDescriptor materialize() {
-        SARFRunner.xoManager.currentTransaction().begin();
-        PackageNamingCriterionDescriptor descriptor = SARFRunner.xoManager.create(PackageNamingCriterionDescriptor.class);
-        descriptor.getPatterns().addAll(
-                this.rules.stream().map(Pattern::getDescriptor).collect(Collectors.toSet())
-        );
-        SARFRunner.xoManager.currentTransaction().commit();
-        this.classificationCriterionDescriptor = descriptor;
-        return descriptor;
-    }
 }

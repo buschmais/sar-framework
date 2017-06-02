@@ -6,9 +6,4 @@ import com.buschmais.xo.neo4j.api.annotation.Label;
  * @author Stephan Pirnbaum
  */
 @Label("Pattern")
-public interface PatternDescriptor extends RuleDescriptor {
-
-    void setRegEx(String regEx);
-
-    String getRegEx();
-}
+public interface PatternDescriptor extends RuleDescriptor {}

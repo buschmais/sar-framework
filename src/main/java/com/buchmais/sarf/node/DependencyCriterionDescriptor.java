@@ -9,9 +9,4 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @Label("DependencyCriterion")
-public interface DependencyCriterionDescriptor extends ClassificationCriterionDescriptor {
-
-    @Relation("USES")
-    @Relation.Outgoing
-    Set<DependencyDescriptor> getDependencies();
-}
+public interface DependencyCriterionDescriptor extends RuleBasedCriterionDescriptor<DependencyDescriptor> {}

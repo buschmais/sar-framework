@@ -10,9 +10,4 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @Label("PackageNamingCriterion")
-public interface PackageNamingCriterionDescriptor extends ClassificationCriterionDescriptor {
-
-    @Relation("USES")
-    @Outgoing
-    Set<PatternDescriptor> getPatterns();
-}
+public interface PackageNamingCriterionDescriptor extends RuleBasedCriterionDescriptor<PatternDescriptor> {}

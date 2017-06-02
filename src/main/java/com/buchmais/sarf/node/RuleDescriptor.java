@@ -19,4 +19,8 @@ public interface RuleDescriptor extends SARFNode {
     void setWeight(double weight);
 
     double getWeight();
+
+    void setRule(String rule);
+
+    String getRule();
 }

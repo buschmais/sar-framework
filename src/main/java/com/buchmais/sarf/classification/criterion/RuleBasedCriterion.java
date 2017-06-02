@@ -4,8 +4,7 @@ import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Dependency;
 import com.buchmais.sarf.classification.Pattern;
 import com.buchmais.sarf.classification.Rule;
-import com.buchmais.sarf.node.ClassificationInfoDescriptor;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.node.*;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -14,14 +13,16 @@ import lombok.Setter;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * @author Stephan Pirnbaum
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
-public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationCriterion {
+public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCriterionDescriptor> extends ClassificationCriterion<T> {
 
     @XmlElementWrapper(name = "Rules")
     @XmlElements(
@@ -31,14 +32,14 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
             }
     )
     @Setter
-    Set<T> rules;
+    Set<R> rules;
 
     public RuleBasedCriterion(double weight) {
         super(weight);
         this.rules = new TreeSet<>();
     }
 
-    public boolean addRule(T rule) {
+    public boolean addRule(R rule) {
         return this.rules.add(rule);
     }
 
@@ -52,7 +53,7 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
             return res;
         });
         SARFRunner.xoManager.currentTransaction().begin();
-        for (T r : this.rules) {
+        for (R r : this.rules) {
             ComponentDescriptor componentDescriptor = r.getOrCreateComponentOfCurrentIteration();
             @SuppressWarnings("unchecked")
             Set<TypeDescriptor> ts = (Set<TypeDescriptor>) r.getMatchingTypes();
@@ -69,5 +70,17 @@ public abstract class RuleBasedCriterion<T extends Rule> extends ClassificationC
         }
         SARFRunner.xoManager.currentTransaction().commit();
         return componentDescriptors;
+    }
+
+    @Override
+    public T materialize() {
+        SARFRunner.xoManager.currentTransaction().begin();
+        T descriptor = instantiateDescriptor();
+        descriptor.getRules().addAll(
+                this.rules.stream().map(R::getDescriptor).collect(Collectors.toSet())
+        );
+        SARFRunner.xoManager.currentTransaction().commit();
+        this.classificationCriterionDescriptor = descriptor;
+        return descriptor;
     }
 }

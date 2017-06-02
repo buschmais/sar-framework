@@ -25,31 +25,16 @@ import java.util.TreeSet;
 @XmlRootElement(name = "Dependency")
 public class Dependency extends Rule<DependencyDescriptor> {
 
-    @Getter
-    @XmlAttribute(name = "dependency")
-    private String dependency;
-
-    public Dependency(String shape, String name, double weight, String dependency) {
-        super(shape, name, weight);
-        this.dependency = dependency;
+    public Dependency(String shape, String name, double weight, String rule) {
+        super(shape, name, weight, rule);
     }
 
-    @Override
-    public DependencyDescriptor materialize() {
-        DependencyDescriptor dependencyDescriptor = SARFRunner.xoManager.create(DependencyDescriptor.class);
-        dependencyDescriptor.setShape(this.shape);
-        dependencyDescriptor.setName(this.name);
-        dependencyDescriptor.setWeight(this.weight);
-        dependencyDescriptor.setDependency(this.dependency);
-        this.descriptor = dependencyDescriptor;
-        return dependencyDescriptor;
-    }
 
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {
         Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
         TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
-        Query.Result<TypeDescriptor> result = repository.getAllInternalTypesDependingOn(this.dependency);
+        Query.Result<TypeDescriptor> result = repository.getAllInternalTypesDependingOn(this.rule);
         for (TypeDescriptor t : result) {
             types.add(t);
             repository.getInnerClassesOf(t.getFullQualifiedName()).forEach(types::add);
@@ -57,9 +42,14 @@ public class Dependency extends Rule<DependencyDescriptor> {
         return types;
     }
 
+    @Override
+    DependencyDescriptor instantiateDescriptor() {
+        return SARFRunner.xoManager.create(DependencyDescriptor.class);
+    }
+
     public static Dependency of(DependencyDescriptor dependencyDescriptor) {
         Dependency dependency = new Dependency(
-                dependencyDescriptor.getShape(), dependencyDescriptor.getName(), dependencyDescriptor.getWeight(), dependencyDescriptor.getDependency());
+                dependencyDescriptor.getShape(), dependencyDescriptor.getName(), dependencyDescriptor.getWeight(), dependencyDescriptor.getRule());
         dependency.descriptor = dependencyDescriptor;
         return dependency;
     }

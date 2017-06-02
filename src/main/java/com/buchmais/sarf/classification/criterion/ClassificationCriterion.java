@@ -14,9 +14,9 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
-public abstract class ClassificationCriterion implements Comparable<ClassificationCriterion>, Materializable<ClassificationCriterionDescriptor> {
+public abstract class ClassificationCriterion<T extends ClassificationCriterionDescriptor> implements Comparable<ClassificationCriterion>, Materializable<ClassificationCriterionDescriptor> {
 
-    ClassificationCriterionDescriptor classificationCriterionDescriptor;
+    T classificationCriterionDescriptor;
 
     @Getter
     @XmlAttribute(name = "weight")
@@ -28,7 +28,7 @@ public abstract class ClassificationCriterion implements Comparable<Classificati
 
     public abstract Set<ComponentDescriptor> classify(Integer iteration);
 
-    public ClassificationCriterionDescriptor getClassificationCriterionDescriptor() {
+    public T getClassificationCriterionDescriptor() {
         if (this.classificationCriterionDescriptor == null) {
             materialize();
         }
@@ -41,4 +41,6 @@ public abstract class ClassificationCriterion implements Comparable<Classificati
         //todo
         return res;
     }
+
+    abstract T instantiateDescriptor();
 }

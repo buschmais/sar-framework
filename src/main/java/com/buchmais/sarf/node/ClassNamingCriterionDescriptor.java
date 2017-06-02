@@ -8,10 +8,5 @@ import java.util.Set;
 /**
  * @author Stephan Pirnbaum
  */
-@Label("ClassNamingCritreion")
-public interface ClassNamingCriterionDescriptor extends ClassificationCriterionDescriptor {
-
-    @Relation("USES")
-    @Relation.Outgoing
-    Set<PatternDescriptor> getPatterns();
-}
+@Label("ClassNamingCriterion")
+public interface ClassNamingCriterionDescriptor extends RuleBasedCriterionDescriptor<PatternDescriptor> {}

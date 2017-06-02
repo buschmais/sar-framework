@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * @author Stephan Pirnbaum
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
-public class ClassNamingCriterion extends RuleBasedCriterion<Pattern> {
+public class ClassNamingCriterion extends RuleBasedCriterion<Pattern, ClassNamingCriterionDescriptor> {
 
 
     public ClassNamingCriterion(double weight) {
@@ -21,14 +21,7 @@ public class ClassNamingCriterion extends RuleBasedCriterion<Pattern> {
     }
 
     @Override
-    public ClassNamingCriterionDescriptor materialize() {
-        SARFRunner.xoManager.currentTransaction().begin();
-        ClassNamingCriterionDescriptor descriptor = SARFRunner.xoManager.create(ClassNamingCriterionDescriptor.class);
-        descriptor.getPatterns().addAll(
-                this.rules.stream().map(Pattern::getDescriptor).collect(Collectors.toSet())
-        );
-        SARFRunner.xoManager.currentTransaction().commit();
-        this.classificationCriterionDescriptor = descriptor;
-        return descriptor;
+    ClassNamingCriterionDescriptor instantiateDescriptor() {
+        return SARFRunner.xoManager.create(ClassNamingCriterionDescriptor.class);
     }
 }
