@@ -109,14 +109,15 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                     double alpha = 0.8;
                     double beta = 0.6;
                     Double tversky = intersection.doubleValue() / (intersection + beta * (alpha * Math.min(ofCD2InCD1, ofCD1InCD2) + (1 - alpha) * Math.max(ofCD2InCD1, ofCD1InCD2)));
-                    System.out.println("Jaccard: " + jaccard);
+                    /*System.out.println("Jaccard: " + jaccard);
                     System.out.println("Cardinality 1: " + cardinality1);
                     System.out.println("Cardinality 2: " + cardinality2);
                     System.out.println("Intersection: " + intersection);
-                    System.out.println("Tversky: " + tversky);
+                    System.out.println("Tversky: " + tversky);*/
                 }
                 SARFRunner.xoManager.currentTransaction().commit();
             }
         }
+        TypeCouplingEnricher.enrich();
     }
 }

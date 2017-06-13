@@ -25,7 +25,7 @@ public class PackageNamingCriterion extends RuleBasedCriterion<Pattern, PackageN
     PackageNamingCriterionDescriptor instantiateDescriptor() {
         return SARFRunner.xoManager.create(PackageNamingCriterionDescriptor.class);
     }
-
+/*
     public static PackageNamingCriterion of(PackageNamingCriterionDescriptor packageNamingCriterionDescriptor) {
         PackageNamingCriterion packageNamingCriterion = new PackageNamingCriterion(packageNamingCriterionDescriptor.getWeight());
         for (PatternDescriptor patternDescriptor : packageNamingCriterionDescriptor.getRules()) {
@@ -33,5 +33,5 @@ public class PackageNamingCriterion extends RuleBasedCriterion<Pattern, PackageN
         }
         return packageNamingCriterion;
     }
-
+*/
 }

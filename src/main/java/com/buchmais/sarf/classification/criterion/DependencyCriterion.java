@@ -25,7 +25,7 @@ public class DependencyCriterion extends RuleBasedCriterion<Dependency, Dependen
     DependencyCriterionDescriptor instantiateDescriptor() {
         return SARFRunner.xoManager.create(DependencyCriterionDescriptor.class);
     }
-
+/*
     public static DependencyCriterion of(DependencyCriterionDescriptor dependencyCriterionDescriptor) {
         DependencyCriterion dependencyCriterion = new DependencyCriterion(dependencyCriterionDescriptor.getWeight());
         for (DependencyDescriptor dependencyDescriptor : dependencyCriterionDescriptor.getRules()) {
@@ -33,5 +33,5 @@ public class DependencyCriterion extends RuleBasedCriterion<Dependency, Dependen
         }
         return dependencyCriterion;
     }
-
+*/
 }

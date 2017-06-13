@@ -43,4 +43,6 @@ public abstract class ClassificationCriterion<T extends ClassificationCriterionD
     }
 
     abstract T instantiateDescriptor();
+
+    public abstract ClassificationCriterionDescriptor materialize();
 }

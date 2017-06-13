@@ -10,5 +10,5 @@ import java.util.Set;
 public interface RuleBasedCriterionDescriptor<T extends RuleDescriptor> extends ClassificationCriterionDescriptor {
     @Relation("USES")
     @Relation.Outgoing
-    Set<T> getRules();
+    Set<RuleDescriptor> getRules();
 }

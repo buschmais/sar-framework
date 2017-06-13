@@ -5,6 +5,7 @@ import com.buchmais.sarf.classification.configuration.ConfigurationHistory;
 import com.buchmais.sarf.node.*;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
+import com.buchmais.sarf.repository.MetricRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDependsOnDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
@@ -64,6 +65,9 @@ public class SARFRunner {
                 .type(ClassNamingCriterionDescriptor.class)
                 .type(DependencyCriterionDescriptor.class)
                 .type(DependencyDescriptor.class)
+                .type(MetricRepository.class)
+                .type(RuleBasedCriterionDescriptor.class)
+                .type(RuleDescriptor.class)
                 .uri(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"))
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
