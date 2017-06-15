@@ -14,9 +14,9 @@ public abstract class WeightConstants {
 
     public static final Double WRITES_STATIC_WEIGHT = 1d;
 
-    public static final Double EXTENDS_WEIGHT = 1d;
+    public static final Double EXTENDS_WEIGHT = 0.5d;
 
-    public static final Double IMPLEMENTS_WEIGHT = 1d;
+    public static final Double IMPLEMENTS_WEIGHT = 0.5d;
 
     public static final Double PARAMETER_WEIGHT = 1d;
 

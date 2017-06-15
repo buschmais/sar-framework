@@ -118,6 +118,5 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 SARFRunner.xoManager.currentTransaction().commit();
             }
         }
-        TypeCouplingEnricher.enrich();
     }
 }

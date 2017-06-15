@@ -5,6 +5,8 @@ import com.buschmais.xo.api.annotation.ResultOf;
 import com.buschmais.xo.api.annotation.ResultOf.Parameter;
 import com.buschmais.xo.neo4j.api.annotation.Cypher;
 
+import javax.validation.constraints.Pattern;
+
 /**
  * @author Stephan Pirnbaum
  */
@@ -294,4 +296,31 @@ public interface MetricRepository {
             "RETURN" +
             "  count(DISTINCT d) > 0")
     boolean declaresInnerClass(@Parameter("t1") Long id1, @Parameter("t2") Long id2);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t1:Type)-[c:COUPLES]->(t2:Type) " +
+            "WHERE" +
+            "  ID(t1) IN {ids} AND ID(t2) IN {ids} " +
+            "RETURN" +
+            "  toFloat(SUM(c.coupling))")
+    Double computeCohesionInComponent(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t1:Type)-[c:COUPLES]->(t2:Type) " +
+            "WHERE" +
+            "  ID(t1) IN {ids1} AND ID(t2) IN {ids2} " +
+            "RETURN" +
+            "  toFloat(SUM(c.coupling))")
+    Double computeCouplingBetweenComponents(@Parameter("ids1") long[] ids1, @Parameter("ids2") long[] ids2);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t1:Type)-[c:COUPLES]->(t2:Type) " +
+            "WHERE" +
+            "  ID(t1) = {id} AND ID(t2) IN {ids} " +
+            "RETURN" +
+            "  toFloat(SUM(c.coupling))")
+    Double computeCouplingToTypes(@Parameter("id") long id, @Parameter("ids") long[] typeIds);
 }

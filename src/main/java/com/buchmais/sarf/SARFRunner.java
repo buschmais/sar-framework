@@ -2,6 +2,8 @@ package com.buchmais.sarf;
 
 import com.buchmais.sarf.classification.configuration.ActiveClassificationConfiguration;
 import com.buchmais.sarf.classification.configuration.ConfigurationHistory;
+import com.buchmais.sarf.classification.configuration.TypeCouplingEnricher;
+import com.buchmais.sarf.classification.criterion.evolution.SomeClass;
 import com.buchmais.sarf.node.*;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
@@ -41,7 +43,9 @@ public class SARFRunner {
     public static void main(String[] args) throws URISyntaxException {
         readConfiguration();
         XOManagerFactory factory = setUpDB();
-        SARFRunner.activeClassificationConfiguration.execute();
+        //SARFRunner.activeClassificationConfiguration.execute();
+        SomeClass someClass = new SomeClass();
+        someClass.someMethod();
         factory.close();
     }
 
@@ -81,6 +85,9 @@ public class SARFRunner {
             SARFRunner.xoManager.createQuery(
                     "MATCH (sarf:SARF) DETACH DELETE sarf"
             ).execute();
+            SARFRunner.xoManager.createQuery(
+                    "MATCH (:Type)-[c:COUPLES]-(:Type) DELETE c"
+            ).execute();
             SARFRunner.xoManager.currentTransaction().commit();
         } else if (SARFRunner.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             System.err.println("Specified Configuration Iteration must be either 1 or " +
@@ -88,6 +95,7 @@ public class SARFRunner {
             System.exit(1);
         }
         SARFRunner.activeClassificationConfiguration.materialize();
+        TypeCouplingEnricher.enrich();
         return factory;
     }
 

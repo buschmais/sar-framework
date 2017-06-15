@@ -65,6 +65,22 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+        <!-- Classpath scanning -->
+        <dependency>
+            <groupId>org.scannotation</groupId>
+            <artifactId>scannotation</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.bitbucket.fwilhelm/org.jenetics -->
+        <dependency>
+            <groupId>org.bitbucket.fwilhelm</groupId>
+            <artifactId>org.jenetics</artifactId>
+        </dependency>
+
 
     </dependencies>
 
@@ -117,6 +133,26 @@
                 <artifactId>lombok</artifactId>
                 <version>1.16.16</version>
             </dependency>
+            <!-- Classpath scanning -->
+            <dependency>
+                <groupId>org.scannotation</groupId>
+                <artifactId>scannotation</artifactId>
+                <version>1.0.4</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>22.0</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.bitbucket.fwilhelm/org.jenetics -->
+            <dependency>
+                <groupId>org.bitbucket.fwilhelm</groupId>
+                <artifactId>org.jenetics</artifactId>
+                <version>3.6.0</version>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 

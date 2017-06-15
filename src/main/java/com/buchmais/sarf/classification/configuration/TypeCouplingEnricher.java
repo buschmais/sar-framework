@@ -72,7 +72,7 @@ public class TypeCouplingEnricher {
         System.out.println("8 " + computeCouplingReadsStatic(id1, id2));
         System.out.println("9 " + computeCouplingWrites(id1, id2));
         System.out.println("10 " + computeCouplingWritesStatic(id1, id2));*/
-        Double res = weightedCoupling / totalWeight;
+        Double res = weightedCoupling;// / totalWeight;
         return Double.isNaN(res) ? 0 : res;
     }
 
