@@ -8,10 +8,9 @@ import com.google.common.collect.Sets;
 import org.jenetics.*;
 import org.jenetics.engine.Engine;
 import org.jenetics.engine.EvolutionResult;
-import org.jenetics.util.Factory;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author Stephan Pirnbaum
@@ -19,6 +18,9 @@ import java.util.stream.Collectors;
 public class SomeClass {
 
     static List<TypeDescriptor> types;
+
+    static Genotype<LongGene> best;
+    static Double bestFitness;
 
     protected static long[] ids;
 
@@ -39,26 +41,26 @@ public class SomeClass {
         final Engine<LongGene, Double> engine = Engine
                 .builder(SomeClass::computeFitnessValue, genotype)
                 .offspringFraction(0.7)
-                .survivorsSelector(new RouletteWheelSelector<>())
-                .offspringSelector(new TournamentSelector<>())
-                .populationSize(10)
+                .survivorsSelector(new ParetoFrontierSelector())
+                .offspringSelector(new ParetoFrontierSelector())
+                .populationSize(15)
                 .fitnessScaler(f -> Math.pow(f, 5))
-                .alterers(new CouplingMutator(0.5), new GaussianMutator<>(0.1), new MultiPointCrossover<>(0.8))
+                .alterers(new CouplingMutator(0.3), new GaussianMutator<>(0.01), new MultiPointCrossover<>(0.8))
                 .build();
         System.out.println("\n\n\n Starting Evolution \n\n\n");
 
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
 
-        final Genotype<LongGene> result = engine
-                .stream(genotypes)
+        engine
+                .stream()
                 .limit(150)
                 .peek(SomeClass::update)
                 .collect(EvolutionResult.toBestGenotype());
         // print result
         Map<Long, Set<String>> identifiedComponents = new HashMap<>();
-        for (int i = 0; i < result.getChromosome().length(); i++) {
+        for (int i = 0; i < best.getChromosome().length(); i++) {
             identifiedComponents.merge(
-                    result.getChromosome().getGene(i).getAllele(),
+                    best.getChromosome().getGene(i).getAllele(),
                     Sets.newHashSet(SARFRunner.xoManager.findById(TypeDescriptor.class, ids[i]).getFullQualifiedName()),
                     (s1, s2) -> {
                         s1.addAll(s2);
@@ -91,56 +93,33 @@ public class SomeClass {
             int componentId = 0;
             for (Map.Entry<String, Set<Long>> entry : packageComponents.entrySet()) {
                 if (entry.getValue().contains(id)) {
-                    genes.add(LongGene.of(componentId, 0, 99));
+                    genes.add(LongGene.of(componentId, 0, 45));
                 }
                 componentId++;
             }
         }
-        Chromosome<LongGene> chromosome = LongChromosome.of(genes.toArray(new LongGene[genes.size()]));
+        Chromosome<LongGene> chromosome = LongObjectiveChromosome.of(genes.toArray(new LongGene[genes.size()]));
         System.out.println(chromosome);
         System.out.println(computeFitnessValue(Genotype.of(chromosome)));
         return Genotype.of(chromosome);
     }
 
     static Double computeFitnessValue(final Genotype<LongGene> prospect) {
-        Double fitnessValue = 0d;
-        LongChromosome chromosome = (LongChromosome) prospect.getChromosome();
-        // mapping from component id to a set of type ids
-        Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
-        for (int i = 0; i < chromosome.length(); i++) {
-            identifiedComponents.merge(
-                    chromosome.getGene(i).getAllele(),
-                    Sets.newHashSet(ids[i]),
-                    (s1, s2) -> {
-                        s1.addAll(s2);
-                        return s1;
-                    });
-        }
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        // compute fitness for intra-edge coupling (cohesiveness of components)
-        for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
-            long[] ids1 = component1.getValue().stream().mapToLong(i -> i).toArray();
-            fitnessValue += mR.computeCohesionInComponent(
-                    ids1
-            );
-            // compute fitness for inter-edge coupling (coupling of components)
-            // is compared twice -> punishing inter-edges
-            for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
-                long[] ids2 = component2.getValue().stream().mapToLong(i -> i).toArray();
-                if (!Objects.equals(component1.getKey(), component2.getKey())) {
-                    fitnessValue -= mR.computeCouplingBetweenComponents(
-                            ids2,
-                            ids1
-                    );
-                }
-            }
-        }
-        return fitnessValue;
+        LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
+        return chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentRangeObjective() + chromosome.getComponentSizeObjective();
     }
 
     private static void update(final EvolutionResult<LongGene, Double> result) {
-        System.out.println("Generation: " + result.getGeneration() + "\nBest Fitness" + result.getBestFitness() + "\n Size: " + result.getPopulation().size());
-        System.out.println(Arrays.toString(ids));
-        System.out.println(result.getBestPhenotype());
+        System.out.println("Generation: " + result.getGeneration() + "\nBest Fitness: " + result.getBestFitness() + "\n Size: " + result.getPopulation().size());
+        LongObjectiveChromosome chromosome = (LongObjectiveChromosome) result.getBestPhenotype().getGenotype().getChromosome();
+        System.out.println(chromosome.getCohesionObjective() + " " +
+                chromosome.getCouplingObjective() + " " +
+                chromosome.getComponentCountObjective() + " " +
+                chromosome.getComponentRangeObjective() + " " +
+                chromosome.getComponentSizeObjective());
+        if (best == null || result.getBestFitness() > bestFitness) {
+            best = result.getBestPhenotype().getGenotype();
+            bestFitness = result.getBestFitness();
+        }
     }
 }
