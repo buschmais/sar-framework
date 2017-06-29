@@ -2,13 +2,20 @@ package com.buchmais.sarf.classification.configuration;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
+import com.buchmais.sarf.classification.criterion.Rule;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
+import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
+import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -118,5 +125,34 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 SARFRunner.xoManager.currentTransaction().commit();
             }
         }
+    }
+
+    public void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
+        Set<Rule> rules = flatten(this.model);
+        Map<Class<? extends RuleBasedCriterion>, RuleBasedCriterion> criteriaMapping = new HashMap<>();
+        for (Rule<?> r : rules) {
+            try {
+                criteriaMapping.merge(r.getAssociateCriterion(), r.getAssociateCriterion().newInstance(), (c1, c2) -> {
+                    c1.addRule(r);
+                    return c1;
+                });
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        this.classificationCriteria = Sets.newTreeSet(criteriaMapping.values());
+    }
+
+    private Set<Rule> flatten(Set<Component> components) {
+        Set<Rule> rules = new TreeSet<>();
+        for (Component component : components) {
+            if (component.getIdentifyingRules() != null) {
+                rules.addAll(component.getIdentifyingRules());
+            }
+            if (component.getContainedComponents() != null) {
+                rules.addAll(flatten(component.getContainedComponents()));
+            }
+        }
+        return rules;
     }
 }

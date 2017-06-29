@@ -1,6 +1,5 @@
 package com.buchmais.sarf.node;
 
-import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Outgoing;
@@ -49,4 +48,10 @@ public interface ComponentDescriptor extends SARFNode {
      * @param shape The new shape of the component
      */
     void setShape(String shape);
+
+    @Outgoing
+    Set<ComponentDescriptor> getContainedComponents();
+
+    @Incoming
+    Set<ComponentDescriptor> getContainingComponents();
 }

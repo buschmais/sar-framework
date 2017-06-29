@@ -2,6 +2,7 @@ package com.buchmais.sarf.classification.criterion.packagenaming;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.Rule;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
 import com.buchmais.sarf.node.PatternDescriptor;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
@@ -51,5 +52,10 @@ public class PackageNamingRule extends Rule<PatternDescriptor> {
     @Override
     protected PatternDescriptor instantiateDescriptor() {
         return SARFRunner.xoManager.create(PatternDescriptor.class);
+    }
+
+    @Override
+    public Class<? extends RuleBasedCriterion> getAssociateCriterion() {
+        return PackageNamingCriterion.class;
     }
 }

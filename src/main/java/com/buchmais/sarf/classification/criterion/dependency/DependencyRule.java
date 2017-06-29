@@ -2,6 +2,7 @@ package com.buchmais.sarf.classification.criterion.dependency;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.Rule;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
 import com.buchmais.sarf.node.DependencyDescriptor;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
@@ -20,7 +21,7 @@ import java.util.TreeSet;
  * @author Stephan Pirnbaum
  */
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @XmlRootElement(name = "Dependency")
 public class DependencyRule extends Rule<DependencyDescriptor> {
 
@@ -51,5 +52,10 @@ public class DependencyRule extends Rule<DependencyDescriptor> {
                 dependencyDescriptor.getShape(), dependencyDescriptor.getName(), dependencyDescriptor.getWeight(), dependencyDescriptor.getRule());
         dependencyRule.descriptor = dependencyDescriptor;
         return dependencyRule;
+    }
+
+    @Override
+    public Class<? extends RuleBasedCriterion> getAssociateCriterion() {
+        return DependencyCriterion.class;
     }
 }

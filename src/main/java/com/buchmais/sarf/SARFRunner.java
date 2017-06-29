@@ -43,9 +43,9 @@ public class SARFRunner {
     public static void main(String[] args) throws URISyntaxException {
         readConfiguration();
         XOManagerFactory factory = setUpDB();
-        //SARFRunner.activeClassificationConfiguration.execute();
+        SARFRunner.activeClassificationConfiguration.execute();
         SomeClass someClass = new SomeClass();
-        someClass.someMethod();
+        //someClass.someMethod();
         factory.close();
     }
 

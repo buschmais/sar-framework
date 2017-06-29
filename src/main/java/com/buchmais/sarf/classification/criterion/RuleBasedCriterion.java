@@ -1,17 +1,13 @@
 package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.criterion.dependency.DependencyRule;
-import com.buchmais.sarf.classification.Pattern;
-import com.buchmais.sarf.node.*;
+import com.buchmais.sarf.node.ClassificationInfoDescriptor;
+import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.node.RuleBasedCriterionDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElements;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -19,21 +15,13 @@ import java.util.stream.Collectors;
 /**
  * @author Stephan Pirnbaum
  */
-@NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
 public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCriterionDescriptor> extends ClassificationCriterion<T> {
 
-    @XmlElementWrapper(name = "Rules")
-    @XmlElements(
-            {
-                    @XmlElement(name = "Pattern", type = Pattern.class),
-                    @XmlElement(name = "Dependency", type = DependencyRule.class)
-            }
-    )
+    @Getter
     @Setter
     Set<R> rules;
 
-    public RuleBasedCriterion(double weight) {
-        super(weight);
+    public RuleBasedCriterion() {
         this.rules = new TreeSet<>();
     }
 
@@ -59,7 +47,7 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
                 ClassificationInfoDescriptor info = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
                 info.setComponent(componentDescriptor);
                 info.setType(t);
-                info.setWeight(this.weight * r.getWeight() / 100);
+                info.setWeight(r.getWeight() / 100);
                 info.setRule(r.getDescriptor());
                 info.setIteration(iteration);
                 this.getClassificationCriterionDescriptor().getClassifications().add(info);

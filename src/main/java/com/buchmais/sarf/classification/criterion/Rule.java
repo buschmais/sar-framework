@@ -2,32 +2,31 @@ package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Materializable;
+import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.node.RuleDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
  */
-@NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 @EqualsAndHashCode(exclude = "descriptor")
 public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>, Materializable<RuleDescriptor> {
 
     @Getter
-    @XmlAttribute(name = "shape")
+    @Setter
     String shape;
 
     @Getter
-    @XmlAttribute(name = "name")
+    @Setter
     String name;
 
     @Getter
@@ -89,4 +88,11 @@ public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>
         if (!rule.equals(o.getRule())) return rule.compareTo(o.getRule());
         return (int) (weight - o.getWeight());
     }
+
+    public void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
+        this.shape = ((Component) parent).getShape();
+        this.name = ((Component) parent).getName();
+    }
+
+    public abstract Class<? extends RuleBasedCriterion> getAssociateCriterion();
 }

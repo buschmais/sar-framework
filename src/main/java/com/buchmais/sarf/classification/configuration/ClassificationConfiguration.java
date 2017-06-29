@@ -2,10 +2,8 @@ package com.buchmais.sarf.classification.configuration;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Materializable;
-import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingCriterion;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
-import com.buchmais.sarf.classification.criterion.dependency.DependencyCriterion;
-import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingCriterion;
+import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import lombok.AccessLevel;
@@ -14,8 +12,6 @@ import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElements;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -31,14 +27,10 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     Integer iteration;
 
     @Getter
-    @XmlElementWrapper(name = "ClassificationCriteria")
-    @XmlElements(
-            {
-                    @XmlElement(name = "PackageNamingCriterion", type = PackageNamingCriterion.class),
-                    @XmlElement(name = "NamingConventionCriterion", type = TypeNamingCriterion.class),
-                    @XmlElement(name = "DependencyCriterion", type = DependencyCriterion.class)
-            }
-    )
+    @XmlElement(name = "Component")
+    Set<Component> model;
+
+    @Getter
     Set<ClassificationCriterion> classificationCriteria;
 
     private ClassificationConfigurationDescriptor classificationConfigurationDescriptor;
@@ -58,6 +50,7 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
 
     public ClassificationConfigurationDescriptor materialize() {
         Set<ClassificationCriterionDescriptor> descriptors = this.classificationCriteria.stream().map(ClassificationCriterion::materialize).collect(Collectors.toSet());
+        this.model.forEach(Component::materialize);
         SARFRunner.xoManager.currentTransaction().begin();
         if (this.classificationConfigurationDescriptor == null) {
             this.classificationConfigurationDescriptor = SARFRunner.xoManager.create(ClassificationConfigurationDescriptor.class);

@@ -42,7 +42,7 @@ public class TypeNamingRule extends Rule<PatternDescriptor> {
         Query.Result<TypeDescriptor> result = repository.getAllInternalTypesLike(this.rule);
         for (TypeDescriptor t : result) {
             types.add(t);
-            types.addAll(t.getDeclaredInnerClasses());
+            // FIXME: 29.06.2017 Cannot create an instance of a single abstract type types.addAll(t.getDeclaredInnerClasses());
         }
         return types;
     }
@@ -50,5 +50,10 @@ public class TypeNamingRule extends Rule<PatternDescriptor> {
     @Override
     protected PatternDescriptor instantiateDescriptor() {
         return SARFRunner.xoManager.create(PatternDescriptor.class);
+    }
+
+    @Override
+    public Class<TypeNamingCriterion> getAssociateCriterion() {
+        return TypeNamingCriterion.class;
     }
 }

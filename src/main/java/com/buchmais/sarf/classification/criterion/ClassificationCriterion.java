@@ -4,10 +4,8 @@ import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import java.util.Set;
 
 /**
@@ -17,14 +15,6 @@ import java.util.Set;
 public abstract class ClassificationCriterion<T extends ClassificationCriterionDescriptor> implements Comparable<ClassificationCriterion>, Materializable<ClassificationCriterionDescriptor> {
 
     T classificationCriterionDescriptor;
-
-    @Getter
-    @XmlAttribute(name = "weight")
-    double weight;
-
-    public ClassificationCriterion(double weight) {
-        this.weight = weight;
-    }
 
     public abstract Set<ComponentDescriptor> classify(Integer iteration);
 
