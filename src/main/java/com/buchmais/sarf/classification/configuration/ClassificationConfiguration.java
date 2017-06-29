@@ -9,6 +9,8 @@ import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
 public abstract class ClassificationConfiguration implements Materializable<ClassificationConfigurationDescriptor> {
+
+    private static final Logger LOG = LogManager.getLogger(ClassificationConfiguration.class);
 
     @Getter
     @XmlAttribute(name = "iteration")
@@ -49,6 +53,7 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     }
 
     public ClassificationConfigurationDescriptor materialize() {
+        LOG.info("Materializing Configuration to Database");
         Set<ClassificationCriterionDescriptor> descriptors = this.classificationCriteria.stream().map(ClassificationCriterion::materialize).collect(Collectors.toSet());
         this.model.forEach(Component::materialize);
         SARFRunner.xoManager.currentTransaction().begin();

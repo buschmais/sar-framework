@@ -34,6 +34,13 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
     @ResultOf
     @Cypher("MATCH" +
             "  (t:Type:Internal) " +
+            "RETURN count(t)")
+    Long countAllInternalTypes();
+
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t:Type:Internal) " +
             "WHERE" +
             "  t.fqn =~ {regEx} " +
             "RETURN t")

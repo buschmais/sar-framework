@@ -6,27 +6,19 @@
             <Dependency rule="org\.springframework\.data.*" weight="50"/>
             <Name rule=".*Repository" weight="100"/>
         </Rules>
-        <Dependencies>
-            <DependsOn shape="Layer" name="DomainLayer" allowed="true"/>
-            <DependsOn shape="Layer" name="DataLayer" allowed="true"/>
-        </Dependencies>
     </Component>
     <Component shape="Layer" name="DomainLayer">
         <Rules>
             <Dependency rule="javax\.mail.*" weight="80"/>
             <Dependency rule="org\.apache\.velocity.*" weight="100"/>
             <Dependency rule="org\.springframework\.mail.*" weight="100"/>
-            <Dependency rule="org\.springframework\.stereotype\.Service.*" weight="80" type="annotation"/>
-            <Implements rule="org\.springframework\.stereotype\.Service.*" weight="80" />
-            <AnnotatedBy rule="org\.springframework\.stereotype\.Service.*" weight="80" />
+            <Dependency rule="org\.springframework\.stereotype\.Service.*" weight="80"/>
+            <!--Implements rule="org\.springframework\.stereotype\.Service.*" weight="80" />
+            <AnnotatedBy rule="org\.springframework\.stereotype\.Service.*" weight="80" /-->
             <Name rule=".*MailSender" weight="100"/>
             <Name rule=".*Service" weight="100"/>
             <Name rule=".*ServiceImpl" weight="100"/>
         </Rules>
-        <Dependencies>
-            <DependsOn shape="Layer" name="DomainLayer" allowed="false"/>
-            <DependsOn shape="Layer" name="DataLayer" allowed="true"/>
-        </Dependencies>
     </Component>
     <Component shape="Layer" name="PresentationLayer">
         <Rules>
@@ -36,10 +28,6 @@
             <Name rule=".*Controller" weight="100"/>
             <Name rule=".*Form" weight="100"/>
         </Rules>
-        <Dependencies>
-            <DependsOn shape="Layer" name="PresentationLayer" allowed="false"/>
-            <DependsOn shape="Layer" name="DomainLayer" allowed="false"/>
-        </Dependencies>
     </Component>
     <Component shape="Module" name="Index">
         <Rules>

@@ -16,6 +16,8 @@ import com.buschmais.xo.api.XOManagerFactory;
 import com.buschmais.xo.api.bootstrap.XO;
 import com.buschmais.xo.api.bootstrap.XOUnit;
 import com.buschmais.xo.neo4j.embedded.api.EmbeddedNeo4jXOProvider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -34,6 +36,8 @@ import java.util.Properties;
  */
 public class SARFRunner {
 
+    private static final Logger LOG = LogManager.getLogger(SARFRunner.class);
+
     public static XOManager xoManager;
 
     private static ActiveClassificationConfiguration activeClassificationConfiguration;
@@ -50,6 +54,7 @@ public class SARFRunner {
     }
 
     public static XOManagerFactory setUpDB() throws URISyntaxException {
+        LOG.info("Setting up Database");
         Properties p = new Properties();
         p.put("neo4j.dbms.allow_format_migration", "true");
         XOUnit xoUnit = XOUnit.builder()
@@ -76,11 +81,9 @@ public class SARFRunner {
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
         xoManager = factory.createXOManager();
-        xoManager.currentTransaction().begin();
-        xoManager.getRepository(TypeRepository.class).markAllInternalTypes("de.htw");
-        xoManager.currentTransaction().commit();
         ClassificationConfigurationRepository classificationConfigurationRepository = SARFRunner.xoManager.getRepository(ClassificationConfigurationRepository.class);
         if (SARFRunner.activeClassificationConfiguration.getIteration() == 1) {
+            LOG.info("Resetting Data");
             SARFRunner.xoManager.currentTransaction().begin();
             SARFRunner.xoManager.createQuery(
                     "MATCH (sarf:SARF) DETACH DELETE sarf"
@@ -90,16 +93,22 @@ public class SARFRunner {
             ).execute();
             SARFRunner.xoManager.currentTransaction().commit();
         } else if (SARFRunner.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
-            System.err.println("Specified Configuration Iteration must be either 1 or " +
-                    classificationConfigurationRepository.getCurrentConfiguration().getIteration());
+            LOG.error("Specified Configuration Iteration must be either 1 or " +
+                    classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1);
             System.exit(1);
         }
+        xoManager.currentTransaction().begin();
+        LOG.info("Preparing Data Set");
+        xoManager.getRepository(TypeRepository.class).markAllInternalTypes("de.htw");
+        xoManager.currentTransaction().commit();
         SARFRunner.activeClassificationConfiguration.materialize();
         TypeCouplingEnricher.enrich();
+        LOG.info("Setting up Database Successful");
         return factory;
     }
 
     public static void readConfiguration() {
+        LOG.info("Reading XML Configuration");
         try {
             URL schemaUrl = SARFRunner.class.getClassLoader().getResource("schema.xsd");
             URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration.xml");
@@ -108,9 +117,11 @@ public class SARFRunner {
             SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = sf.newSchema(schemaUrl);
             jaxbUnmarshaller.setSchema(schema);
+            LOG.info("Unmarshalling XML Configuration");
             SARFRunner.activeClassificationConfiguration = (ActiveClassificationConfiguration) jaxbUnmarshaller.unmarshal(configUrl);
         } catch (JAXBException | SAXException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         }
+        LOG.info("Unmarshalling XML Configuration Successful");
     }
 }

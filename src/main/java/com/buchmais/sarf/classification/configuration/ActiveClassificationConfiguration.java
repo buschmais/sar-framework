@@ -11,6 +11,8 @@ import com.buchmais.sarf.repository.ComponentRepository;
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,6 +27,8 @@ import java.util.TreeSet;
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @XmlRootElement(name = "Configuration")
 public class ActiveClassificationConfiguration extends ClassificationConfiguration {
+
+    private static final Logger LOG = LogManager.getLogger(ActiveClassificationConfiguration.class);
 
     private static ActiveClassificationConfiguration instance;
 
@@ -72,6 +76,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
     }
 
     public void execute() {
+        LOG.info("Executing Classification");
         Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
             int res = 0;
             if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
@@ -82,7 +87,6 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         for (ClassificationCriterion cC : this.classificationCriteria) {
             Set<ComponentDescriptor> res = cC.classify(this.iteration);
             SARFRunner.xoManager.currentTransaction().begin();
-            res.forEach(c -> System.out.println(c.getShape() + " " + c.getName()));
             components.addAll(res);
             SARFRunner.xoManager.currentTransaction().commit();
         }

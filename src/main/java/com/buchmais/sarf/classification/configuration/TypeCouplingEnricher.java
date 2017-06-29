@@ -4,7 +4,8 @@ import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.repository.MetricRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import sun.awt.windows.WEmbeddedFrame;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -14,7 +15,10 @@ import java.util.TreeSet;
  */
 public class TypeCouplingEnricher {
 
+    private static final Logger LOG = LogManager.getLogger(TypeCouplingEnricher.class);
+
     public static void enrich() {
+        LOG.info("Computing Coupling between Types");
         SARFRunner.xoManager.currentTransaction().begin();
         Set<String> orderedCoupling = new TreeSet<>();
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
@@ -29,7 +33,7 @@ public class TypeCouplingEnricher {
                 orderedCoupling.add(coupling + " " + t1.getFullQualifiedName()+ " " + t2.getFullQualifiedName());
             }
         }
-        orderedCoupling.forEach(System.out::println);
+        orderedCoupling.forEach(c -> LOG.debug("Coupling: " + c));
         SARFRunner.xoManager.currentTransaction().commit();
     }
 
