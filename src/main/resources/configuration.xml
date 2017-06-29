@@ -1,151 +1,97 @@
 <Configuration iteration="1">
-    <ClassificationCriteria>
-        <NamingConventionCriterion weight="100">
+    <Component shape="Layer" name="DataLayer">
+        <Rules>
+            <Dependency rule="javax\.persistence.*" weight="50"/>
+            <Dependency rule="org\.hibernate.*" weight="50"/>
+            <Dependency rule="org\.springframework\.data.*" weight="50"/>
+            <Name rule=".*Repository" weight="100"/>
+        </Rules>
+        <Dependencies>
+            <DependsOn shape="Layer" name="DomainLayer" allowed="true"/>
+            <DependsOn shape="Layer" name="DataLayer" allowed="true"/>
+        </Dependencies>
+    </Component>
+    <Component shape="Layer" name="DomainLayer">
+        <Rules>
+            <Dependency rule="javax\.mail.*" weight="80"/>
+            <Dependency rule="org\.apache\.velocity.*" weight="100"/>
+            <Dependency rule="org\.springframework\.mail.*" weight="100"/>
+            <Dependency rule="org\.springframework\.stereotype\.Service.*" weight="80" type="annotation"/>
+            <Implements rule="org\.springframework\.stereotype\.Service.*" weight="80" />
+            <AnnotatedBy rule="org\.springframework\.stereotype\.Service.*" weight="80" />
+            <Name rule=".*MailSender" weight="100"/>
+            <Name rule=".*Service" weight="100"/>
+            <Name rule=".*ServiceImpl" weight="100"/>
+        </Rules>
+        <Dependencies>
+            <DependsOn shape="Layer" name="DomainLayer" allowed="false"/>
+            <DependsOn shape="Layer" name="DataLayer" allowed="true"/>
+        </Dependencies>
+    </Component>
+    <Component shape="Layer" name="PresentationLayer">
+        <Rules>
+            <Dependency rule="com\.github\.dandelion.*" weight="50"/>
+            <Dependency rule="javax\.servlet.*" weight="80"/>
+            <Dependency rule="org\.springframework\.stereotype\.Controller.*" weight="100"/>
+            <Name rule=".*Controller" weight="100"/>
+            <Name rule=".*Form" weight="100"/>
+        </Rules>
+        <Dependencies>
+            <DependsOn shape="Layer" name="PresentationLayer" allowed="false"/>
+            <DependsOn shape="Layer" name="DomainLayer" allowed="false"/>
+        </Dependencies>
+    </Component>
+    <Component shape="Module" name="Index">
+        <Rules>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.index.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="KeycardAdministration">
+        <Rules>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.keycard.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="NewsAdministration">
+        <Rules>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.news.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="TrainingAdministration">
+        <Rules>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.training.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="UserAdministration">
+        <Rules>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.user.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="Infrastructure">
+        <Component shape="Component" name="IConfiguration">
             <Rules>
-                <Pattern
-                        shape="Layer"
-                        name="DataLayer"
-                        regEx=".*Repository"
-                        weight="100"/>
-                <Pattern
-                        shape="Layer"
-                        name="DomainLayer"
-                        regEx=".*MailSender"
-                        weight="100"/>
-                <Pattern
-                        shape="Layer"
-                        name="DomainLayer"
-                        regEx=".*Service"
-                        weight="100"/>
-                <Pattern
-                        shape="Layer"
-                        name="DomainLayer"
-                        regEx=".*ServiceImpl"
-                        weight="100"/>
-                <Pattern
-                        shape="Layer"
-                        name="PresentationLayer"
-                        regEx=".*Controller"
-                        weight="100"/>
-                <Pattern
-                        shape="Layer"
-                        name="PresentationLayer"
-                        regEx=".*Form"
-                        weight="100"/>
+                <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.configuration.*"
+                         weight="100"/>
             </Rules>
-        </NamingConventionCriterion>
-        <PackageNamingCriterion weight="100">
+        </Component>
+        <Component shape="Component" name="ISecurity">
             <Rules>
-                <Pattern
-                        shape="Module"
-                        name="Index"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.index.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="KeycardAdministration"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.keycard.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="NewsAdministration"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.news.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="TrainingAdministration"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.training.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="UserAdministration"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.user.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="IConfiguration"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.configuration.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="ISecurity"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.security.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="IUtil"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.util.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="IValidation"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.validation.*"
-                        weight="100"/>
-                <Pattern
-                        shape="Module"
-                        name="IView"
-                        regEx="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.view.*"
-                        weight="100"/>
+                <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.security.*" weight="100"/>
             </Rules>
-        </PackageNamingCriterion>
-        <DependencyCriterion weight="100">
+        </Component>
+        <Component shape="Component" name="IUtil">
             <Rules>
-                <Dependency
-                        shape="Layer"
-                        name="DataLayer"
-                        dependency="javax\.persistence.*"
-                        weight="50"/>
-                <Dependency
-                        shape="Layer"
-                        name="DataLayer"
-                        dependency="org\.hibernate.*"
-                        weight="50"/>
-                <Dependency
-                        shape="Layer"
-                        name="DataLayer"
-                        dependency="org\.springframework\.data.*"
-                        weight="50"/>
-                <Dependency
-                        shape="Layer"
-                        name="DomainLayer"
-                        dependency="javax\.mail.*"
-                        weight="80"/>
-                <Dependency
-                        shape="Layer"
-                        name="DomainLayer"
-                        dependency="org\.apache\.velocity.*"
-                        weight="100"/>
-                <Dependency
-                        shape="Layer"
-                        name="DomainLayer"
-                        dependency="org\.springframework\.mail.*"
-                        weight="100"/>
-                <Dependency
-                        shape="Layer"
-                        name="DomainLayer"
-                        dependency="org\.springframework\.stereotype\.Service.*"
-                        weight="80"/>
-                <Dependency
-                        shape="Layer"
-                        name="PresentationLayer"
-                        dependency="com\.github\.dandelion.*"
-                        weight="50"/>
-                <Dependency
-                        shape="Layer"
-                        name="PresentationLayer"
-                        dependency="javax\.servlet.*"
-                        weight="80"/>
-                <Dependency
-                        shape="Layer"
-                        name="PresentationLayer"
-                        dependency="org\.springframework\.stereotype\.Controller.*"
-                        weight="100"/>
-                <Dependency
-                        shape="Layer"
-                        name="PresentationLayer"
-                        dependency="org\.springframework\.web.*"
-                        weight="100"/>
+                <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.util.*" weight="100"/>
             </Rules>
-        </DependencyCriterion>
-    </ClassificationCriteria>
+        </Component>
+        <Component shape="Component" name="IValidation">
+            <Rules>
+                <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.validation.*" weight="100"/>
+            </Rules>
+        </Component>
+        <Component shape="Component" name="IView">
+            <Rules>
+                <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.infrastructure\.view.*" weight="100"/>
+            </Rules>
+        </Component>
+    </Component>
 </Configuration>

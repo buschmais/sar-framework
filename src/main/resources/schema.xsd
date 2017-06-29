@@ -1,24 +1,20 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    <xs:element name="Pattern">
-        <xs:complexType>
-            <xs:simpleContent>
-                <xs:extension base="xs:string">
-                    <xs:attribute type="xs:string" name="shape" use="optional"/>
-                    <xs:attribute type="xs:string" name="name" use="optional"/>
-                    <xs:attribute type="xs:string" name="regEx" use="optional"/>
-                    <xs:attribute type="xs:integer" name="weight" use="optional"/>
-                </xs:extension>
-            </xs:simpleContent>
-        </xs:complexType>
-    </xs:element>
     <xs:element name="Dependency">
         <xs:complexType>
             <xs:simpleContent>
                 <xs:extension base="xs:string">
-                    <xs:attribute type="xs:string" name="shape" use="optional"/>
-                    <xs:attribute type="xs:string" name="name" use="optional"/>
-                    <xs:attribute type="xs:string" name="dependency" use="optional"/>
-                    <xs:attribute type="xs:integer" name="weight" use="optional"/>
+                    <xs:attribute type="xs:string" name="rule" use="required"/>
+                    <xs:attribute type="xs:byte" name="weight" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Name">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="rule" use="required"/>
+                    <xs:attribute type="xs:byte" name="weight" use="optional"/>
                 </xs:extension>
             </xs:simpleContent>
         </xs:complexType>
@@ -26,52 +22,38 @@
     <xs:element name="Rules">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="Pattern" maxOccurs="unbounded" minOccurs="0"/>
                 <xs:element ref="Dependency" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Name" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Package" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
-    <xs:element name="NamingConventionCriterion">
+    <xs:element name="Package">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="Rules"/>
-            </xs:sequence>
-            <xs:attribute type="xs:integer" name="weight"/>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="rule" use="required"/>
+                    <xs:attribute type="xs:byte" name="weight" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
         </xs:complexType>
     </xs:element>
-    <xs:element name="PackageNamingCriterion">
+    <xs:element name="Component">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="Rules"/>
+                <xs:element ref="Rules" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Component" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
-            <xs:attribute type="xs:integer" name="weight"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="DependencyCriterion">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="Rules"/>
-            </xs:sequence>
-            <xs:attribute type="xs:integer" name="weight"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="ClassificationCriteria">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:choice maxOccurs="unbounded">
-                    <xs:element ref="NamingConventionCriterion"/>
-                    <xs:element ref="PackageNamingCriterion"/>
-                    <xs:element ref="DependencyCriterion"/>
-                </xs:choice>
-            </xs:sequence>
+            <xs:attribute type="xs:string" name="shape" use="optional"/>
+            <xs:attribute type="xs:string" name="name" use="optional"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="Configuration">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="ClassificationCriteria"/>
+                <xs:element ref="Component" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
-            <xs:attribute type="xs:integer" name="iteration"/>
+            <xs:attribute type="xs:byte" name="iteration"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>
