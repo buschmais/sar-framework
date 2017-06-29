@@ -3,7 +3,7 @@ package com.buchmais.sarf;
 import com.buchmais.sarf.classification.configuration.ActiveClassificationConfiguration;
 import com.buchmais.sarf.classification.configuration.ConfigurationHistory;
 import com.buchmais.sarf.classification.configuration.TypeCouplingEnricher;
-import com.buchmais.sarf.classification.criterion.evolution.SomeClass;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.SomeClass;
 import com.buchmais.sarf.node.*;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;

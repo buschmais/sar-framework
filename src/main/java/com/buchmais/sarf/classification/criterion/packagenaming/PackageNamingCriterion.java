@@ -1,7 +1,8 @@
-package com.buchmais.sarf.classification.criterion;
+package com.buchmais.sarf.classification.criterion.packagenaming;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Pattern;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
 import com.buchmais.sarf.node.PackageNamingCriterionDescriptor;
 import com.buchmais.sarf.node.PatternDescriptor;
 import lombok.AccessLevel;
@@ -22,7 +23,7 @@ public class PackageNamingCriterion extends RuleBasedCriterion<Pattern, PackageN
     }
 
     @Override
-    PackageNamingCriterionDescriptor instantiateDescriptor() {
+    protected PackageNamingCriterionDescriptor instantiateDescriptor() {
         return SARFRunner.xoManager.create(PackageNamingCriterionDescriptor.class);
     }
 /*

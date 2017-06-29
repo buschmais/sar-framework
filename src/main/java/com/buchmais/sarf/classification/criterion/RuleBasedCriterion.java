@@ -1,9 +1,8 @@
 package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.Dependency;
+import com.buchmais.sarf.classification.criterion.dependency.DependencyRule;
 import com.buchmais.sarf.classification.Pattern;
-import com.buchmais.sarf.classification.Rule;
 import com.buchmais.sarf.node.*;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import lombok.AccessLevel;
@@ -13,7 +12,6 @@ import lombok.Setter;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -28,7 +26,7 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
     @XmlElements(
             {
                     @XmlElement(name = "Pattern", type = Pattern.class),
-                    @XmlElement(name = "Dependency", type = Dependency.class)
+                    @XmlElement(name = "Dependency", type = DependencyRule.class)
             }
     )
     @Setter

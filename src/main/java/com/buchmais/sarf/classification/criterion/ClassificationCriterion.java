@@ -42,7 +42,7 @@ public abstract class ClassificationCriterion<T extends ClassificationCriterionD
         return res;
     }
 
-    abstract T instantiateDescriptor();
+    protected abstract T instantiateDescriptor();
 
     public abstract ClassificationCriterionDescriptor materialize();
 }

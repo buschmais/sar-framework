@@ -1,6 +1,7 @@
-package com.buchmais.sarf.classification;
+package com.buchmais.sarf.classification.criterion.dependency;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.criterion.Rule;
 import com.buchmais.sarf.node.DependencyDescriptor;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
@@ -8,10 +9,8 @@ import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Comparator;
 import java.util.Set;
@@ -23,9 +22,9 @@ import java.util.TreeSet;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @XmlRootElement(name = "Dependency")
-public class Dependency extends Rule<DependencyDescriptor> {
+public class DependencyRule extends Rule<DependencyDescriptor> {
 
-    public Dependency(String shape, String name, double weight, String rule) {
+    public DependencyRule(String shape, String name, double weight, String rule) {
         super(shape, name, weight, rule);
     }
 
@@ -43,14 +42,14 @@ public class Dependency extends Rule<DependencyDescriptor> {
     }
 
     @Override
-    DependencyDescriptor instantiateDescriptor() {
+    protected DependencyDescriptor instantiateDescriptor() {
         return SARFRunner.xoManager.create(DependencyDescriptor.class);
     }
 
-    public static Dependency of(DependencyDescriptor dependencyDescriptor) {
-        Dependency dependency = new Dependency(
+    public static DependencyRule of(DependencyDescriptor dependencyDescriptor) {
+        DependencyRule dependencyRule = new DependencyRule(
                 dependencyDescriptor.getShape(), dependencyDescriptor.getName(), dependencyDescriptor.getWeight(), dependencyDescriptor.getRule());
-        dependency.descriptor = dependencyDescriptor;
-        return dependency;
+        dependencyRule.descriptor = dependencyDescriptor;
+        return dependencyRule;
     }
 }

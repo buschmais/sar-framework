@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.evolution;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import org.jenetics.*;
 

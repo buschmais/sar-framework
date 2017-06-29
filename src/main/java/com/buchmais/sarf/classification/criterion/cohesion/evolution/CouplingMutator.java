@@ -1,12 +1,10 @@
-package com.buchmais.sarf.classification.criterion.evolution;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.repository.MetricRepository;
-import com.google.common.primitives.Ints;
 import org.jenetics.LongGene;
 import org.jenetics.Mutator;
 import org.jenetics.util.MSeq;
-import org.jenetics.util.Random64;
 import org.jenetics.util.RandomRegistry;
 
 import java.util.Objects;

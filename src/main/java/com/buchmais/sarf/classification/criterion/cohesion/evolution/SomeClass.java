@@ -1,7 +1,6 @@
-package com.buchmais.sarf.classification.criterion.evolution;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.repository.MetricRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.google.common.collect.Sets;
@@ -10,7 +9,6 @@ import org.jenetics.engine.Engine;
 import org.jenetics.engine.EvolutionResult;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * @author Stephan Pirnbaum

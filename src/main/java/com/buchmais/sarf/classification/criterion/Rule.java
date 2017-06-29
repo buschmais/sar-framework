@@ -1,8 +1,8 @@
-package com.buchmais.sarf.classification;
+package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.node.ComponentDescriptor;
-import com.buchmais.sarf.node.PatternDescriptor;
 import com.buchmais.sarf.node.RuleDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
@@ -36,9 +36,10 @@ public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>
 
     @Getter
     @XmlAttribute(name = "rule")
+    protected
     String rule;
 
-    T descriptor;
+    protected T descriptor;
 
     public Rule(String shape, String name, double weight, String rule) {
         this.shape = shape;
@@ -80,7 +81,7 @@ public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>
         return descriptor;
     }
 
-    abstract T instantiateDescriptor();
+    protected abstract T instantiateDescriptor();
 
     public int compareTo(Rule o) {
         if (!shape.equals(o.getShape())) return shape.compareTo(o.getShape());
