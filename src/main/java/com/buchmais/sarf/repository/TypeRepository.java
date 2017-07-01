@@ -22,8 +22,8 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "SET" +
             "  t:Internal " +
             "RETURN" +
-            "  t")
-    Result<TypeDescriptor> markAllInternalTypes(@Parameter("basePackage") String basePackage);
+            "  count(t)")
+    Long markAllInternalTypes(@Parameter("basePackage") String basePackage);
 
     @ResultOf
     @Cypher("MATCH" +
@@ -70,4 +70,13 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "RETURN" +
             "  DISTINCT d")
     Result<TypeDescriptor> getInternalDependencies(@Parameter("t") Long t);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (p:Package)-[:CONTAINS]->(t:Type) " +
+            "WHERE" +
+            "  ID(t) = {t} " +
+            "RETURN" +
+            "  p.fqn")
+    String getPackageName(@Parameter("t") Long t);
 }

@@ -26,6 +26,7 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
     protected int mutate(MSeq<LongGene> genes, double p) {
         int mutated = 0;
         long[] componentIds = genes.stream().mapToLong(i -> i.getAllele()).distinct().toArray();
+        SARFRunner.xoManager.currentTransaction().begin();
         for (int i = 0; i < genes.size(); i++) {
             if (RandomRegistry.getRandom().nextDouble() < p) {
                 // mutate gene
@@ -48,6 +49,7 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
                 }
             }
         }
+        SARFRunner.xoManager.currentTransaction().commit();
         return mutated;
     }
 

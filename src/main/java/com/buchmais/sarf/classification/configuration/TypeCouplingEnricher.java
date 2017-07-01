@@ -4,6 +4,7 @@ import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.repository.MetricRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import com.buschmais.xo.api.Query.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,15 +23,20 @@ public class TypeCouplingEnricher {
         SARFRunner.xoManager.currentTransaction().begin();
         Set<String> orderedCoupling = new TreeSet<>();
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        for (TypeDescriptor t1 : SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
-            final Long id1 = SARFRunner.xoManager.getId(t1);
-            for (TypeDescriptor t2 : SARFRunner.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
-                final Long id2 = SARFRunner.xoManager.getId(t2);
-                Double coupling = computeCoupling(id1, id2);
-                if (coupling > 0) {
-                    mR.setCoupling(id1, id2, coupling);
+        try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes())
+        {
+            for (TypeDescriptor t1 : descriptors) {
+                final Long id1 = SARFRunner.xoManager.getId(t1);
+                try (Result<TypeDescriptor> dependencies = SARFRunner.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
+                    for (TypeDescriptor t2 : dependencies) {
+                        final Long id2 = SARFRunner.xoManager.getId(t2);
+                        Double coupling = computeCoupling(id1, id2);
+                        if (coupling > 0) {
+                            mR.setCoupling(id1, id2, coupling);
+                        }
+                        orderedCoupling.add(coupling + " " + t1.getFullQualifiedName() + " " + t2.getFullQualifiedName());
+                    }
                 }
-                orderedCoupling.add(coupling + " " + t1.getFullQualifiedName()+ " " + t2.getFullQualifiedName());
             }
         }
         orderedCoupling.forEach(c -> LOG.debug("Coupling: " + c));

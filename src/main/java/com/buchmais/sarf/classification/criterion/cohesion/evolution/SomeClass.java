@@ -3,6 +3,7 @@ package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import com.buschmais.xo.api.Query.Result;
 import com.google.common.collect.Sets;
 import org.jenetics.*;
 import org.jenetics.engine.Engine;
@@ -15,35 +16,35 @@ import java.util.*;
  */
 public class SomeClass {
 
-    static List<TypeDescriptor> types;
-
     static Genotype<LongGene> best;
     static Double bestFitness;
 
     protected static long[] ids;
 
     public SomeClass() {
-        types = new ArrayList<>();
         SARFRunner.xoManager.currentTransaction().begin();
-        for (TypeDescriptor t : SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
-            types.add(t);
+        List<TypeDescriptor> types = new ArrayList<>();
+        try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
+            for (TypeDescriptor t : descriptors) {
+                types.add(t);
+            }
         }
         ids = types.stream().mapToLong(t -> SARFRunner.xoManager.getId(t)).sorted().toArray();
         SARFRunner.xoManager.currentTransaction().commit();
     }
 
     public void someMethod() {
-        SARFRunner.xoManager.currentTransaction().begin();
-        int maximumNumberOfComponents = types.size();
+        int maximumNumberOfComponents = ids.length;
         Genotype<LongGene> genotype = packageStructureToGenotype();
         final Engine<LongGene, Double> engine = Engine
                 .builder(SomeClass::computeFitnessValue, genotype)
                 .offspringFraction(0.7)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
-                .populationSize(15)
+                .populationSize(25)
                 .fitnessScaler(f -> Math.pow(f, 5))
-                .alterers(new CouplingMutator(0.3), new GaussianMutator<>(0.01), new MultiPointCrossover<>(0.8))
+                .alterers(new CouplingMutator(0.3), new GaussianMutator<>(0.1), new MultiPointCrossover<>(0.8))
+                .executor(Runnable::run)
                 .build();
         System.out.println("\n\n\n Starting Evolution \n\n\n");
 
@@ -51,10 +52,11 @@ public class SomeClass {
 
         engine
                 .stream()
-                .limit(150)
+                .limit(1000)
                 .peek(SomeClass::update)
                 .collect(EvolutionResult.toBestGenotype());
         // print result
+        SARFRunner.xoManager.currentTransaction().begin();
         Map<Long, Set<String>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < best.getChromosome().length(); i++) {
             identifiedComponents.merge(
@@ -71,16 +73,18 @@ public class SomeClass {
                 System.out.println("\t" + s);
             }
         }
+        SARFRunner.xoManager.currentTransaction().close();
     }
 
     private Genotype<LongGene> packageStructureToGenotype() {
         // Package name to type ids
         Map<String, Set<Long>> packageComponents = new HashMap<>();
-        for (TypeDescriptor t : types) {
-            String packageName = t.getFullQualifiedName().substring(0, t.getFullQualifiedName().lastIndexOf("."));
+        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        for (Long id : ids) {
+            String packageName = typeRepository.getPackageName(id);
             packageComponents.merge(
                     packageName,
-                    Sets.newHashSet((Long) SARFRunner.xoManager.getId(t)),
+                    Sets.newHashSet(id),
                     (s1, s2) -> {
                         s1.addAll(s2);
                         return s1;

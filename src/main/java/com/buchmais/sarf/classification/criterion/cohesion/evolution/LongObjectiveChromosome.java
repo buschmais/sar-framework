@@ -54,6 +54,7 @@ public class LongObjectiveChromosome extends LongChromosome {
                         return s1;
                     });
         }
+        SARFRunner.xoManager.currentTransaction().begin();
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         // compute fitness for intra-edge coupling (cohesiveness of components)
         for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
@@ -73,6 +74,7 @@ public class LongObjectiveChromosome extends LongChromosome {
                 }
             }
         }
+        SARFRunner.xoManager.currentTransaction().commit();
         // minimize the difference between min and max component size
         this.componentRangeObjective = identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
                 identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0);
@@ -81,6 +83,7 @@ public class LongObjectiveChromosome extends LongChromosome {
         // maximize component number
         this.componentCountObjective = identifiedComponents.size();
         this.evaluated = true;
+
     }
 
     protected Double getCohesionObjective() {
