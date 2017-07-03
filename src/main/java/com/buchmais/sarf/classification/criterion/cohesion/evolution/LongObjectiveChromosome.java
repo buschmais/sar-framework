@@ -48,7 +48,7 @@ public class LongObjectiveChromosome extends LongChromosome {
         for (int i = 0; i < this.length(); i++) {
             identifiedComponents.merge(
                     this.getGene(i).getAllele(),
-                    Sets.newHashSet(SomeClass.ids[i]),
+                    Sets.newHashSet(Partitioner.ids[i]),
                     (s1, s2) -> {
                         s1.addAll(s2);
                         return s1;

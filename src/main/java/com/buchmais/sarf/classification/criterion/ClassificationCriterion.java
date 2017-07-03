@@ -11,10 +11,10 @@ import java.util.Set;
 /**
  * @author Stephan Pirnbaum
  */
-@NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 public abstract class ClassificationCriterion<T extends ClassificationCriterionDescriptor> implements Comparable<ClassificationCriterion>, Materializable<ClassificationCriterionDescriptor> {
 
-    T classificationCriterionDescriptor;
+    protected T classificationCriterionDescriptor;
 
     public abstract Set<ComponentDescriptor> classify(Integer iteration);
 

@@ -1,27 +1,32 @@
 package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import org.jenetics.*;
 import org.jenetics.engine.Engine;
 import org.jenetics.engine.EvolutionResult;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Stephan Pirnbaum
  */
-public class SomeClass {
+public class Partitioner {
 
     static Genotype<LongGene> best;
     static Double bestFitness;
 
-    protected static long[] ids;
+    static long[] ids;
 
-    public SomeClass() {
+    public Partitioner() {
         SARFRunner.xoManager.currentTransaction().begin();
         List<TypeDescriptor> types = new ArrayList<>();
         try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
@@ -33,11 +38,17 @@ public class SomeClass {
         SARFRunner.xoManager.currentTransaction().commit();
     }
 
-    public void someMethod() {
-        int maximumNumberOfComponents = ids.length;
-        Genotype<LongGene> genotype = packageStructureToGenotype();
+    public Map<Long, Set<Long>> partition(Set<ComponentDescriptor> initialPartitioning) {
+        Partitioner.best = null;
+        Partitioner.bestFitness = Double.MIN_VALUE;
+        Genotype<LongGene> genotype;
+        if (initialPartitioning == null || initialPartitioning.size() == 0) {
+            genotype = packageStructureToGenotype();
+        } else {
+            genotype = componentStructureToGenotype(initialPartitioning);
+        }
         final Engine<LongGene, Double> engine = Engine
-                .builder(SomeClass::computeFitnessValue, genotype)
+                .builder(Partitioner::computeFitnessValue, genotype)
                 .offspringFraction(0.7)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
@@ -52,28 +63,74 @@ public class SomeClass {
 
         engine
                 .stream()
-                .limit(1000)
-                .peek(SomeClass::update)
+                .limit(150)
+                .peek(Partitioner::update)
                 .collect(EvolutionResult.toBestGenotype());
         // print result
         SARFRunner.xoManager.currentTransaction().begin();
-        Map<Long, Set<String>> identifiedComponents = new HashMap<>();
+        Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < best.getChromosome().length(); i++) {
             identifiedComponents.merge(
                     best.getChromosome().getGene(i).getAllele(),
-                    Sets.newHashSet(SARFRunner.xoManager.findById(TypeDescriptor.class, ids[i]).getFullQualifiedName()),
+                    Sets.newHashSet(ids[i]),
                     (s1, s2) -> {
                         s1.addAll(s2);
                         return s1;
                     });
         }
-        for (Map.Entry<Long, Set<String>> component : identifiedComponents.entrySet()) {
-            System.out.println("Component " + component.getKey());
-            for (String s : component.getValue()) {
-                System.out.println("\t" + s);
+        SARFRunner.xoManager.currentTransaction().close();
+        return identifiedComponents;
+    }
+
+    private Genotype<LongGene> componentStructureToGenotype(Set<ComponentDescriptor> components) {
+        Map<Long, Set<Long>> componentMappings = new HashMap<>();
+        SARFRunner.xoManager.currentTransaction().begin();
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        // Type ID -> Component IDs
+        Map<Long, Set<Long>> typeToComponents = new HashMap<>();
+        Set<String> shapes = components.stream().map(ComponentDescriptor::getShape).collect(Collectors.toSet());
+        for (Long typeId : ids) {
+            for (String shape : shapes) {
+                Long bestCId = componentRepository.getBestComponentForShape(components.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray(),
+                        shape, typeId);
+                if (bestCId != null) {
+                    typeToComponents.merge(
+                            typeId,
+                            Sets.newHashSet(bestCId),
+                            (c1, c2) -> {
+                                c1.addAll(c2);
+                                return c1;
+                            }
+                    );
+                }
             }
         }
-        SARFRunner.xoManager.currentTransaction().close();
+        ArrayListMultimap<Set<Long>, Long> inverse = Multimaps.invertFrom(Multimaps.forMap(typeToComponents), ArrayListMultimap.create());
+        Long componentId = 0L;
+        for (Set<Long> componentIds : inverse.keys().elementSet()) {
+            componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
+            componentId++;
+        }
+        SARFRunner.xoManager.currentTransaction().commit();
+        List<LongGene> genes = new LinkedList<>();
+        for (Long id : ids) {
+            int compId = 0;
+            boolean found = false;
+            for (Map.Entry<Long, Set<Long>> entry : componentMappings.entrySet()) {
+                if (entry.getValue().contains(id)) {
+                    genes.add(LongGene.of(compId, 0, ids.length / 2));
+                    found = true;
+                }
+                compId++;
+            }
+            if (!found) {
+                genes.add(LongGene.of(compId, 0, ids.length / 2));
+            }
+        }
+        Chromosome<LongGene> chromosome = LongObjectiveChromosome.of(genes.toArray(new LongGene[genes.size()]));
+        System.out.println(chromosome);
+        System.out.println(computeFitnessValue(Genotype.of(chromosome)));
+        return Genotype.of(chromosome);
     }
 
     private Genotype<LongGene> packageStructureToGenotype() {
@@ -95,7 +152,8 @@ public class SomeClass {
             int componentId = 0;
             for (Map.Entry<String, Set<Long>> entry : packageComponents.entrySet()) {
                 if (entry.getValue().contains(id)) {
-                    genes.add(LongGene.of(componentId, 0, 45));
+                    genes.add(LongGene.of(componentId, 0, ids.length / 2));
+                    break;
                 }
                 componentId++;
             }

@@ -3,7 +3,7 @@ package com.buchmais.sarf;
 import com.buchmais.sarf.classification.configuration.ActiveClassificationConfiguration;
 import com.buchmais.sarf.classification.configuration.ConfigurationHistory;
 import com.buchmais.sarf.classification.configuration.TypeCouplingEnricher;
-import com.buchmais.sarf.classification.criterion.cohesion.evolution.SomeClass;
+import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
 import com.buchmais.sarf.node.*;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
@@ -47,9 +47,7 @@ public class SARFRunner {
     public static void main(String[] args) throws URISyntaxException {
         readConfiguration();
         XOManagerFactory factory = setUpDB();
-        //SARFRunner.activeClassificationConfiguration.execute();
-        SomeClass someClass = new SomeClass();
-        someClass.someMethod();
+        SARFRunner.activeClassificationConfiguration.execute();
         factory.close();
     }
 
@@ -77,6 +75,7 @@ public class SARFRunner {
                 .type(MetricRepository.class)
                 .type(RuleBasedCriterionDescriptor.class)
                 .type(RuleDescriptor.class)
+                .type(CohesionCriterionDescriptor.class)
                 .uri(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"))
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
@@ -111,7 +110,7 @@ public class SARFRunner {
         LOG.info("Reading XML Configuration");
         try {
             URL schemaUrl = SARFRunner.class.getClassLoader().getResource("schema.xsd");
-            URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration.xml");
+            URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration_3.xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(ActiveClassificationConfiguration.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -119,6 +118,7 @@ public class SARFRunner {
             jaxbUnmarshaller.setSchema(schema);
             LOG.info("Unmarshalling XML Configuration");
             SARFRunner.activeClassificationConfiguration = (ActiveClassificationConfiguration) jaxbUnmarshaller.unmarshal(configUrl);
+            activeClassificationConfiguration.addClassificationCriterion(new CohesionCriterion());
         } catch (JAXBException | SAXException e) {
             LOG.error(e.getMessage());
         }

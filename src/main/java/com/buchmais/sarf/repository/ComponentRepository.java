@@ -1,5 +1,6 @@
 package com.buchmais.sarf.repository;
 
+import com.buchmais.sarf.node.ClassificationInfoDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.annotation.Repository;
@@ -108,4 +109,39 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
     Long computeComplementCardinality(@Parameter("shape1") String ofShape, @Parameter("name1") String ofName,
                                       @Parameter("shape2") String inShape, @Parameter("name2") String inName,
                                       @Parameter("iteration") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:SARF:Component)<-[:MAPS]-(info:ClassificationInfo) " +
+            "WHERE" +
+            "  ID(c) = {id} " +
+            "RETURN" +
+            "  info")
+    Result<ClassificationInfoDescriptor> getCandidateTypes(@Parameter("id") Long componentId);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:SARF:Component)<-[:MAPS]-(:ClassificationInfo)-[:CLASSIFIES]->(t:Type) " +
+            "WHERE" +
+            "  ID(c) = {cId} AND ID(t) = {tId} " +
+            "RETURN" +
+            "  NOT t IS NULL")
+    boolean isCandidateType(@Parameter("cId") Long componentId, @Parameter("tId") Long typeId);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:SARF:Component{shape:{shape}})<-[:MAPS]-(info:ClassificationInfo)-[:CLASSIFIES]->(t:Type) " +
+            "WHERE" +
+            "  ID(c) IN {ids} AND ID(t) = {tid} " +
+            "WITH" +
+            "  max(info.weight) AS maxWeight " +
+            "MATCH" +
+            "  (c:SARF:Component{shape:{shape}})<-[:MAPS]-(info:ClassificationInfo)-[:CLASSIFIES]->(t:Type) " +
+            "WHERE" +
+            "  ID(c) IN {ids} AND ID(t) = {tid} AND info.weight = maxWeight " +
+            "RETURN" +
+            "  ID(c) " +
+            "LIMIT" +
+            "  1")
+    Long getBestComponentForShape(@Parameter("ids") long[] longs, @Parameter("shape") String shape, @Parameter("tid") Long typeId);
 }

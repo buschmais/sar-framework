@@ -30,8 +30,9 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
         this.rules = new TreeSet<>();
     }
 
-    public boolean addRule(R rule) {
-        return this.rules.add(rule);
+    public RuleBasedCriterion<R, T> addRule(R rule) {
+        this.rules.add(rule);
+        return this;
     }
 
     @Override

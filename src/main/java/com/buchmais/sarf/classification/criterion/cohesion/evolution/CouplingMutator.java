@@ -33,11 +33,11 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
                 Long componentId = genes.get(i).getAllele();
                 // compute coupling to elements in same component
                 long[] typeIds = getIdsInSameComponent(componentId, genes);
-                Double maxCoupling = SARFRunner.xoManager.getRepository(MetricRepository.class).computeCouplingToTypes(SomeClass.ids[i], typeIds);
+                Double maxCoupling = SARFRunner.xoManager.getRepository(MetricRepository.class).computeCouplingToTypes(Partitioner.ids[i], typeIds);
                 Long maxComponent = componentId;
                 // the coupling to another component can be higher, find the component with the highest coupling
                 for (long l : componentIds) {
-                    Double coup = SARFRunner.xoManager.getRepository(MetricRepository.class).computeCouplingToTypes(SomeClass.ids[i], getIdsInSameComponent(l, genes));
+                    Double coup = SARFRunner.xoManager.getRepository(MetricRepository.class).computeCouplingToTypes(Partitioner.ids[i], getIdsInSameComponent(l, genes));
                     if (coup > maxCoupling) {
                         maxCoupling = coup;
                         maxComponent = l;
@@ -56,7 +56,7 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
     private long[] getIdsInSameComponent(Long componentId, MSeq<LongGene> genes) {
         return IntStream.range(0, genes.size())
                 .filter(index -> Objects.equals(genes.get(index).getAllele(), componentId))
-                .mapToLong(index -> SomeClass.ids[index])
+                .mapToLong(index -> Partitioner.ids[index])
                 .toArray();
     }
 }

@@ -4,10 +4,13 @@ import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.classification.criterion.Rule;
 import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
+import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
 import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
+import com.buchmais.sarf.node.ClassificationInfoDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
+import com.buschmais.xo.api.Query.Result;
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -84,13 +87,33 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
             }
             return res;
         });
+        CohesionCriterion cohesionCriterion  = null;
         for (ClassificationCriterion cC : this.classificationCriteria) {
-            Set<ComponentDescriptor> res = cC.classify(this.iteration);
-            SARFRunner.xoManager.currentTransaction().begin();
-            components.addAll(res);
-            SARFRunner.xoManager.currentTransaction().commit();
+            if (!(cC instanceof CohesionCriterion)) {
+                Set<ComponentDescriptor> res = cC.classify(this.iteration);
+                SARFRunner.xoManager.currentTransaction().begin();
+                components.addAll(res);
+                SARFRunner.xoManager.currentTransaction().commit();
+            } else {
+                cohesionCriterion = (CohesionCriterion) cC;
+            }
         }
-        combine(components);
+        //combine(components);
+        if (cohesionCriterion != null) {
+            components = cohesionCriterion.classify(this.iteration, components);
+        }
+        SARFRunner.xoManager.currentTransaction().begin();
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        for (ComponentDescriptor componentDescriptor : components) {
+            System.out.println(componentDescriptor.getShape() + " " + componentDescriptor.getName());
+            Result<ClassificationInfoDescriptor> infos = componentRepository.getCandidateTypes(
+                    SARFRunner.xoManager.getId(componentDescriptor));
+            for (ClassificationInfoDescriptor info : infos) {
+                System.out.println(info.getType().getFullQualifiedName());
+            }
+        }
+        SARFRunner.xoManager.currentTransaction().commit();
+
     }
 
     public void combine(Set<ComponentDescriptor> components) {
@@ -103,7 +126,11 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         for (ComponentDescriptor cD1 : components) {
             for (ComponentDescriptor cD2 : components) {
                 SARFRunner.xoManager.currentTransaction().begin();
-                if (cD1 != cD2 && (cD1.getName().startsWith("#") || cD2.getName().startsWith("#"))) {
+                if (cD1 != cD2 && (cD1.getShape().equals(cD2.getShape()))) {
+
+
+
+
                     System.out.println(cD1.getShape() + " " + cD1.getName() + " With: " + cD2.getShape() + " " + cD2.getName());
                     double jaccard = componentRepository.computeJaccardSimilarity(
                             cD1.getShape(), cD1.getName(),
@@ -136,7 +163,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         Map<Class<? extends RuleBasedCriterion>, RuleBasedCriterion> criteriaMapping = new HashMap<>();
         for (Rule<?> r : rules) {
             try {
-                criteriaMapping.merge(r.getAssociateCriterion(), r.getAssociateCriterion().newInstance(), (c1, c2) -> {
+                criteriaMapping.merge(r.getAssociateCriterion(), r.getAssociateCriterion().newInstance().addRule(r), (c1, c2) -> {
                     c1.addRule(r);
                     return c1;
                 });
