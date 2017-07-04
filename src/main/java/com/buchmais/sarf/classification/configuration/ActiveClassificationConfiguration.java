@@ -10,7 +10,11 @@ import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ClassificationInfoDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
+import com.buchmais.sarf.repository.TypeRepository;
+import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -19,10 +23,8 @@ import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Stephan Pirnbaum
@@ -98,10 +100,12 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 cohesionCriterion = (CohesionCriterion) cC;
             }
         }
+        removeAmbiguities(components);
         //combine(components);
         if (cohesionCriterion != null) {
             components = cohesionCriterion.classify(this.iteration, components);
         }
+        //finalize(components);
         SARFRunner.xoManager.currentTransaction().begin();
         ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
         for (ComponentDescriptor componentDescriptor : components) {
@@ -114,6 +118,83 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         SARFRunner.xoManager.currentTransaction().commit();
 
+    }
+
+    private void removeAmbiguities(Set<ComponentDescriptor> components) {
+        LOG.info("Removing Ambiguities from Pre-Partitioning");
+        SARFRunner.xoManager.currentTransaction().begin();
+        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        int removed = 0;
+        for (ComponentDescriptor component1 : components) {
+            Long id1 = SARFRunner.xoManager.getId(component1);
+            for (ComponentDescriptor component2 : components) {
+                Long id2 = SARFRunner.xoManager.getId(component2);
+                if (component1.getShape().equals(component2.getShape()) && !component1.getName().equals(component2.getName())) {
+                    Result<TypeDescriptor> types = typeRepository.getTypesPreAssignedTo(id1, id2, this.iteration);
+                    for (TypeDescriptor type : types) {
+                        Double weightC1 = typeRepository.getAssignmentWeight(SARFRunner.xoManager.getId(type), id1, this.iteration);
+                        Double weightC2 = typeRepository.getAssignmentWeight(SARFRunner.xoManager.getId(type), id2, this.iteration);
+                        if (weightC1 - weightC2 < 1 || weightC2 - weightC1 > 1) { // TODO: 04.07.2017 change threshold for productive usage
+                            LOG.info("\tDetected Ambiguity:");
+                            LOG.info("\t\tFQN: " + type.getFullQualifiedName());
+                            LOG.info("\t\tComponent 1: " + component1.getShape() + " - " + component1.getName() + " Weight: " + weightC1);
+                            LOG.info("\t\tComponent 2: " + component2.getShape() + " - " + component2.getName() + " Weight: " + weightC2);
+                            LOG.info("\t\tRemoving Assignment to: " + (weightC1 < weightC2 ? component1.getShape() + " - " + component1.getName()
+                                                                                              : component2.getShape() + " - " + component2.getName()));
+                        }
+                        if (weightC1 < weightC2) {
+                            typeRepository.removeAssignment(SARFRunner.xoManager.getId(type), id1, this.iteration);
+                        } else {
+                            typeRepository.removeAssignment(SARFRunner.xoManager.getId(type), id2, this.iteration);
+                        }
+                        removed++;
+                    }
+                    types.close();
+                }
+            }
+        }
+        SARFRunner.xoManager.currentTransaction().commit();
+        LOG.info("\tRemoved " + removed + " Assignments");
+    }
+
+    private void createCrosscuttingComponents(Set<ComponentDescriptor> components) {
+        Map<Long, Set<Long>> componentMappings = new HashMap<>();
+        SARFRunner.xoManager.currentTransaction().begin();
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        // Type ID -> Component IDs
+        Map<Long, Set<Long>> typeToComponents = new HashMap<>();
+        Set<String> shapes = components.stream().map(ComponentDescriptor::getShape).collect(Collectors.toSet());
+        List<TypeDescriptor> types = new ArrayList<>(); // TODO: 03.07.2017 REMOVE!!! all of this
+        try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
+            for (TypeDescriptor t : descriptors) {
+                types.add(t);
+            }
+        }
+        long[] ids = types.stream().mapToLong(t -> SARFRunner.xoManager.getId(t)).sorted().toArray();
+        for (Long typeId : ids) { // TODO: 03.07.2017 replace usage
+            for (String shape : shapes) {
+                Long bestCId = componentRepository.getBestComponentForShape(components.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray(),
+                        shape, typeId);
+                if (bestCId != null) {
+                    typeToComponents.merge(
+                            typeId,
+                            Sets.newHashSet(bestCId),
+                            (c1, c2) -> {
+                                c1.addAll(c2);
+                                return c1;
+                            }
+                    );
+                }
+            }
+        }
+        ArrayListMultimap<Set<Long>, Long> inverse = Multimaps.invertFrom(Multimaps.forMap(typeToComponents), ArrayListMultimap.create());
+        Long componentId = 0L;
+        for (Set<Long> componentIds : inverse.keys().elementSet()) {
+            componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
+            componentId++;
+        }
+        System.out.println("Identified Components: " + componentMappings.size());
+        SARFRunner.xoManager.currentTransaction().commit();
     }
 
     public void combine(Set<ComponentDescriptor> components) {
