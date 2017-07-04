@@ -6,6 +6,7 @@
             <Dependency rule="org\.springframework\.data.*" weight="50"/>
             <Name rule=".*Repository" weight="100"/>
             <Name rule=".*View" weight="100"/>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.model.*" weight="100"/>
         </Rules>
     </Component>
     <Component shape="Layer" name="DomainLayer">

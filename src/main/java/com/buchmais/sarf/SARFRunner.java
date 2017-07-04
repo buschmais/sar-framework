@@ -110,7 +110,7 @@ public class SARFRunner {
         LOG.info("Reading XML Configuration");
         try {
             URL schemaUrl = SARFRunner.class.getClassLoader().getResource("schema.xsd");
-            URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration_3.xml");
+            URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration_1.xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(ActiveClassificationConfiguration.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
