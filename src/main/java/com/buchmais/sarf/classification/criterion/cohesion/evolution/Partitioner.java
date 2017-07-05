@@ -64,13 +64,13 @@ public class Partitioner {
             boolean found = false;
             for (Map.Entry<Long, Set<Long>> entry : initialPartitioning.entrySet()) {
                 if (entry.getValue().contains(id)) {
-                    genes.add(LongGene.of(compId, 0, ids.length / 2));
+                    genes.add(LongGene.of(compId, 0, ids.length - 2));
                     found = true;
                 }
                 compId++;
             }
             if (!found) {
-                genes.add(LongGene.of(compId, 0, ids.length / 2));
+                genes.add(LongGene.of(compId, 0, ids.length - 2));
             }
         }
         Chromosome<LongGene> chromosome = LongObjectiveChromosome.of(genes.toArray(new LongGene[genes.size()]));
