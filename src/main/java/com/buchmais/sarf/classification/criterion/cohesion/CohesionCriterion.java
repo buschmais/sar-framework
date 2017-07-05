@@ -55,6 +55,10 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations);
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
             ids = identifiedGroups.stream().mapToLong(l -> l).sorted().toArray();
+            SARFRunner.xoManager.currentTransaction().begin();
+            ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+            componentRepository.computeCouplingBetweenComponents(ids);
+            SARFRunner.xoManager.currentTransaction().commit();
             initialPartitioning = partitioningFromGroups(identifiedGroups);
             componentLevel++;
             iterations = 100;
