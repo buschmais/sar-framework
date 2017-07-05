@@ -50,56 +50,78 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().commit();
         // types -> components
         Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning);
-        Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
+        Set<Long> identifiedGroups = new HashSet<>();
         SARFRunner.xoManager.currentTransaction().begin();
         int componentLevel = 0;
         for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
-            ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
-            componentDescriptor.setShape("Component");
-            componentDescriptor.setName("COH" + iteration + "L" + componentLevel + "#" + component.getKey());
-            for (Long id : component.getValue()) {
-                ClassificationInfoDescriptor classificationInfoDescriptor = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
-                classificationInfoDescriptor.setIteration(iteration);
-                classificationInfoDescriptor.setComponent(componentDescriptor);
-                classificationInfoDescriptor.setType(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
-                componentDescriptor.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
-            }
-            componentDescriptors.add(componentDescriptor);
-        }
-        LOG.info("Identified " + componentDescriptors.size() + " Level " + componentLevel + " Components");
-        SARFRunner.xoManager.currentTransaction().commit();
-        // components -> components
-        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
-        while (componentDescriptors.size() > 2) {
-            SARFRunner.xoManager.currentTransaction().begin();
-            componentLevel++;
-            // compute coupling between components
-            ids = componentDescriptors.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).sorted().toArray();
-            componentRepository.computeCouplingBetweenComponents(ids);
-            SARFRunner.xoManager.currentTransaction().commit();
-            partitioning = Partitioner.partition(ids, partitioningFromComponents(componentDescriptors));
-            SARFRunner.xoManager.currentTransaction().begin();
-            componentDescriptors = new HashSet<>();
-            for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
+            if (component.getValue().size() > 1) {
                 ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
                 componentDescriptor.setShape("Component");
                 componentDescriptor.setName("COH" + iteration + "L" + componentLevel + "#" + component.getKey());
-                Result<ComponentDescriptor> containedComponents = componentRepository.getComponentsWithId(component.getValue().stream().mapToLong(l -> l).toArray());
-                for (ComponentDescriptor containedComponent : containedComponents) {
-                    componentDescriptor.getContainedComponents().add(containedComponent);
+                for (Long id : component.getValue()) {
+                    ClassificationInfoDescriptor classificationInfoDescriptor = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
+                    classificationInfoDescriptor.setIteration(iteration);
+                    classificationInfoDescriptor.setComponent(componentDescriptor);
+                    classificationInfoDescriptor.setType(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
+                    componentDescriptor.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
                 }
-                componentDescriptors.add(componentDescriptor);
-                containedComponents.close();
+                identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
+            } else if (component.getValue().iterator().hasNext()){
+                identifiedGroups.add(component.getValue().iterator().next());
             }
-            LOG.info("Identified " + componentDescriptors.size() + " Level " + componentLevel + " Components");
+        }
+        LOG.info("Identified " + identifiedGroups.size() + " Level " + componentLevel + " Groups");
+        SARFRunner.xoManager.currentTransaction().commit();
+        // components -> components
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        while (identifiedGroups.size() > 2) {
+            SARFRunner.xoManager.currentTransaction().begin();
+            componentLevel++;
+            // compute coupling between groups
+            ids = identifiedGroups.stream().mapToLong(l -> l).sorted().toArray();
+            componentRepository.computeCouplingBetweenComponents(ids);
+            SARFRunner.xoManager.currentTransaction().commit();
+            partitioning = Partitioner.partition(ids, partitioningFromGroups(identifiedGroups));
+            SARFRunner.xoManager.currentTransaction().begin();
+            identifiedGroups = new HashSet<>();
+            for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
+                if (component.getValue().size() > 1) {
+                    ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+                    componentDescriptor.setShape("Component");
+                    componentDescriptor.setName("COH" + iteration + "L" + componentLevel + "#" + component.getKey());
+                    Result<ComponentDescriptor> containedComponents = componentRepository.getComponentsWithId(component.getValue().stream().mapToLong(l -> l).toArray());
+                    for (Long id : component.getValue()) {
+                        try {
+                            ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                            componentDescriptor.getContainedComponents().add(cD);
+                        } catch (Exception e) {
+                            TypeDescriptor tD = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                            componentDescriptor.getContainedTypes().add(tD);
+                        }
+                    }
+                    identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
+                    containedComponents.close();
+                } else if (component.getValue().iterator().hasNext()){
+                    identifiedGroups.add(component.getValue().iterator().next());
+                }
+            }
+            LOG.info("Identified " + identifiedGroups.size() + " Level " + componentLevel + " Groups");
             SARFRunner.xoManager.currentTransaction().commit();
         }
         SARFRunner.xoManager.currentTransaction().begin();
         ComponentDescriptor architecture = SARFRunner.xoManager.create(ComponentDescriptor.class);
         architecture.setShape("Component");
         architecture.setName("COH" + iteration + "L" + ++componentLevel + "Root");
-        architecture.getContainedComponents().addAll(componentDescriptors);
-        componentRepository.computeCouplingBetweenComponents(componentDescriptors.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray());
+        for (Long id : identifiedGroups) {
+            try {
+                ComponentDescriptor componentDescriptor = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                architecture.getContainedComponents().add(componentDescriptor);
+            } catch (Exception e) {
+                TypeDescriptor typeDescriptor = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                architecture.getContainedTypes().add(typeDescriptor);
+            }
+        }
+        componentRepository.computeCouplingBetweenComponents(identifiedGroups.stream().mapToLong(l -> l).toArray());
         SARFRunner.xoManager.currentTransaction().commit();
         return Sets.newHashSet(architecture);
     }
@@ -151,11 +173,11 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         return componentMappings;
     }
 
-    private Map<Long, Set<Long>> partitioningFromComponents(Set<ComponentDescriptor> components) {
+    private Map<Long, Set<Long>> partitioningFromGroups(Set<Long> elements) {
         Map<Long, Set<Long>> partitioning = new HashMap<>();
         Long cId = 0L;
-        for (ComponentDescriptor component : components) {
-            partitioning.put(cId, Sets.newHashSet((Long) SARFRunner.xoManager.getId(component)));
+        for (Long group : elements) {
+            partitioning.put(cId, Sets.newHashSet(group));
             cId++;
         }
         return partitioning;
