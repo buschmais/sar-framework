@@ -1,6 +1,7 @@
 package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.buchmais.sarf.SARFRunner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.jenetics.*;
 import org.jenetics.engine.Engine;
@@ -18,10 +19,14 @@ public class Partitioner {
 
     static long[] ids;
 
-    public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning) {
+    static int generations;
+    private static long bestGeneration;
+
+    public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations) {
         Partitioner.best = null;
         Partitioner.bestFitness = Double.MIN_VALUE;
         Partitioner.ids = ids;
+        Partitioner.generations = generations;
         Genotype<LongGene> genotype = createGenotype(initialPartitioning);
         final Engine<LongGene, Double> engine = Engine
                 .builder(Partitioner::computeFitnessValue, genotype)
@@ -37,7 +42,7 @@ public class Partitioner {
 
         engine
                 .stream(genotypes)
-                .limit(5)
+                .limit(generations)
                 .peek(Partitioner::update)
                 .collect(EvolutionResult.toBestGenotype());
         // print result
@@ -74,8 +79,6 @@ public class Partitioner {
             }
         }
         Chromosome<LongGene> chromosome = LongObjectiveChromosome.of(genes.toArray(new LongGene[genes.size()]));
-        System.out.println(chromosome);
-        System.out.println(computeFitnessValue(Genotype.of(chromosome)));
         return Genotype.of(chromosome);
     }
 
@@ -85,16 +88,18 @@ public class Partitioner {
     }
 
     private static void update(final EvolutionResult<LongGene, Double> result) {
-        System.out.println("Generation: " + result.getGeneration() + "\nBest Fitness: " + result.getBestFitness() + "\n Size: " + result.getPopulation().size());
-        LongObjectiveChromosome chromosome = (LongObjectiveChromosome) result.getBestPhenotype().getGenotype().getChromosome();
-        System.out.println(chromosome.getCohesionObjective() + " " +
-                chromosome.getCouplingObjective() + " " +
-                chromosome.getComponentCountObjective() + " " +
-                chromosome.getComponentRangeObjective() + " " +
-                chromosome.getComponentSizeObjective());
-        if (best == null || result.getBestFitness() > bestFitness) {
-            best = result.getBestPhenotype().getGenotype();
+        int percentage = (int) (1.0 * result.getGeneration() / generations * 100);
+        int left = 100 - percentage;
+        if (result.getBestFitness() > bestFitness) {
             bestFitness = result.getBestFitness();
+            bestGeneration = result.getGeneration();
+            best = result.getBestPhenotype().getGenotype();
+        }
+        Long components = best.getChromosome().stream().mapToLong(l -> l.getAllele()).distinct().count();
+        System.out.print("\rProgress: " + Strings.repeat("=", percentage) + Strings.repeat(" ", left) + "| ");
+        System.out.print("Best Genotype at Generation: " + bestGeneration + " with Fitness: " + bestFitness + " with Components: " + components);
+        if (result.getGeneration() == generations) {
+            System.out.println("");
         }
     }
 }

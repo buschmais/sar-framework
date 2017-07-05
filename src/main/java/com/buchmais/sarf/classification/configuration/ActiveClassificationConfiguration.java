@@ -107,6 +107,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         //finalize(components);
         SARFRunner.xoManager.currentTransaction().begin();
+        LOG.info("Pretty Printing the Result");
         prettyPrint(components, "");
         SARFRunner.xoManager.currentTransaction().commit();
 

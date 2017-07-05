@@ -49,16 +49,20 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
+        int iterations = 500;
         do {
-            Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning);
+            LOG.info("Computing Level " + componentLevel + " Components");
+            Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations);
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
             ids = identifiedGroups.stream().mapToLong(l -> l).sorted().toArray();
             initialPartitioning = partitioningFromGroups(identifiedGroups);
             componentLevel++;
+            iterations = 100;
         } while (ids.length > 1);
         SARFRunner.xoManager.currentTransaction().begin();
         ComponentDescriptor result = SARFRunner.xoManager.findById(ComponentDescriptor.class, ids[0]);
         SARFRunner.xoManager.currentTransaction().commit();
+        LOG.info("Partitioning Finished");
         return Sets.newHashSet(result);
     }
 
