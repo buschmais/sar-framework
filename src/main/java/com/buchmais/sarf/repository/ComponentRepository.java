@@ -121,12 +121,21 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (c:SARF:Component)<-[:MAPS]-(:ClassificationInfo)-[:CLASSIFIES]->(t:Type) " +
+            "  (e1), (e2) " +
             "WHERE" +
-            "  ID(c) = {cId} AND ID(t) = {tId} " +
+            "  ID(e1) = {cId} AND ID(e2) = {id} " +
             "RETURN" +
-            "  NOT t IS NULL")
-    boolean isCandidateType(@Parameter("cId") Long componentId, @Parameter("tId") Long typeId);
+            "  EXISTS((e1)<-[:MAPS]-(:ClassificationInfo)-[:CLASSIFIES]->(e2))")
+    boolean isCandidateType(@Parameter("cId") Long componentId, @Parameter("id") Long id);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (e1), (e2) " +
+            "WHERE" +
+            "  ID(e1) = {cId} AND ID(e2) = {id} " +
+            "RETURN" +
+            "  EXISTS((e1)-[:CONTAINS]->(e2))")
+    boolean isCandidateComponent(@Parameter("cId") Long cId, @Parameter("id") Long id);
 
     @ResultOf
     @Cypher("MATCH" +
@@ -144,4 +153,24 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "LIMIT" +
             "  1")
     Long getBestComponentForShape(@Parameter("ids") long[] longs, @Parameter("shape") String shape, @Parameter("tid") Long typeId);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:Component:SARF) " +
+            "WHERE" +
+            "  ID(c) IN {ids} " +
+            "RETURN" +
+            "  c")
+    Result<ComponentDescriptor> getComponentsWithId(@Parameter("ids") long[] longs);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]-(e2)<-[:CONTAINS]-(c2:Component:SARF) " +
+            "WHERE" +
+            "  ID(c1) IN {ids} AND ID(c2) IN {ids} AND NOT ID(c1) = ID(c2) " +
+            "WITH" +
+            "  c1, c2, SUM(coup.coupling) AS coupl " +
+            "MERGE" +
+            "  (c1)-[:COUPLES{coupling:coupl}]-(c2)")
+    void computeCouplingBetweenComponents(@Parameter("ids") long[] ids);
 }

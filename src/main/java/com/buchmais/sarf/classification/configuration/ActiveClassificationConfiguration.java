@@ -7,12 +7,12 @@ import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
 import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
 import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
-import com.buchmais.sarf.node.ClassificationInfoDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
+import com.buschmais.xo.api.Query.Result.CompositeRowObject;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -107,17 +107,27 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         //finalize(components);
         SARFRunner.xoManager.currentTransaction().begin();
-        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
-        for (ComponentDescriptor componentDescriptor : components) {
-            System.out.println(componentDescriptor.getShape() + " " + componentDescriptor.getName());
-            Result<ClassificationInfoDescriptor> infos = componentRepository.getCandidateTypes(
-                    SARFRunner.xoManager.getId(componentDescriptor));
-            for (ClassificationInfoDescriptor info : infos) {
-                System.out.println(info.getType().getFullQualifiedName());
-            }
-        }
+        prettyPrint(components, "");
         SARFRunner.xoManager.currentTransaction().commit();
 
+    }
+
+    private void prettyPrint(Set<ComponentDescriptor> components, String indentation) {
+        for (ComponentDescriptor component : components) {
+            System.out.println(indentation + " " + component.getName());
+            Result<CompositeRowObject > res = SARFRunner.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + SARFRunner.xoManager.getId(component) + " " +
+                    "OPTIONAL MATCH (c)-[:CONTAINS]->(e) RETURN e").execute(); // TODO: 05.07.2017 Improve !!!
+            Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
+            for (CompositeRowObject r : res) {
+                try {
+                    componentDescriptors.add(r.get("e", ComponentDescriptor.class));
+                } catch (ClassCastException e) {
+                    System.out.println(indentation + " \t\t" + r.get("e", TypeDescriptor.class).getFullQualifiedName());
+                }
+            }
+            res.close();
+            prettyPrint(componentDescriptors, indentation + "\t");
+        }
     }
 
     private void removeAmbiguities(Set<ComponentDescriptor> components) {
@@ -157,21 +167,22 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         LOG.info("\tRemoved " + removed + " Assignments");
     }
 
-    private void createCrosscuttingComponents(Set<ComponentDescriptor> components) {
+    private Map<Long, Set<Long>> createIntersectingComponents(Set<ComponentDescriptor> components) {
+        LOG.info("Creating Intersecting Components");
         Map<Long, Set<Long>> componentMappings = new HashMap<>();
         SARFRunner.xoManager.currentTransaction().begin();
         ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
         // Type ID -> Component IDs
         Map<Long, Set<Long>> typeToComponents = new HashMap<>();
         Set<String> shapes = components.stream().map(ComponentDescriptor::getShape).collect(Collectors.toSet());
-        List<TypeDescriptor> types = new ArrayList<>(); // TODO: 03.07.2017 REMOVE!!! all of this
+        List<TypeDescriptor> types = new ArrayList<>();
         try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
             for (TypeDescriptor t : descriptors) {
                 types.add(t);
             }
         }
         long[] ids = types.stream().mapToLong(t -> SARFRunner.xoManager.getId(t)).sorted().toArray();
-        for (Long typeId : ids) { // TODO: 03.07.2017 replace usage
+        for (Long typeId : ids) {
             for (String shape : shapes) {
                 Long bestCId = componentRepository.getBestComponentForShape(components.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray(),
                         shape, typeId);
@@ -187,14 +198,15 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 }
             }
         }
+        // Create Intersecting Components and assign the types to them
         ArrayListMultimap<Set<Long>, Long> inverse = Multimaps.invertFrom(Multimaps.forMap(typeToComponents), ArrayListMultimap.create());
         Long componentId = 0L;
         for (Set<Long> componentIds : inverse.keys().elementSet()) {
             componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
             componentId++;
         }
-        System.out.println("Identified Components: " + componentMappings.size());
         SARFRunner.xoManager.currentTransaction().commit();
+        return null;
     }
 
     public void combine(Set<ComponentDescriptor> components) {

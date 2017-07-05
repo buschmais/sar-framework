@@ -16,6 +16,10 @@ public interface ClassificationConfigurationDescriptor extends SARFNode {
     @Outgoing
     Set<ClassificationCriterionDescriptor> getClassificationCriteria();
 
+    @Relation("DEFINES")
+    @Outgoing
+    Set<ComponentDescriptor> getDefinedComponents();
+
     void setIteration(Integer iteration);
 
     Integer getIteration();

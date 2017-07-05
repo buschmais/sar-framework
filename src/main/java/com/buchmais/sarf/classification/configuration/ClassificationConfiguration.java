@@ -6,6 +6,7 @@ import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
+import com.buchmais.sarf.node.ComponentDescriptor;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,12 +56,13 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     public ClassificationConfigurationDescriptor materialize() {
         LOG.info("Materializing Configuration to Database");
         Set<ClassificationCriterionDescriptor> descriptors = this.classificationCriteria.stream().map(ClassificationCriterion::materialize).collect(Collectors.toSet());
-        this.model.forEach(Component::materialize);
+        Set<ComponentDescriptor> componentDescriptors = this.model.stream().map(Component::materialize).collect(Collectors.toSet());
         SARFRunner.xoManager.currentTransaction().begin();
         if (this.classificationConfigurationDescriptor == null) {
             this.classificationConfigurationDescriptor = SARFRunner.xoManager.create(ClassificationConfigurationDescriptor.class);
             this.classificationConfigurationDescriptor.setIteration(this.iteration);
             this.classificationConfigurationDescriptor.getClassificationCriteria().addAll(descriptors);
+            this.classificationConfigurationDescriptor.getDefinedComponents().addAll(componentDescriptors);
         }
         SARFRunner.xoManager.currentTransaction().commit();
         return this.classificationConfigurationDescriptor;

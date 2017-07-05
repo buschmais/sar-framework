@@ -79,4 +79,37 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "RETURN" +
             "  p.fqn")
     String getPackageName(@Parameter("t") Long t);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t:Type:Internal)<-[:CLASSIFIES]-(:ClassificationInfo{iteration:{i}})-[:MAPS]->(c1:Component:SARF) " +
+            "WHERE" +
+            "  ID(c1) = {c1} " +
+            "WITH" +
+            "  t " +
+            "MATCH" +
+            "  (t)<-[:CLASSIFIES]-(:ClassificationInfo{iteration:{i}})-[:MAPS]->(c2:Component:SARF) " +
+            "WHERE" +
+            "  ID(c2) = {c2} " +
+            "RETURN" +
+            "  DISTINCT t")
+    Result<TypeDescriptor> getTypesPreAssignedTo(@Parameter("c1") Long c1, @Parameter("c2") Long c2, @Parameter("i") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t:Type:Internal)<-[:CLASSIFIES]-(i:ClassificationInfo{iteration:{i}})-[:MAPS]->(c:Component:SARF) " +
+            "WHERE" +
+            "  ID(t) = {t} AND ID(c) = {c} " +
+            "RETURN" +
+            "  MAX(i.weight)")
+    Double getAssignmentWeight(@Parameter("t") Long type, @Parameter("c") Long c, @Parameter("i") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t:Type:Internal)<-[:CLASSIFIES]-(i:ClassificationInfo{iteration:{i}})-[:MAPS]->(c:Component:SARF) " +
+            "WHERE" +
+            "  ID(t) = {t} AND ID(c) = {c} " +
+            "DETACH DELETE" +
+            "  i")
+    void removeAssignment(@Parameter("t") Long type, @Parameter("c") Long c, @Parameter("i") Integer iteration);
 }

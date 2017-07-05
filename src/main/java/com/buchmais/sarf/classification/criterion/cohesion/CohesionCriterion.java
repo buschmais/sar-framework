@@ -7,16 +7,22 @@ import com.buchmais.sarf.node.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.node.ClassificationInfoDescriptor;
 import com.buchmais.sarf.node.CohesionCriterionDescriptor;
 import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.repository.ComponentRepository;
+import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import com.buschmais.xo.api.Query.Result;
+import com.google.common.collect.Sets;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author Stephan Pirnbaum
  */
 public class CohesionCriterion extends ClassificationCriterion<CohesionCriterionDescriptor> {
+
+    private static final Logger LOG = LogManager.getLogger(CohesionCriterion.class);
 
     @Override
     public Set<ComponentDescriptor> classify(Integer iteration) {
@@ -24,25 +30,135 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
     }
 
     public Set<ComponentDescriptor> classify(Integer iteration, Set<ComponentDescriptor> components) {
-        Partitioner partitioner = new Partitioner();
-        Map<Long, Set<Long>> partitioning = partitioner.partition(components);
-        Set<ComponentDescriptor> componentDescriptors = new TreeSet<>();
+        LOG.info("Partitioning the System");
+        List<Long> typeIds = new ArrayList<>();
         SARFRunner.xoManager.currentTransaction().begin();
+        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        Result<TypeDescriptor> types = typeRepository.getAllInternalTypes();
+        for (TypeDescriptor type : types) {
+            typeIds.add(SARFRunner.xoManager.getId(type));
+        }
+        types.close();
+        long[] ids = typeIds.stream().mapToLong(l -> l).sorted().toArray();
+        // create initial partitioning
+        Map<Long, Set<Long>> initialPartitioning;
+        if (components != null && components.size() > 0) {
+            initialPartitioning = initialPartitioningFromComponents(components, ids);
+        } else {
+            initialPartitioning = inititialPartitioningFromPackageStructure(ids);
+        }
+        SARFRunner.xoManager.currentTransaction().commit();
+        // types -> components
+        Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning);
+        Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
+        SARFRunner.xoManager.currentTransaction().begin();
+        int componentLevel = 0;
         for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
             ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
             componentDescriptor.setShape("Component");
-            componentDescriptor.setName("COH" + iteration + "#" + component.getKey());
+            componentDescriptor.setName("COH" + iteration + "L" + componentLevel + "#" + component.getKey());
             for (Long id : component.getValue()) {
                 ClassificationInfoDescriptor classificationInfoDescriptor = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
                 classificationInfoDescriptor.setIteration(iteration);
                 classificationInfoDescriptor.setComponent(componentDescriptor);
                 classificationInfoDescriptor.setType(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
+                componentDescriptor.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
             }
             componentDescriptors.add(componentDescriptor);
-
         }
+        LOG.info("Identified " + componentDescriptors.size() + " Level " + componentLevel + " Components");
         SARFRunner.xoManager.currentTransaction().commit();
-        return componentDescriptors;
+        // components -> components
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        while (componentDescriptors.size() > 2) {
+            SARFRunner.xoManager.currentTransaction().begin();
+            componentLevel++;
+            // compute coupling between components
+            ids = componentDescriptors.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).sorted().toArray();
+            componentRepository.computeCouplingBetweenComponents(ids);
+            SARFRunner.xoManager.currentTransaction().commit();
+            partitioning = Partitioner.partition(ids, partitioningFromComponents(componentDescriptors));
+            SARFRunner.xoManager.currentTransaction().begin();
+            componentDescriptors = new HashSet<>();
+            for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
+                ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+                componentDescriptor.setShape("Component");
+                componentDescriptor.setName("COH" + iteration + "L" + componentLevel + "#" + component.getKey());
+                Result<ComponentDescriptor> containedComponents = componentRepository.getComponentsWithId(component.getValue().stream().mapToLong(l -> l).toArray());
+                for (ComponentDescriptor containedComponent : containedComponents) {
+                    componentDescriptor.getContainedComponents().add(containedComponent);
+                }
+                componentDescriptors.add(componentDescriptor);
+                containedComponents.close();
+            }
+            LOG.info("Identified " + componentDescriptors.size() + " Level " + componentLevel + " Components");
+            SARFRunner.xoManager.currentTransaction().commit();
+        }
+        SARFRunner.xoManager.currentTransaction().begin();
+        ComponentDescriptor architecture = SARFRunner.xoManager.create(ComponentDescriptor.class);
+        architecture.setShape("Component");
+        architecture.setName("COH" + iteration + "L" + ++componentLevel + "Root");
+        architecture.getContainedComponents().addAll(componentDescriptors);
+        componentRepository.computeCouplingBetweenComponents(componentDescriptors.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray());
+        SARFRunner.xoManager.currentTransaction().commit();
+        return Sets.newHashSet(architecture);
+    }
+
+    private Map<Long, Set<Long>> inititialPartitioningFromPackageStructure(long[] ids) {
+        // Package name to type ids
+        Map<String, Set<Long>> packageComponents = new HashMap<>();
+        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        for (Long id : ids) {
+            String packageName = typeRepository.getPackageName(id);
+            packageComponents.merge(
+                    packageName,
+                    Sets.newHashSet(id),
+                    (s1, s2) -> {
+                        s1.addAll(s2);
+                        return s1;
+                    });
+        }
+        long componentId = 0;
+        Map<Long, Set<Long>> components = new HashMap<>();
+        for (Map.Entry<String, Set<Long>> component : packageComponents.entrySet()) {
+            components.put(componentId, component.getValue());
+            componentId++;
+        }
+        return components;
+    }
+
+    private Map<Long, Set<Long>> initialPartitioningFromComponents(Set<ComponentDescriptor> components, long[] ids) {
+        Map<Long, Set<Long>> componentMappings = new HashMap<>();
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        for (Long id : ids) {
+            long componentId = 0;
+            for (ComponentDescriptor component : components) {
+                Long cId = SARFRunner.xoManager.getId(component);
+                if (componentRepository.isCandidateType(cId, id) || componentRepository.isCandidateComponent(cId, id)) {
+                    componentMappings.merge(
+                            componentId,
+                            Sets.newHashSet(id),
+                            (t1, t2) -> {
+                                t1.addAll(t2);
+                                return t1;
+                            }
+                    );
+                    break;
+                }
+                componentId++;
+            }
+        }
+        return componentMappings;
+    }
+
+    private Map<Long, Set<Long>> partitioningFromComponents(Set<ComponentDescriptor> components) {
+        Map<Long, Set<Long>> partitioning = new HashMap<>();
+        Long cId = 0L;
+        for (ComponentDescriptor component : components) {
+            partitioning.put(cId, Sets.newHashSet((Long) SARFRunner.xoManager.getId(component)));
+            cId++;
+        }
+        return partitioning;
     }
 
     @Override
