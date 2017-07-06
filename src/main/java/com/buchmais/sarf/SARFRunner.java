@@ -1,10 +1,21 @@
 package com.buchmais.sarf;
 
-import com.buchmais.sarf.classification.configuration.ActiveClassificationConfiguration;
-import com.buchmais.sarf.classification.configuration.ConfigurationHistory;
 import com.buchmais.sarf.classification.configuration.TypeCouplingEnricher;
-import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
-import com.buchmais.sarf.node.*;
+import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
+import com.buchmais.sarf.classification.configuration.logic.ActiveClassificationConfiguration;
+import com.buchmais.sarf.classification.configuration.logic.ConfigurationHistory;
+import com.buchmais.sarf.classification.criterion.data.node.ClassificationInfoDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.RuleBasedCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.cohesion.CohesionCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.packagenaming.PackageNamingCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.data.node.typenaming.ClassNamingCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.logic.cohesion.CohesionCriterion;
+import com.buchmais.sarf.node.ComponentDependsOn;
+import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.node.PatternDescriptor;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.MetricRepository;
