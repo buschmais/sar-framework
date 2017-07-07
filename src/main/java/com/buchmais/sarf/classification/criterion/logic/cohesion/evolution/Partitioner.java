@@ -90,7 +90,7 @@ public class Partitioner {
     private static void update(final EvolutionResult<LongGene, Double> result) {
         int percentage = (int) (1.0 * result.getGeneration() / generations * 100);
         int left = 100 - percentage;
-        if (result.getBestFitness() > bestFitness) {
+        if (best == null || result.getBestFitness() > bestFitness) {
             bestFitness = result.getBestFitness();
             bestGeneration = result.getGeneration();
             best = result.getBestPhenotype().getGenotype();
