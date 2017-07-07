@@ -11,8 +11,10 @@ import com.buchmais.sarf.classification.criterion.data.node.cohesion.CohesionCri
 import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.packagenaming.PackageNamingCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.data.node.typenaming.ClassNamingCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.logic.cohesion.CohesionCriterion;
+import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRepository;
+import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRuleDescriptor;
 import com.buchmais.sarf.node.ComponentDependsOn;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.node.PatternDescriptor;
@@ -80,13 +82,15 @@ public class SARFRunner {
                 .type(ClassificationConfigurationDescriptor.class)
                 .type(ClassificationInfoDescriptor.class)
                 .type(ClassificationConfigurationRepository.class)
-                .type(ClassNamingCriterionDescriptor.class)
+                .type(TypeNamingCriterionDescriptor.class)
                 .type(DependencyCriterionDescriptor.class)
                 .type(DependencyDescriptor.class)
                 .type(MetricRepository.class)
                 .type(RuleBasedCriterionDescriptor.class)
                 .type(RuleDescriptor.class)
                 .type(CohesionCriterionDescriptor.class)
+                .type(TypeNamingRuleDescriptor.class)
+                .type(TypeNamingRepository.class)
                 .uri(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"))
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);

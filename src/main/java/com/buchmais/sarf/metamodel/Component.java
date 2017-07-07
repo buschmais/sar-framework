@@ -5,7 +5,7 @@ import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.classification.criterion.logic.Rule;
 import com.buchmais.sarf.classification.criterion.logic.dependency.DependencyRule;
 import com.buchmais.sarf.classification.criterion.logic.packagenaming.PackageNamingRule;
-import com.buchmais.sarf.classification.criterion.logic.typenaming.TypeNamingRule;
+import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRule;
 import com.buchmais.sarf.node.ComponentDescriptor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
