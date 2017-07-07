@@ -20,6 +20,6 @@ public interface TypeNamingRepository {
             "WHERE" +
             "  t.name =~ {regEx} " +
             "RETURN t")
-    Result<TypeDescriptor> getAllInternalTypesByNameLike(@Parameter("regEx") String packageRegEx);
+    Result<TypeDescriptor> getAllInternalTypesByNameLike(@Parameter("regEx") String typeRegEx);
 
 }
