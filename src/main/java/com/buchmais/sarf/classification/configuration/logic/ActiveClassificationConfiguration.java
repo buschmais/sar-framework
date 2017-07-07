@@ -102,10 +102,15 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         removeAmbiguities(components);
         //combine(components);
-        if (cohesionCriterion != null) {
-            components = cohesionCriterion.classify(this.iteration, components);
-        }
+        //Set<ComponentDescriptor> cohesionResult = null;
+        //if (cohesionCriterion != null) {
+        //    cohesionResult = cohesionCriterion.classify(this.iteration, components);
+        //    // match with manual classification
+        //} else {
+
+        //}
         //finalize(components);
+        components = createIntersectingComponents(components);
         SARFRunner.xoManager.currentTransaction().begin();
         LOG.info("Pretty Printing the Result");
         prettyPrint(components, "");
@@ -121,9 +126,15 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
             Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
             for (CompositeRowObject r : res) {
                 try {
-                    componentDescriptors.add(r.get("e", ComponentDescriptor.class));
+                    ComponentDescriptor c = r.get("e", ComponentDescriptor.class);
+                    if (c != null) {
+                        componentDescriptors.add(c); // 19269, 19285, 19292
+                    }
                 } catch (ClassCastException e) {
-                    System.out.println(indentation + " \t\t" + r.get("e", TypeDescriptor.class).getFullQualifiedName());
+                    TypeDescriptor t = r.get("e", TypeDescriptor.class);
+                    if (t != null) {
+                        System.out.println(indentation + " \t\t" + t.getFullQualifiedName());
+                    }
                 }
             }
             res.close();
@@ -168,9 +179,71 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         LOG.info("\tRemoved " + removed + " Assignments");
     }
 
-    private Map<Long, Set<Long>> createIntersectingComponents(Set<ComponentDescriptor> components) {
-        LOG.info("Creating Intersecting Components");
+    private Set<ComponentDescriptor> createIntersectingComponents(Set<ComponentDescriptor> components) {
+        ArrayListMultimap<Set<Long>, Long> inverse = intersectComponents(components);
+        Set<ComponentDescriptor> result = new HashSet<>();
+        SARFRunner.xoManager.currentTransaction().begin();
+        List<Long> ids = new ArrayList<>();
+        for (Set<Long> componentIds : inverse.keys().elementSet()) {
+            if (componentIds.size() > 1) {
+                ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+                componentDescriptor.setShape("Component");
+                componentDescriptor.setName("");
+                ids.add(SARFRunner.xoManager.getId(componentDescriptor));
+                for (Long componentId : componentIds) {
+                    ComponentDescriptor containing = SARFRunner.xoManager.findById(ComponentDescriptor.class, componentId);
+                    containing.getContainedComponents().add(componentDescriptor);
+                    componentDescriptor.setName(componentDescriptor.getName() + " - " + containing.getName());
+                    result.add(containing);
+                    ids.add(componentId);
+
+                }
+                for (Long typeId : inverse.get(componentIds)) {
+                    componentDescriptor.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, typeId));
+                }
+            } else if (componentIds.size() == 1){
+                Long id = componentIds.iterator().next();
+                ComponentDescriptor singleComponent = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                ids.add(id);
+                for (Long typeId : inverse.get(componentIds)) {
+                    singleComponent.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, typeId));
+                }
+                result.add(singleComponent);
+            }
+        }
+        SARFRunner.xoManager.getRepository(ComponentRepository.class).computeCouplingBetweenComponents(ids.stream().mapToLong(l -> l).toArray());
+        SARFRunner.xoManager.currentTransaction().commit();
+        return result;
+    }
+
+    /**
+     *
+     * @param components
+     * @return Mapping from component id (ranges from 0 to the number of identified components) to type ids (actual ids from the graph database)
+     */
+    private Map<Long, Set<Long>> identifyIntersectingComponents(Set<ComponentDescriptor> components) {
         Map<Long, Set<Long>> componentMappings = new HashMap<>();
+        Long componentId = 0L;
+        ArrayListMultimap<Set<Long>, Long> inverse = intersectComponents(components);
+        for (Set<Long> componentIds : inverse.keys().elementSet()) {
+            componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
+            componentId++;
+        }
+        return componentMappings;
+    }
+
+    /**
+     * Merges the shapes and names specified by the user as far as possible into the results of the automatic recovery
+     * @param prePartitioning
+     * @param partitioning
+     * @return
+     */
+    private Set<ComponentDescriptor> mergeResults(Set<ComponentDescriptor> prePartitioning, Set<ComponentDescriptor> partitioning) {
+        return  null;
+    }
+
+    private ArrayListMultimap<Set<Long>, Long> intersectComponents(Set<ComponentDescriptor> components) {
+        LOG.info("Creating Intersecting Components");
         SARFRunner.xoManager.currentTransaction().begin();
         ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
         // Type ID -> Component IDs
@@ -201,13 +274,8 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         // Create Intersecting Components and assign the types to them
         ArrayListMultimap<Set<Long>, Long> inverse = Multimaps.invertFrom(Multimaps.forMap(typeToComponents), ArrayListMultimap.create());
-        Long componentId = 0L;
-        for (Set<Long> componentIds : inverse.keys().elementSet()) {
-            componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
-            componentId++;
-        }
         SARFRunner.xoManager.currentTransaction().commit();
-        return null;
+        return inverse;
     }
 
     public void combine(Set<ComponentDescriptor> components) {

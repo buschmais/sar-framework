@@ -36,6 +36,15 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "  (:ClassificationConfiguration{iteration: current})-[:CONTAINS]->(:ClassificationCriterion)" +
             "    -[:CREATED]->(:ClassificationInfo)-[:MAPS]->(c:Component {shape: {shape}, name: {name}})" +
             "RETURN" +
+            "  DISTINCT c " +
+            "UNION " +
+            "MATCH" +
+            "  (conf:ClassificationConfiguration) " +
+            "WITH" +
+            "  max(conf.iteration) AS current " +
+            "MATCH" +
+            "  (:ClassificationConfiguration{iteration: current})-[:DEFINES]->(c:SARF:Component {shape: {shape}, name: {name}}) " +
+            "RETURN" +
             "  DISTINCT c")
     Result<ComponentDescriptor> getComponentOfCurrentIteration(@Parameter("shape") String shape, @Parameter("name") String name);
 
