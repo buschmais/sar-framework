@@ -1,13 +1,11 @@
-package com.buchmais.sarf.classification.criterion.logic.packagenaming;
+package com.buchmais.sarf.classification.criterion.packagenaming;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.logic.Rule;
 import com.buchmais.sarf.classification.criterion.logic.RuleBasedCriterion;
-import com.buchmais.sarf.node.PatternDescriptor;
-import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.xo.api.Query;
+import com.buschmais.xo.api.Query.Result;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -23,7 +21,7 @@ import java.util.TreeSet;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 @XmlRootElement(name = "Package")
-public class PackageNamingRule extends Rule<PatternDescriptor> {
+public class PackageNamingRule extends Rule<PackageNamingRuleDescriptor> {
 
 
 
@@ -31,18 +29,18 @@ public class PackageNamingRule extends Rule<PatternDescriptor> {
         super(shape, name, weight, rule);
     }
 
-    public static PackageNamingRule of(PatternDescriptor patternDescriptor) {
+    public static PackageNamingRule of(PackageNamingRuleDescriptor packageNamingRuleDescriptor) {
         PackageNamingRule pattern = new PackageNamingRule(
-                patternDescriptor.getShape(), patternDescriptor.getName(), patternDescriptor.getWeight(), patternDescriptor.getRule());
-        pattern.descriptor = patternDescriptor;
+                packageNamingRuleDescriptor.getShape(), packageNamingRuleDescriptor.getName(), packageNamingRuleDescriptor.getWeight(), packageNamingRuleDescriptor.getRule());
+        pattern.descriptor = packageNamingRuleDescriptor;
         return pattern;
     }
 
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {
         Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
-        TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
-        Query.Result<TypeDescriptor> result = repository.getAllInternalTypesLike(this.rule);
+        PackageNamingRepository repository = SARFRunner.xoManager.getRepository(PackageNamingRepository.class);
+        Result<TypeDescriptor> result = repository.getAllInternalTypesInPackageLike(this.rule);
         for (TypeDescriptor t : result) {
             types.add(t);
         }
@@ -50,8 +48,8 @@ public class PackageNamingRule extends Rule<PatternDescriptor> {
     }
 
     @Override
-    protected PatternDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(PatternDescriptor.class);
+    protected PackageNamingRuleDescriptor instantiateDescriptor() {
+        return SARFRunner.xoManager.create(PackageNamingRuleDescriptor.class);
     }
 
     @Override

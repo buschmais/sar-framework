@@ -10,14 +10,15 @@ import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.cohesion.CohesionCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyDescriptor;
-import com.buchmais.sarf.classification.criterion.data.node.packagenaming.PackageNamingCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.logic.cohesion.CohesionCriterion;
+import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRepository;
+import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRuleDescriptor;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRepository;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRuleDescriptor;
 import com.buchmais.sarf.node.ComponentDependsOn;
 import com.buchmais.sarf.node.ComponentDescriptor;
-import com.buchmais.sarf.node.PatternDescriptor;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.MetricRepository;
@@ -74,7 +75,7 @@ public class SARFRunner {
                 .type(TypeDescriptor.class)
                 .type(TypeDependsOnDescriptor.class)
                 .type(TypeRepository.class)
-                .type(PatternDescriptor.class)
+                .type(PackageNamingRuleDescriptor.class)
                 .type(PackageNamingCriterionDescriptor.class)
                 .type(ComponentRepository.class)
                 .type(ComponentDescriptor.class)
@@ -91,6 +92,7 @@ public class SARFRunner {
                 .type(CohesionCriterionDescriptor.class)
                 .type(TypeNamingRuleDescriptor.class)
                 .type(TypeNamingRepository.class)
+                .type(PackageNamingRepository.class)
                 .uri(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"))
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);

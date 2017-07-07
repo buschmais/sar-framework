@@ -1,4 +1,4 @@
-package com.buchmais.sarf.node;
+package com.buchmais.sarf.classification.criterion.packagenaming;
 
 import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
@@ -6,5 +6,5 @@ import com.buschmais.xo.neo4j.api.annotation.Label;
 /**
  * @author Stephan Pirnbaum
  */
-@Label("Pattern")
-public interface PatternDescriptor extends RuleDescriptor {}
+@Label("PackageNamingRule")
+public interface PackageNamingRuleDescriptor extends RuleDescriptor {}
