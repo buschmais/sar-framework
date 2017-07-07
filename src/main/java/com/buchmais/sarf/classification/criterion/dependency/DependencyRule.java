@@ -1,10 +1,8 @@
-package com.buchmais.sarf.classification.criterion.logic.dependency;
+package com.buchmais.sarf.classification.criterion.dependency;
 
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.criterion.data.node.dependency.DependencyDescriptor;
 import com.buchmais.sarf.classification.criterion.logic.Rule;
 import com.buchmais.sarf.classification.criterion.logic.RuleBasedCriterion;
-import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query;
@@ -33,11 +31,11 @@ public class DependencyRule extends Rule<DependencyDescriptor> {
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {
         Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
-        TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        DependencyRepository repository = SARFRunner.xoManager.getRepository(DependencyRepository.class);
         Query.Result<TypeDescriptor> result = repository.getAllInternalTypesDependingOn(this.rule);
         for (TypeDescriptor t : result) {
             types.add(t);
-            repository.getInnerClassesOf(t.getFullQualifiedName()).forEach(types::add);
+            // FIXME: 07.07.2017 Cannot create an instance of a single abstract type [interface com.buschmais.xo.api.CompositeObject] types.addAll(t.getDeclaredInnerClasses());
         }
         return types;
     }

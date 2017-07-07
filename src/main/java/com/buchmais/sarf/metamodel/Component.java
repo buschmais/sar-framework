@@ -2,8 +2,8 @@ package com.buchmais.sarf.metamodel;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Materializable;
+import com.buchmais.sarf.classification.criterion.dependency.DependencyRule;
 import com.buchmais.sarf.classification.criterion.logic.Rule;
-import com.buchmais.sarf.classification.criterion.logic.dependency.DependencyRule;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRule;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRule;
 import com.buchmais.sarf.node.ComponentDescriptor;

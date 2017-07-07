@@ -46,15 +46,6 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (t:Type:Internal)-[:DEPENDS_ON]->(d:Type) " +
-            "WHERE" +
-            "  d.fqn =~ {dependency}" +
-            "RETURN" +
-            "  DISTINCT t")
-    Result<TypeDescriptor> getAllInternalTypesDependingOn(@Parameter("dependency") String dependency);
-
-    @ResultOf
-    @Cypher("MATCH" +
             "  (t:Type:Internal)-[:DEPENDS_ON]->(d:Type:Internal) " +
             "WHERE" +
             "  ID(t) = {t} " +
