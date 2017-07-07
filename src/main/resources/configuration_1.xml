@@ -19,7 +19,7 @@
             <AnnotatedBy rule="org\.springframework\.stereotype\.Service.*" weight="80" /-->
             <Name rule=".*MailSender" weight="100"/>
             <Name rule=".*Service" weight="100"/>
-            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.service.*" weight="100"/>
+            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.manager.*" weight="100"/>
         </Rules>
     </Component>
     <Component shape="Layer" name="PresentationLayer">
