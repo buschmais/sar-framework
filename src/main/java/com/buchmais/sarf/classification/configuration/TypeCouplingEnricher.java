@@ -39,7 +39,7 @@ public class TypeCouplingEnricher {
                 }
             }
         }
-        orderedCoupling.forEach(c -> LOG.debug("Coupling: " + c));
+        orderedCoupling.forEach(c -> LOG.info("Coupling: " + c));
         SARFRunner.xoManager.currentTransaction().commit();
     }
 
@@ -70,7 +70,8 @@ public class TypeCouplingEnricher {
                 WeightConstants.WRITES_WEIGHT * computeCouplingWrites(id1, id2) +
                 WeightConstants.WRITES_STATIC_WEIGHT * computeCouplingWritesStatic(id1, id2) +
                 WeightConstants.COMPOSES_WEIGHT * computeCouplingComposes(id1, id2) +
-                WeightConstants.INNER_CLASSES_WEIGHT * computeCouplingDeclaresInnerClass(id1, id2);
+                WeightConstants.INNER_CLASSES_WEIGHT * computeCouplingDeclaresInnerClass(id1, id2) +
+                computeSimpleDependsOn(id1, id2);
 
         /*System.out.println("1 " + computeCouplingInvokes(id1, id2));
         System.out.println("2 " + computeCouplingInvokesStatic(id1, id2));
@@ -88,87 +89,80 @@ public class TypeCouplingEnricher {
 
     private static Double computeCouplingInvokes(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        Double res = (double) mR.countInvokes(id1, id2) / (2 * mR.countAllInvokesExternal(id1)) +
-                     (double) mR.countInvokes(id2, id1) / (2 * mR.countAllInvokesExternal(id2));
+        Double res = (double) mR.countInvokes(id1, id2) / mR.countAllInvokesExternal(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingInvokesStatic(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        Double res = (double) mR.countInvokesStatic(id1, id2) / (2 * mR.countAllInvokesExternalStatic(id1)) +
-                     (double) mR.countInvokesStatic(id2, id1) / (2 * mR.countAllInvokesExternalStatic(id2));
+        Double res = (double) mR.countInvokesStatic(id1, id2) / mR.countAllInvokesExternalStatic(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingExtends(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        return (mR.typeExtends(id1, id2) ? 1d : 0d) + (mR.typeExtends(id2, id1) ? 1d : 0d);
+        return mR.typeExtends(id1, id2) ? 1d : 0d;
     }
 
     private static Double computeCouplingImplements(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        return (mR.typeImplements(id1, id2) ? 1d : 0d) + (mR.typeImplements(id2, id1) ? 1d : 0d);
+        return mR.typeImplements(id1, id2) ? 1d : 0d;
     }
 
     private static Double computeCouplingReturns(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         // todo generics
-        Double res = (double) mR.countReturns(id1, id2) / (2 * mR.countMethods(id1)) +
-                     (double) mR.countReturns(id2, id1) / (2 * mR.countMethods(id2));
+        Double res = (double) mR.countReturns(id1, id2) / mR.countMethods(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingParameterized(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         // todo generics
-        Double res = (double) mR.countParameterized(id1, id2) / (2 * mR.countMethods(id1)) +
-                     (double) mR.countParameterized(id2, id1) / (2 * mR.countMethods(id2));
+        Double res = (double) mR.countParameterized(id1, id2) / mR.countMethods(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingReads(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         final Long readsT1T2 = mR.countReads(id1, id2);
-        final Long readsT2T1 = mR.countReads(id2, id1);
-        Double res = ((double) readsT1T2 * readsT1T2) / (2 * mR.countReadsExternal(id1) * mR.countReadByExternal(id2)) +
-                     ((double) readsT2T1 * readsT2T1) / (2 * mR.countReadsExternal(id2) * mR.countReadByExternal(id1));
+        Double res = ((double) readsT1T2 * readsT1T2) / (mR.countReadsExternal(id1) * mR.countReadByExternal(id2)); // TODO: 07.07.2017 correct?
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingReadsStatic(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         final Long readsT1T2 = mR.countReadsStatic(id1, id2);
-        final Long readsT2T1 = mR.countReadsStatic(id2, id1);
-        Double res = ((double) readsT1T2 * readsT1T2) / (2 * mR.countReadsStaticExternal(id1) * mR.countReadByExternalStatic(id2)) +
-                     ((double) readsT2T1 * readsT2T1) / (2 * mR.countReadsStaticExternal(id2) * mR.countReadByExternalStatic(id1));
+        Double res = ((double) readsT1T2 * readsT1T2) / (mR.countReadsStaticExternal(id1) * mR.countReadByExternalStatic(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingWrites(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         final Long writesT1T2 = mR.countWrites(id1, id2);
-        final Long writesT2T1 = mR.countWrites(id2, id1);
-        Double res = ((double) writesT1T2 * writesT1T2) / (2 * mR.countWritesExternal(id1) * mR.countWrittenByExternal(id2)) +
-                     ((double) writesT2T1 * writesT2T1) / (2 * mR.countWritesExternal(id2) * mR.countWrittenByExternal(id1));
+        Double res = ((double) writesT1T2 * writesT1T2) / (mR.countWritesExternal(id1) * mR.countWrittenByExternal(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingWritesStatic(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         final Long writesT1T2 = mR.countWritesStatic(id1, id2);
-        final Long writesT2T1 = mR.countWritesStatic(id2, id1);
-        Double res = ((double) writesT1T2 * writesT1T2) / (2 * mR.countWritesStaticExternal(id1) * mR.countWrittenByExternalStatic(id2)) +
-                     ((double) writesT2T1 * writesT2T1) / (2 * mR.countWritesStaticExternal(id2) * mR.countWrittenByExternalStatic(id1));
+        Double res = ((double) writesT1T2 * writesT1T2) / (mR.countWritesStaticExternal(id1) * mR.countWrittenByExternalStatic(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingComposes(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        return (mR.typeComposes(id1, id2) ? 0.5 : 0d) + (mR.typeComposes(id1, id2) ? 0.5 : 0d);
+        return (mR.typeComposes(id1, id2) ? 1d : 0d);
     }
 
     private static Double computeCouplingDeclaresInnerClass(Long id1, Long id2) {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        return (mR.declaresInnerClass(id1, id2) || mR.declaresInnerClass(id2, id1)) ? 1d : 0d;
+        return mR.declaresInnerClass(id1, id2) ? 1d : 0d;
+    }
+
+    private static Double computeSimpleDependsOn(Long id1, Long id2) {
+        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        return mR.dependsOn(id1, id2) ? 1d : 0d;
     }
 }

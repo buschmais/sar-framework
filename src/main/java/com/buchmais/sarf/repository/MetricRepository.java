@@ -272,7 +272,7 @@ public interface MetricRepository {
             "WHERE" +
             "  ID(t2) = {t2} " +
             "MERGE" +
-            "  (t1)-[c:COUPLES{coupling:{coupling}}]-(t2) " +
+            "  (t1)-[c:COUPLES{coupling:{coupling}}]->(t2) " +
             "RETURN" +
             "  c")
     void setCoupling(@Parameter("t1") Long id1, @Parameter("t2") Long id2, @Parameter("coupling") Double coupling);
@@ -321,4 +321,13 @@ public interface MetricRepository {
             "RETURN" +
             "  toFloat(SUM(c.coupling))")
     Double computeCouplingTo(@Parameter("id") long id, @Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t1:Type), (t2:Type) " +
+            "WHERE" +
+            "  ID(t1) = {id1} AND ID(t2) = {id2} " +
+            "RETURN" +
+            "  EXISTS((t1)-[:DEPENDS_ON]->(t2))")
+    boolean dependsOn(@Parameter("id1") Long id1, @Parameter("id2") Long id2);
 }

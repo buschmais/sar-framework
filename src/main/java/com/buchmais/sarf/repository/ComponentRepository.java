@@ -174,12 +174,12 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]-(e2)<-[:CONTAINS]-(c2:Component:SARF) " +
+            "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]->(e2)<-[:CONTAINS]-(c2:Component:SARF) " +
             "WHERE" +
             "  ID(c1) IN {ids} AND ID(c2) IN {ids} AND NOT ID(c1) = ID(c2) " +
             "WITH" +
             "  c1, c2, SUM(coup.coupling) AS coupl " +
             "MERGE" +
-            "  (c1)-[:COUPLES{coupling:coupl}]-(c2)")
+            "  (c1)-[:COUPLES{coupling:coupl}]->(c2)")
     void computeCouplingBetweenComponents(@Parameter("ids") long[] ids);
 }
