@@ -8,9 +8,7 @@ import com.buchmais.sarf.classification.criterion.data.node.ClassificationInfoDe
 import com.buchmais.sarf.classification.criterion.data.node.RuleBasedCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
 import com.buchmais.sarf.classification.criterion.data.node.cohesion.CohesionCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.dependency.DependencyCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.dependency.DependencyDescriptor;
-import com.buchmais.sarf.classification.criterion.dependency.DependencyRepository;
+import com.buchmais.sarf.classification.criterion.dependency.*;
 import com.buchmais.sarf.classification.criterion.logic.cohesion.CohesionCriterion;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRepository;
@@ -95,6 +93,9 @@ public class SARFRunner {
                 .type(TypeNamingRepository.class)
                 .type(PackageNamingRepository.class)
                 .type(DependencyRepository.class)
+                .type(AnnotatedByDescriptor.class)
+                .type(ExtendsDescriptor.class)
+                .type(ImplementsDescriptor.class)
                 .uri(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"))
                 .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);

@@ -2,7 +2,10 @@ package com.buchmais.sarf.metamodel;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Materializable;
+import com.buchmais.sarf.classification.criterion.dependency.AnnotatedByRule;
 import com.buchmais.sarf.classification.criterion.dependency.DependencyRule;
+import com.buchmais.sarf.classification.criterion.dependency.ExtendsRule;
+import com.buchmais.sarf.classification.criterion.dependency.ImplementsRule;
 import com.buchmais.sarf.classification.criterion.logic.Rule;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRule;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRule;
@@ -40,7 +43,10 @@ public class Component implements Comparable<Component>, Materializable<Componen
             {
                     @XmlElement(name = "Name", type = TypeNamingRule.class),
                     @XmlElement(name = "Package", type = PackageNamingRule.class),
-                    @XmlElement(name = "Dependency", type = DependencyRule.class)
+                    @XmlElement(name = "Dependency", type = DependencyRule.class),
+                    @XmlElement(name = "AnnotatedBy", type = AnnotatedByRule.class),
+                    @XmlElement(name = "Extends", type = ExtendsRule.class),
+                    @XmlElement(name = "Implements", type = ImplementsRule.class)
             }
     )
     Set<Rule> identifyingRules;
