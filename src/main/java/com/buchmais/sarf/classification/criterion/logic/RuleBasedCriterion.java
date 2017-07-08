@@ -6,11 +6,14 @@ import com.buchmais.sarf.classification.criterion.data.node.RuleBasedCriterionDe
 import com.buchmais.sarf.node.ComponentDescriptor;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -46,8 +49,7 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
             return res;
         });
         SARFRunner.xoManager.currentTransaction().begin();
-        Set<String> matchedTypes = new TreeSet<>();
-        Set<String> multipleMatchedTypes = new TreeSet<>();
+        Map<String, Map<String, Set<String>>> mappedTypes = new HashMap<>();
         Long totalTypes = 0L;
         Long internalTypes = SARFRunner.xoManager.getRepository(TypeRepository.class).countAllInternalTypes();
         for (R r : this.rules) {
@@ -62,18 +64,38 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
                 info.setRule(r.getDescriptor());
                 info.setIteration(iteration);
                 this.getClassificationCriterionDescriptor().getClassifications().add(info);
-                if (matchedTypes.contains(t.getFullQualifiedName()))
-                    multipleMatchedTypes.add(t.getFullQualifiedName());
-                matchedTypes.add(t.getFullQualifiedName());
+                if (mappedTypes.containsKey(t.getFullQualifiedName())) {
+                    mappedTypes.get(t.getFullQualifiedName()).merge(
+                            componentDescriptor.getShape(),
+                            Sets.newHashSet(componentDescriptor.getName()),
+                            (s1, s2) -> {
+                                s1.addAll(s2);
+                                return s1;
+                            }
+                    );
+                } else {
+                    Map<String, Set<String>> start = new HashMap<>();
+                    start.put(componentDescriptor.getShape(), Sets.newHashSet(componentDescriptor.getName()));
+                    mappedTypes.put(t.getFullQualifiedName(), start);
+                }
                 totalTypes++;
             }
             componentDescriptors.add(componentDescriptor);
         }
+        Long multipleMatched = 0L;
+        for (Map.Entry<String, Map<String, Set<String>>> mappings : mappedTypes.entrySet()) {
+            for (Map.Entry<String, Set<String>> components : mappings.getValue().entrySet()) {
+                if (components.getValue().size() > 1) {
+                    multipleMatched++;
+                    break;
+                }
+            }
+        }
         SARFRunner.xoManager.currentTransaction().commit();
         LOG.info("Executed " + this.rules.size() + " Rules");
         LOG.info("\tIdentified " + componentDescriptors.size() + " Components");
-        LOG.info("\tCoverage = " + (matchedTypes.size() / (double) internalTypes));
-        LOG.info("\tQuality = " + (1 - multipleMatchedTypes.size() / (double) matchedTypes.size()));  // TODO: 29.06.2017 Compute per shape
+        LOG.info("\tCoverage = " + (mappedTypes.size() / (double) internalTypes));
+        LOG.info("\tQuality = " + (1 - multipleMatched / (double) mappedTypes.size()));
         return componentDescriptors;
     }
 
