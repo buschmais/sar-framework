@@ -11,7 +11,7 @@ public class ImplementsRule extends DependencyRule<ImplementsRule, ImplementsDes
 
     @Override
     Result<TypeDescriptor> getMatchingTypes(DependencyRepository repository) {
-        return repository.getAllInternalTypesExtending(this.rule);
+        return repository.getAllInternalTypesImplementing(this.rule);
     }
 
     @Override
