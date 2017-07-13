@@ -1,6 +1,6 @@
 package com.buchmais.sarf.classification.criterion;
 
-import com.buchmais.sarf.classification.Materializable;
+import com.buchmais.sarf.Materializable;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

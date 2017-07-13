@@ -1,6 +1,4 @@
-package com.buchmais.sarf.classification;
-
-import com.buchmais.sarf.node.SARFNode;
+package com.buchmais.sarf;
 
 /**
  * @author Stephan Pirnbaum

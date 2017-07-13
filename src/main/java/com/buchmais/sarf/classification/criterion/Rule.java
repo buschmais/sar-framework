@@ -1,7 +1,7 @@
 package com.buchmais.sarf.classification.criterion;
 
+import com.buchmais.sarf.Materializable;
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.metamodel.Component;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;

@@ -1,7 +1,7 @@
 package com.buchmais.sarf.classification.criterion;
 
+import com.buchmais.sarf.SARFNode;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
-import com.buchmais.sarf.node.SARFNode;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;

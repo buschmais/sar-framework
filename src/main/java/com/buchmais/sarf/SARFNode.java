@@ -1,4 +1,4 @@
-package com.buchmais.sarf.node;
+package com.buchmais.sarf;
 
 import com.buschmais.xo.neo4j.api.annotation.Label;
 

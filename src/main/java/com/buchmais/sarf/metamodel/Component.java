@@ -1,7 +1,7 @@
 package com.buchmais.sarf.metamodel;
 
+import com.buchmais.sarf.Materializable;
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.Materializable;
 import com.buchmais.sarf.classification.criterion.Rule;
 import com.buchmais.sarf.classification.criterion.dependency.AnnotatedByRule;
 import com.buchmais.sarf.classification.criterion.dependency.DependencyRule;
