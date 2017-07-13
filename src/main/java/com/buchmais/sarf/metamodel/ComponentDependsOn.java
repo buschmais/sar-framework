@@ -1,4 +1,4 @@
-package com.buchmais.sarf.node;
+package com.buchmais.sarf.metamodel;
 
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;

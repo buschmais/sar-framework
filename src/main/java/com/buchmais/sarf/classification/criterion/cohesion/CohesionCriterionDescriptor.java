@@ -1,6 +1,6 @@
-package com.buchmais.sarf.classification.criterion.data.node.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion;
 
-import com.buchmais.sarf.classification.criterion.data.node.ClassificationCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 
 /**

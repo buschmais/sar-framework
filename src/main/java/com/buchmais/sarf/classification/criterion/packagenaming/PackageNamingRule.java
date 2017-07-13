@@ -1,8 +1,8 @@
 package com.buchmais.sarf.classification.criterion.packagenaming;
 
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.criterion.logic.Rule;
-import com.buchmais.sarf.classification.criterion.logic.RuleBasedCriterion;
+import com.buchmais.sarf.classification.criterion.Rule;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;

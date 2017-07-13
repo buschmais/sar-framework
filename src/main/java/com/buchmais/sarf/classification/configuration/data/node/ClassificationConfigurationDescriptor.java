@@ -1,7 +1,7 @@
 package com.buchmais.sarf.classification.configuration.data.node;
 
-import com.buchmais.sarf.classification.criterion.data.node.ClassificationCriterionDescriptor;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.node.SARFNode;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;

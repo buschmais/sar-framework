@@ -1,6 +1,6 @@
 package com.buchmais.sarf.classification.criterion.dependency;
 
-import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
+import com.buchmais.sarf.classification.criterion.RuleDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 
 /**

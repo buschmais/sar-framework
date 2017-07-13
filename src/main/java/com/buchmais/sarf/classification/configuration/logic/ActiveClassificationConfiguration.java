@@ -2,12 +2,12 @@ package com.buchmais.sarf.classification.configuration.logic;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
-import com.buchmais.sarf.classification.criterion.logic.ClassificationCriterion;
-import com.buchmais.sarf.classification.criterion.logic.Rule;
-import com.buchmais.sarf.classification.criterion.logic.RuleBasedCriterion;
-import com.buchmais.sarf.classification.criterion.logic.cohesion.CohesionCriterion;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
+import com.buchmais.sarf.classification.criterion.Rule;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterion;
+import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
 import com.buchmais.sarf.metamodel.Component;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
@@ -102,15 +102,17 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         removeAmbiguities(components);
         //combine(components);
-        //Set<ComponentDescriptor> cohesionResult = null;
-        //if (cohesionCriterion != null) {
-        //    cohesionResult = cohesionCriterion.classify(this.iteration, components);
-        //    // match with manual classification
-        //} else {
-
-        //}
+        Set<ComponentDescriptor> cohesionResult = null;
+        cohesionCriterion = null;
+        if (cohesionCriterion != null) {
+            cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components));
+            // match with manual classification
+            components = cohesionResult;
+        } else {
+            components = createIntersectingComponents(components);
+        }
         //finalize(components);
-        components = createIntersectingComponents(components);
+
         SARFRunner.xoManager.currentTransaction().begin();
         LOG.info("Pretty Printing the Result");
         prettyPrint(components, "");

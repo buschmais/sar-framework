@@ -1,7 +1,7 @@
 package com.buchmais.sarf.repository;
 
-import com.buchmais.sarf.classification.criterion.data.node.ClassificationInfoDescriptor;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.classification.criterion.ClassificationInfoDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.annotation.Repository;
 import com.buschmais.xo.api.annotation.ResultOf;

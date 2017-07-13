@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.data.node;
+package com.buchmais.sarf.classification.criterion;
 
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 

@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.logic.cohesion.evolution;
+package com.buchmais.sarf.classification.criterion.cohesion;
 
 import com.buchmais.sarf.SARFRunner;
 import com.google.common.base.Strings;

@@ -1,11 +1,9 @@
-package com.buchmais.sarf.classification.criterion.logic.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion;
 
 import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.classification.criterion.data.node.ClassificationCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.data.node.cohesion.CohesionCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.logic.ClassificationCriterion;
-import com.buchmais.sarf.classification.criterion.logic.cohesion.evolution.Partitioner;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
+import com.buchmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
@@ -28,7 +26,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         return classify(iteration, null);
     }
 
-    public Set<ComponentDescriptor> classify(Integer iteration, Set<ComponentDescriptor> components) {
+    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
         SARFRunner.xoManager.currentTransaction().begin();
@@ -42,14 +40,15 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         // create initial partitioning
         Map<Long, Set<Long>> initialPartitioning;
         if (components != null && components.size() > 0) {
-            initialPartitioning = initialPartitioningFromComponents(components, ids);
+            //initialPartitioning = initialPartitioningFromComponents(components, ids);
+            initialPartitioning = components;
         } else {
             initialPartitioning = inititialPartitioningFromPackageStructure(ids);
         }
         SARFRunner.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
-        int iterations = 500;
+        int iterations = 300;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations);

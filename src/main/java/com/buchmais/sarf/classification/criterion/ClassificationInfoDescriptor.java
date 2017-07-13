@@ -1,6 +1,6 @@
-package com.buchmais.sarf.classification.criterion.data.node;
+package com.buchmais.sarf.classification.criterion;
 
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.node.SARFNode;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;

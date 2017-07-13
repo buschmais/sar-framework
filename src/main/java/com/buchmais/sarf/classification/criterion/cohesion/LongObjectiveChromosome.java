@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.logic.cohesion.evolution;
+package com.buchmais.sarf.classification.criterion.cohesion;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.repository.MetricRepository;
@@ -24,11 +24,11 @@ public class LongObjectiveChromosome extends LongChromosome {
 
     private Double couplingObjective = 0d;
 
-    private int componentCountObjective = 0;
+    private Double componentCountObjective = 0d;
 
-    private long componentSizeObjective = 0;
+    private Double componentSizeObjective = 0d;
 
-    private int componentRangeObjective = 0;
+    private Double componentRangeObjective = 0d;
 
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes);
@@ -76,12 +76,12 @@ public class LongObjectiveChromosome extends LongChromosome {
         }
         SARFRunner.xoManager.currentTransaction().commit();
         // minimize the difference between min and max component size
-        this.componentRangeObjective = identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
-                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0);
+        this.componentRangeObjective = (double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
+                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0));
         // punish one-type only components
-        this.componentSizeObjective = identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count();
+        this.componentSizeObjective = - identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / 10d;
         // maximize component number
-        this.componentCountObjective = identifiedComponents.size();
+        this.componentCountObjective = (double) identifiedComponents.size();
         this.evaluated = true;
 
     }
@@ -96,17 +96,17 @@ public class LongObjectiveChromosome extends LongChromosome {
         return this.couplingObjective;
     }
 
-    protected Long getComponentSizeObjective() {
+    protected Double getComponentSizeObjective() {
         if (!this.evaluated) evaluate();
         return this.componentSizeObjective;
     }
 
-    protected Integer getComponentRangeObjective() {
+    protected Double getComponentRangeObjective() {
         if (!this.evaluated) evaluate();
         return this.componentRangeObjective;
     }
 
-    protected Integer getComponentCountObjective() {
+    protected Double getComponentCountObjective() {
         if (!this.evaluated) evaluate();
         return this.componentCountObjective;
     }

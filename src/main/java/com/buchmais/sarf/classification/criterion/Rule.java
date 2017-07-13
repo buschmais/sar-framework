@@ -1,10 +1,9 @@
-package com.buchmais.sarf.classification.criterion.logic;
+package com.buchmais.sarf.classification.criterion;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Materializable;
-import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
 import com.buchmais.sarf.metamodel.Component;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;

@@ -4,20 +4,20 @@ import com.buchmais.sarf.classification.configuration.TypeCouplingEnricher;
 import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.classification.configuration.logic.ActiveClassificationConfiguration;
 import com.buchmais.sarf.classification.configuration.logic.ConfigurationHistory;
-import com.buchmais.sarf.classification.criterion.data.node.ClassificationInfoDescriptor;
-import com.buchmais.sarf.classification.criterion.data.node.RuleBasedCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.data.node.RuleDescriptor;
-import com.buchmais.sarf.classification.criterion.data.node.cohesion.CohesionCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.ClassificationInfoDescriptor;
+import com.buchmais.sarf.classification.criterion.RuleBasedCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.RuleDescriptor;
+import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
+import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.dependency.*;
-import com.buchmais.sarf.classification.criterion.logic.cohesion.CohesionCriterion;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRepository;
 import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRuleDescriptor;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRepository;
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRuleDescriptor;
-import com.buchmais.sarf.node.ComponentDependsOn;
-import com.buchmais.sarf.node.ComponentDescriptor;
+import com.buchmais.sarf.metamodel.ComponentDependsOn;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.MetricRepository;
@@ -130,7 +130,7 @@ public class SARFRunner {
         LOG.info("Reading XML Configuration");
         try {
             URL schemaUrl = SARFRunner.class.getClassLoader().getResource("schema.xsd");
-            URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration_1.xml");
+            URL configUrl = SARFRunner.class.getClassLoader().getResource("configuration_2.xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(ActiveClassificationConfiguration.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -140,7 +140,7 @@ public class SARFRunner {
             SARFRunner.activeClassificationConfiguration = (ActiveClassificationConfiguration) jaxbUnmarshaller.unmarshal(configUrl);
             activeClassificationConfiguration.addClassificationCriterion(new CohesionCriterion());
         } catch (JAXBException | SAXException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e);
         }
         LOG.info("Unmarshalling XML Configuration Successful");
     }
