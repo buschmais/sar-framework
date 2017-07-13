@@ -1,8 +1,7 @@
-package com.buchmais.sarf.classification.configuration.logic;
+package com.buchmais.sarf.classification.configuration;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.Materializable;
-import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.metamodel.Component;

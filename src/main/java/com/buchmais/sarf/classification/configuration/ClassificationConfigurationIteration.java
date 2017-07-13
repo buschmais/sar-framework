@@ -1,6 +1,4 @@
-package com.buchmais.sarf.classification.configuration.logic;
-
-import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
+package com.buchmais.sarf.classification.configuration;
 
 /**
  * @author Stephan Pirnbaum

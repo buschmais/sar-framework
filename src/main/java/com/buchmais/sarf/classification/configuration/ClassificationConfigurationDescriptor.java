@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.configuration.data.node;
+package com.buchmais.sarf.classification.configuration;
 
 import com.buchmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;

@@ -1,6 +1,5 @@
-package com.buchmais.sarf.repository;
+package com.buchmais.sarf.classification.configuration;
 
-import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
 import com.buschmais.xo.api.annotation.Repository;
 import com.buschmais.xo.api.annotation.ResultOf;
 import com.buschmais.xo.neo4j.api.TypedNeo4jRepository;

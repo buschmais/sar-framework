@@ -1,9 +1,6 @@
 package com.buchmais.sarf;
 
-import com.buchmais.sarf.classification.configuration.TypeCouplingEnricher;
-import com.buchmais.sarf.classification.configuration.data.node.ClassificationConfigurationDescriptor;
-import com.buchmais.sarf.classification.configuration.logic.ActiveClassificationConfiguration;
-import com.buchmais.sarf.classification.configuration.logic.ConfigurationHistory;
+import com.buchmais.sarf.classification.configuration.*;
 import com.buchmais.sarf.classification.criterion.ClassificationInfoDescriptor;
 import com.buchmais.sarf.classification.criterion.RuleBasedCriterionDescriptor;
 import com.buchmais.sarf.classification.criterion.RuleDescriptor;
@@ -18,7 +15,6 @@ import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRepositor
 import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRuleDescriptor;
 import com.buchmais.sarf.metamodel.ComponentDependsOn;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
-import com.buchmais.sarf.repository.ClassificationConfigurationRepository;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.MetricRepository;
 import com.buchmais.sarf.repository.TypeRepository;
