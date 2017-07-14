@@ -1,5 +1,25 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    <xs:element name="Dependency">
+    <xs:element name="DependsOn">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="rule" use="required"/>
+                    <xs:attribute type="xs:byte" name="weight" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Implements">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="rule" use="required"/>
+                    <xs:attribute type="xs:byte" name="weight" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="AnnotatedBy">
         <xs:complexType>
             <xs:simpleContent>
                 <xs:extension base="xs:string">
@@ -19,15 +39,6 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
-    <xs:element name="Rules">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="Dependency" maxOccurs="unbounded" minOccurs="0"/>
-                <xs:element ref="Name" maxOccurs="unbounded" minOccurs="0"/>
-                <xs:element ref="Package" maxOccurs="unbounded" minOccurs="0"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
     <xs:element name="Package">
         <xs:complexType>
             <xs:simpleContent>
@@ -38,14 +49,25 @@
             </xs:simpleContent>
         </xs:complexType>
     </xs:element>
+    <xs:element name="Rules">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="DependsOn" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Implements" minOccurs="0"/>
+                <xs:element ref="AnnotatedBy" minOccurs="0"/>
+                <xs:element ref="Name" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Package" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
     <xs:element name="Component">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="Rules" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Rules" minOccurs="0"/>
                 <xs:element ref="Component" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
-            <xs:attribute type="xs:string" name="shape" use="optional"/>
-            <xs:attribute type="xs:string" name="name" use="optional"/>
+            <xs:attribute type="xs:string" name="shape" use="required"/>
+            <xs:attribute type="xs:string" name="name" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="Configuration">
@@ -53,7 +75,7 @@
             <xs:sequence>
                 <xs:element ref="Component" maxOccurs="unbounded" minOccurs="0"/>
             </xs:sequence>
-            <xs:attribute type="xs:byte" name="iteration"/>
+            <xs:attribute type="xs:integer" name="iteration" use="required"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>

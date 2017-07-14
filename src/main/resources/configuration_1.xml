@@ -1,42 +1,64 @@
 <Configuration iteration="1">
     <Component shape="Layer" name="DataLayer">
         <Rules>
-            <Dependency rule="javax\.persistence.*" weight="50"/>
+            <!--Dependency rule="javax\.persistence.*" weight="50"/>
             <Dependency rule="org\.hibernate.*" weight="50"/>
             <Dependency rule="org\.springframework\.data.*" weight="50"/>
+            <Implements rule="org\.springframework\.data\.Repository" weight="100"/>
+            <AnnotatedBy rule="javax\.persistence\.Entity" weight="100"/-->
             <Name rule=".*Repository" weight="100"/>
             <Name rule=".*View" weight="100"/>
-            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.model.*" weight="100"/>
+            <!--Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.model.*" weight="100"/-->
         </Rules>
     </Component>
     <Component shape="Layer" name="DomainLayer">
         <Rules>
-            <Dependency rule="javax\.mail.*" weight="80"/>
+            <!--Dependency rule="javax\.mail.*" weight="80"/>
             <Dependency rule="org\.apache\.velocity.*" weight="100"/>
             <Dependency rule="org\.springframework\.mail.*" weight="100"/>
-            <Dependency rule="org\.springframework\.stereotype\.Service.*" weight="80"/>
-            <!--Implements rule="org\.springframework\.stereotype\.Service.*" weight="80" />
-            <AnnotatedBy rule="org\.springframework\.stereotype\.Service.*" weight="80" /-->
+            <AnnotatedBy rule="org\.springframework\.stereotype\.Service" weight="100" /-->
             <Name rule=".*MailSender" weight="100"/>
             <Name rule=".*Service" weight="100"/>
-            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.manager.*" weight="100"/>
+            <!--Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.manager.*" weight="100"/-->
         </Rules>
     </Component>
     <Component shape="Layer" name="PresentationLayer">
         <Rules>
-            <Dependency rule="com\.github\.dandelion.*" weight="50"/>
+            <!--Dependency rule="com\.github\.dandelion.*" weight="50"/>
             <Dependency rule="javax\.servlet.*" weight="80"/>
-            <Dependency rule="org\.springframework\.stereotype\.Controller.*" weight="100"/>
+            <AnnotatedBy rule="org\.springframework\.stereotype\.Controller" weight="100"/-->
             <Name rule=".*Controller" weight="100"/>
             <Name rule=".*Form" weight="100"/>
-            <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.controller.*" weight="100"/>
+            <!--Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.controller.*" weight="100"/-->
         </Rules>
     </Component>
-    <Component shape="Module" name="Infrastructure">
+    <Component shape="Module" name="KeycardAdministration">
+        <Rules>
+            <Name rule=".*Keycard.*" weight="100"/>
+            <Name rule=".*KeyCard.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="NewsAdministration">
+        <Rules>
+            <Name rule=".*News.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="TrainingAdministration">
+        <Rules>
+            <Name rule=".*Training.*" weight="100"/>
+            <Name rule=".*Opening.*" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Module" name="UserAdministration">
+        <Rules>
+            <Name rule=".*User.*" weight="100"/>
+        </Rules>
+    </Component>
+    <!--Component shape="Module" name="Infrastructure">
         <Rules>
             <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.annotation.*" weight="80"/>
             <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.configuration.*" weight="80"/>
             <Package rule="de\.htw\.kraftraum\.trainingszeitverwaltung\.security.*" weight="80"/>
         </Rules>
-    </Component>
+    </Component-->
 </Configuration>
