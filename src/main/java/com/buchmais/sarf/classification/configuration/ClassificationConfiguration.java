@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -32,7 +33,7 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
 
     @Getter
     @XmlElement(name = "Component")
-    Set<Component> model;
+    Set<Component> model = new HashSet<>();
 
     @Getter
     Set<ClassificationCriterion> classificationCriteria;

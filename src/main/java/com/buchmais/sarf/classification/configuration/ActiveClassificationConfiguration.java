@@ -36,7 +36,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
 
     private static ActiveClassificationConfiguration instance;
 
-    private ActiveClassificationConfiguration(Integer iteration) {
+    public ActiveClassificationConfiguration(Integer iteration) {
         super(iteration);
     }
 
