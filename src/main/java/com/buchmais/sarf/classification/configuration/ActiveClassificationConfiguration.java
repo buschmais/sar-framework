@@ -22,6 +22,10 @@ import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,7 +106,6 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         removeAmbiguities(components);
         //combine(components);
         Set<ComponentDescriptor> cohesionResult = null;
-        cohesionCriterion = null;
         if (cohesionCriterion != null) {
             cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components));
             // match with manual classification
@@ -114,14 +117,21 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
 
         SARFRunner.xoManager.currentTransaction().begin();
         LOG.info("Pretty Printing the Result");
-        prettyPrint(components, "");
+        try (FileWriter fW = new FileWriter("Result_" + System.currentTimeMillis())) {
+            BufferedWriter bW = new BufferedWriter(fW);
+            PrintWriter pW = new PrintWriter(bW);
+            prettyPrint(components, "", pW);
+            pW.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         SARFRunner.xoManager.currentTransaction().commit();
 
     }
 
-    private void prettyPrint(Set<ComponentDescriptor> components, String indentation) {
+    private void prettyPrint(Set<ComponentDescriptor> components, String indentation , PrintWriter pW) {
         for (ComponentDescriptor component : components) {
-            System.out.println(indentation + " " + component.getName());
+            pW.println(indentation + " " + component.getName());
             Result<CompositeRowObject > res = SARFRunner.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + SARFRunner.xoManager.getId(component) + " " +
                     "OPTIONAL MATCH (c)-[:CONTAINS]->(e) RETURN e").execute(); // TODO: 05.07.2017 Improve !!!
             Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
@@ -134,14 +144,14 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 } catch (ClassCastException e) {
                     TypeDescriptor t = r.get("e", TypeDescriptor.class);
                     if (t != null) {
-                        System.out.println(indentation + " \t\t" + t.getFullQualifiedName());
+                        pW.println(indentation + "\t" + t.getName());
                     }
                 }
             }
             res.close();
-            prettyPrint(componentDescriptors, indentation + "\t");
+            prettyPrint(componentDescriptors, indentation + "\t", pW);
         }
-    }
+      }
 
     private void removeAmbiguities(Set<ComponentDescriptor> components) {
         LOG.info("Removing Ambiguities from Pre-Partitioning");
