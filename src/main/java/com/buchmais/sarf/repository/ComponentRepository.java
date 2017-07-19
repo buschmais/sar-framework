@@ -179,4 +179,14 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "MERGE" +
             "  (c1)-[:COUPLES{coupling:coupl}]->(c2)")
     void computeCouplingBetweenComponents(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:Component:SARF)," +
+            "  (t:Type) " +
+            "WHERE" +
+            "  ID(c) = {cId} AND ID(t) = {tId} " +
+            "RETURN" +
+            "  exists((c)-[:CONTAINS]->(t))")
+    boolean containsType(@Parameter("cId") Long cId, @Parameter("tId") Long tId);
 }

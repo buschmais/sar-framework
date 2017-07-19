@@ -83,7 +83,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         return this;
     }
 
-    public void execute() {
+    public Set<ComponentDescriptor> execute() {
         LOG.info("Executing Classification");
         Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
             int res = 0;
@@ -107,7 +107,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         //combine(components);
         Set<ComponentDescriptor> cohesionResult = null;
         if (cohesionCriterion != null) {
-            cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components));
+            cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components), true);
             // match with manual classification
             components = cohesionResult;
         } else {
@@ -126,7 +126,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
             e.printStackTrace();
         }
         SARFRunner.xoManager.currentTransaction().commit();
-
+        return components;
     }
 
     private void prettyPrint(Set<ComponentDescriptor> components, String indentation , PrintWriter pW) {

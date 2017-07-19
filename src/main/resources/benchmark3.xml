@@ -1,0 +1,166 @@
+<Configuration iteration="1">
+    <Component shape="Component" name="1">
+        <Rules>
+            <Name rule="IndexController" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="2">
+        <Rules>
+            <Name rule="Configuration" weight="100"/>
+            <Name rule="DandelionConfiguration" weight="100"/>
+            <Name rule="DateTimeFormatterConfiguration" weight="100"/>
+            <Name rule="MailConfiguration" weight="100"/>
+            <Name rule="VelocityEngineConfiguration" weight="100"/>
+            <Name rule="ViewResolverConfiguration" weight="100"/>
+            <Name rule="WebConfiguration" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="3">
+        <Rules>
+            <Name rule="CustomAuthenticationFailureHandler" weight="100"/>
+            <Name rule="CustomAuthenticationSuccessHandler" weight="100"/>
+            <Name rule="SecurityConfiguration" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="4">
+        <Rules>
+            <Name rule="AbstractMailSender" weight="100"/>
+            <Name rule="AbstractMailSender\$1" weight="100"/>
+            <Name rule="LocalDateTimeSerializer" weight="100"/>
+            <Name rule="LoggedInUser" weight="100"/>
+            <Name rule="PasswordGenerator" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="5">
+        <Rules>
+            <Name rule="AbstractForm" weight="100"/>
+            <Name rule="AssertEquals" weight="100"/>
+            <Name rule="AssertEqualsImpl" weight="100"/>
+            <Name rule="EMail" weight="100"/>
+            <Name rule="EMail\$List" weight="100"/>
+            <Name rule="EmailValidatorImpl" weight="100"/>
+            <Name rule="ValidTimeSpan" weight="100"/>
+            <Name rule="ValidTimeSpanImpl" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="6">
+        <Rules>
+            <Name rule="DatatablesBaseView" weight="100"/>
+            <Name rule="DatatablesResponse" weight="100"/>
+            <Name rule="View" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="7">
+        <Rules>
+            <Name rule="KeyCard" weight="100"/>
+            <Name rule="KeyCardRepository" weight="100"/>
+            <Name rule="ManagerAssignedKeyCardsView" weight="100"/>
+            <Name rule="ManagerUnassignedKeyCardsView" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="8">
+        <Rules>
+            <Name rule="KeycardAdministrationController" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="9">
+        <Rules>
+            <Name rule="KeyCardService" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="10">
+        <Rules>
+            <Name rule="News" weight="100"/>
+            <Name rule="NewsRepository" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="11">
+        <Rules>
+            <Name rule="NewsService" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="12">
+        <Rules>
+            <Name rule="AbstractNewsController" weight="100"/>
+            <Name rule="NewsAdministrationController" weight="100"/>
+            <Name rule="NewsController" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="13">
+        <Rules>
+            <Name rule="AbstractOpening" weight="100"/>
+            <Name rule="BasicOpeningView" weight="100"/>
+            <Name rule="OpeningsStatistic" weight="100"/>
+            <Name rule="RecurringOpening" weight="100"/>
+            <Name rule="RecurringOpeningRepository" weight="100"/>
+            <Name rule="SingleOpening" weight="100"/>
+            <Name rule="SingleOpeningRepository" weight="100"/>
+            <Name rule="TrainerOpeningsView" weight="100"/>
+            <Name rule="TrainingStatisticEntry" weight="100"/>
+            <Name rule="TrainingStatisticRepository" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="14">
+        <Rules>
+            <Name rule="SubscriptionService" weight="100"/>
+            <Name rule="TrainingMailSender" weight="100"/>
+            <Name rule="TrainingService" weight="100"/>
+            <Name rule="TrainingService\$1" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="15">
+        <Rules>
+            <Name rule="AbstractTrainingController" weight="100"/>
+            <Name rule="SubscriptionForm" weight="100"/>
+            <Name rule="TrainingAdministrationController" weight="100"/>
+            <Name rule="TrainingController" weight="100"/>
+            <Name rule="TrainingCreateForm" weight="100"/>
+            <Name rule="TrainingSubscriptionController" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="16">
+        <Rules>
+            <Name rule="BasicUserView" weight="100"/>
+            <Name rule="ManagerUserDetailsView" weight="100"/>
+            <Name rule="ManagerUsersView" weight="100"/>
+            <Name rule="RegisteredMail" weight="100"/>
+            <Name rule="RegisteredMailRepository" weight="100"/>
+            <Name rule="RegisteredUser" weight="100"/>
+            <Name rule="RegisteredUser\$Role" weight="100"/>
+            <Name rule="UserRepository" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="17">
+        <Rules>
+            <Name rule="CustomUserDetailService" weight="100"/>
+            <Name rule="RegisteredUserService" weight="100"/>
+            <Name rule="UrlGenerator" weight="100"/>
+            <Name rule="UserMailSender" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="18">
+        <Rules>
+            <Name rule="AbstractUserController" weight="100"/>
+            <Name rule="LoggedInUserArgumentResolver" weight="100"/>
+            <Name rule="NotExisting" weight="100"/>
+            <Name rule="NotExistingImpl" weight="100"/>
+            <Name rule="PasswordChangeForm" weight="100"/>
+            <Name rule="RegistrationForm" weight="100"/>
+            <Name rule="UserAccountController" weight="100"/>
+            <Name rule="UserAdministrationController" weight="100"/>
+            <Name rule="UserController" weight="100"/>
+            <Name rule="UserDataChangeForm" weight="100"/>
+        </Rules>
+    </Component>
+
+    <Component shape="Component" name="19">
+        <Rules>
+            <Name rule="AppointmentManagerApplication" weight="100"/>
+        </Rules>
+    </Component>
+    <Component shape="Component" name="20">
+        <Rules>
+            <Name rule="DataInitializer" weight="100"/>
+        </Rules>
+    </Component>
+</Configuration>

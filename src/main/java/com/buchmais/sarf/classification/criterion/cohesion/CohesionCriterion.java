@@ -23,10 +23,10 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
 
     @Override
     public Set<ComponentDescriptor> classify(Integer iteration) {
-        return classify(iteration, null);
+        return classify(iteration, null, true);
     }
 
-    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components) {
+    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components, boolean hierarchical) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
         SARFRunner.xoManager.currentTransaction().begin();
@@ -48,11 +48,29 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
-        int iterations = 300;
+        int iterations = 5;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations);
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
+            if (!hierarchical) {
+                SARFRunner.xoManager.currentTransaction().begin();
+                Set<ComponentDescriptor> res = new HashSet<>();
+                for (Long id : identifiedGroups) {
+                    try {
+                        ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                        res.add(cD);
+                    } catch (ClassCastException e) {
+                        ComponentDescriptor cD = SARFRunner.xoManager.create(ComponentDescriptor.class);
+                        cD.setShape("Component");
+                        cD.setName("COH" + iteration + "L" + componentLevel + "#" + (-id));
+                        cD.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
+                        res.add(cD);
+                    }
+                }
+                SARFRunner.xoManager.currentTransaction().commit();
+                return res;
+            }
             ids = identifiedGroups.stream().mapToLong(l -> l).sorted().toArray();
             SARFRunner.xoManager.currentTransaction().begin();
             ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
