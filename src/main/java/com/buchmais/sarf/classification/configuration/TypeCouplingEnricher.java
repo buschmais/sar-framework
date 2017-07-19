@@ -71,7 +71,7 @@ public class TypeCouplingEnricher {
                 WeightConstants.WRITES_STATIC_WEIGHT * computeCouplingWritesStatic(id1, id2) +
                 WeightConstants.COMPOSES_WEIGHT * computeCouplingComposes(id1, id2) +
                 WeightConstants.INNER_CLASSES_WEIGHT * computeCouplingDeclaresInnerClass(id1, id2) +
-                computeSimpleDependsOn(id1, id2);
+                WeightConstants.DEPENDS_ON_WEIGHT * computeSimpleDependsOn(id1, id2);
 
         /*System.out.println("1 " + computeCouplingInvokes(id1, id2));
         System.out.println("2 " + computeCouplingInvokesStatic(id1, id2));

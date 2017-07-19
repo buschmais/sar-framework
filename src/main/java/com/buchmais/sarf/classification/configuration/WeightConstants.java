@@ -4,29 +4,29 @@ package com.buchmais.sarf.classification.configuration;
  * @author Stephan Pirnbaum
  */
 public abstract class WeightConstants {
-    public static final Double INVOKES_WEIGHT = 3d;
+    public static Double DEPENDS_ON_WEIGHT = 1d; // 1
 
-    public static final Double READS_WEIGHT = 1d;
+    public static Double INVOKES_WEIGHT = 0d;  // 2
 
-    public static final Double WRITES_WEIGHT = 1d;
+    public static Double READS_WEIGHT = 0d;  // 3
 
-    public static final Double READS_STATIC_WEIGHT = 1d;
+    public static Double WRITES_WEIGHT = 0d;  // 4
 
-    public static final Double WRITES_STATIC_WEIGHT = 1d;
+    public static Double READS_STATIC_WEIGHT = 0d;  // 4
 
-    public static final Double EXTENDS_WEIGHT = .5d;
+    public static Double WRITES_STATIC_WEIGHT = 0d; // 5
 
-    public static final Double IMPLEMENTS_WEIGHT = .5d;
+    public static Double EXTENDS_WEIGHT = 0d; // 6
 
-    public static final Double PARAMETER_WEIGHT = 1d;
+    public static Double IMPLEMENTS_WEIGHT = 0d;  // 7
 
-    public static final Double RETURNS_WEIGHT = 1d;
+    public static Double PARAMETER_WEIGHT = 0d; // 8
 
-    public static final Double LOCAL_VARIABLE_WEIGHT = 1d;
+    public static Double RETURNS_WEIGHT = 0d; // 9
 
-    public static final Double INNER_CLASSES_WEIGHT = 1d;
+    public static Double INNER_CLASSES_WEIGHT = 0d; // 10
 
-    public static final Double INVOKES_STATIC_WEIGHT = 1d;
+    public static Double INVOKES_STATIC_WEIGHT = 0d; // 11
 
-    public static final Double COMPOSES_WEIGHT = 1d;
+    public static Double COMPOSES_WEIGHT = 0d; // 12
 }

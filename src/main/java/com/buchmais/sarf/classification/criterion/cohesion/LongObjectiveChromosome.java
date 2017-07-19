@@ -61,7 +61,7 @@ public class LongObjectiveChromosome extends LongChromosome {
             long[] ids1 = component1.getValue().stream().mapToLong(i -> i).toArray();
             this.cohesionObjective += mR.computeCohesionInComponent(
                     ids1
-            );
+            ) / ids1.length;
             // compute fitness for inter-edge coupling (coupling of components)
             // is compared twice -> punishing inter-edges
             for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
@@ -73,15 +73,16 @@ public class LongObjectiveChromosome extends LongChromosome {
                     );
                 }
             }
+            this.couplingObjective /= identifiedComponents.size();
         }
         SARFRunner.xoManager.currentTransaction().commit();
         // minimize the difference between min and max component size
-        this.componentRangeObjective = (double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
-                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0));
+        this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
+                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / 10d;
         // punish one-type only components
         this.componentSizeObjective = - identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / 10d;
         // maximize component number
-        this.componentCountObjective = (double) identifiedComponents.size();
+        this.componentCountObjective = ((double) identifiedComponents.size()) / 10d;
         this.evaluated = true;
 
     }
