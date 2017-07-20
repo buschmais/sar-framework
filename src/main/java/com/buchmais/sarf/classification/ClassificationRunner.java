@@ -2,29 +2,11 @@ package com.buchmais.sarf.classification;
 
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.configuration.*;
-import com.buchmais.sarf.classification.criterion.ClassificationInfoDescriptor;
-import com.buchmais.sarf.classification.criterion.RuleBasedCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.RuleDescriptor;
 import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
-import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.dependency.*;
-import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRepository;
-import com.buchmais.sarf.classification.criterion.packagenaming.PackageNamingRuleDescriptor;
-import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingCriterionDescriptor;
-import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRepository;
-import com.buchmais.sarf.classification.criterion.typenaming.TypeNamingRuleDescriptor;
-import com.buchmais.sarf.metamodel.ComponentDependsOn;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
-import com.buchmais.sarf.repository.MetricRepository;
 import com.buchmais.sarf.repository.TypeRepository;
-import com.buschmais.jqassistant.plugin.java.api.model.TypeDependsOnDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.xo.api.XOManagerFactory;
-import com.buschmais.xo.api.bootstrap.XO;
-import com.buschmais.xo.api.bootstrap.XOUnit;
-import com.buschmais.xo.neo4j.embedded.api.EmbeddedNeo4jXOProvider;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
@@ -39,6 +21,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
@@ -62,25 +48,53 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     private ClassificationRunner() {
     }
 
-    public void run(URI storeUri, URL configUrl, URL benchmarkUrl, Integer iteration) {
-        XOManagerFactory factory = setUpDB(storeUri);
+    public Double run(URI storeUri, URL configUrl, URL benchmarkUrl, Integer iteration) {
+        //XOManagerFactory factory = setUpDB(storeUri);
         if (iteration != null) {
             loadIteration(iteration);
         } else if (benchmarkUrl != null) {
-            runBenchmark(benchmarkUrl);
+            return runBenchmark(benchmarkUrl);
         } else {
             startNewIteration(configUrl);
         }
-        factory.close();
+        //factory.close();
+        return 0d;
     }
 
-    private Double runBenchmark(URL benchmarkUrl) {
+    public Double runBenchmark(URL benchmarkUrl) {
         this.activeClassificationConfiguration = readConfiguration(benchmarkUrl);
         this.setUpData();
         this.activeClassificationConfiguration.materialize();
         Set<ComponentDescriptor> reference = this.activeClassificationConfiguration.execute();
         CohesionCriterion cohesionCriterion = new CohesionCriterion();
         Set<ComponentDescriptor> comp = cohesionCriterion.classify(2, null, false);
+        try {
+            Long changeCount = Math.min(computeMoJoOperations(reference, comp), computeMoJoOperations(comp, reference));
+            TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+            Double quality = (1 - changeCount.doubleValue() / typeRepository.countAllInternalTypes()) * 100;
+            try (FileWriter fW = new FileWriter("Result_Benchmark_" + System.currentTimeMillis())) {
+                BufferedWriter bW = new BufferedWriter(fW);
+                PrintWriter pW = new PrintWriter(bW);
+                pW.println(WeightConstants.stringify());
+                pW.println("MoJo Changes: " + changeCount);
+                pW.println("MoJo Quality: " + quality + " %");
+                SARFRunner.xoManager.currentTransaction().begin();
+                ActiveClassificationConfiguration.prettyPrint(comp, "", pW);
+                SARFRunner.xoManager.currentTransaction().commit();
+                pW.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            LOG.info("MoJo - Changes Required: " + changeCount);
+            LOG.info("MoJo - Quality: " + quality + "%");
+            return quality;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return Double.MIN_VALUE;
+        }
+    }
+
+    private Long computeMoJoOperations (Set<ComponentDescriptor> reference, Set<ComponentDescriptor> comp) {
         long[] bIds = comp.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray();
         Map<Long, List<Long>> aToBTags = new HashMap<>();
         // there are two partitionings, create a mapping from each component in the reference to all components of the
@@ -154,12 +168,12 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                     for (Map.Entry<Long, List<Long>> aToBTag : aToBTags.entrySet()) {
                         if (!Objects.equals(aToBTag.getKey(), aToBCC.getKey())) {
                             if (aToBTag.getValue().stream().filter(id -> id.equals(tX)).count() > x2 &&
-                                    (bToACCConsidered.get(tX) != null || !bToACCConsidered.get(tX).contains(aToBTag.getKey()))) {
+                                    (bToACCConsidered.get(tX) == null || !bToACCConsidered.get(tX).contains(aToBTag.getKey()))) {
                                 x2 = aToBTag.getValue().stream().filter(id -> id.equals(tX)).count();
                                 aFId = aToBTag.getKey();
                             }
-                            if (aToBTag.getValue().stream().filter(id -> id.equals(tY)).count() > x2 &&
-                                    (bToACCConsidered.get(tX) != null || !bToACCConsidered.get(tX).contains(aToBTag.getKey()))) {
+                            if (aToBTag.getValue().stream().filter(id -> id.equals(tY)).count() > y2 &&
+                                    (bToACCConsidered.get(tY) == null || !bToACCConsidered.get(tY).contains(aToBTag.getKey()))) {
                                 y2 = aToBTag.getValue().stream().filter(id -> id.equals(tY)).count();
                                 aGId = aToBTag.getKey();
                             }
@@ -186,7 +200,8 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                                     return s1;
                                 }
                         );
-                    } else if (y2 == 0 || x1 + y2 <= x2 + y1) {
+                        break;
+                    } else if (y2 == 0 || x1 + y2 < x2 + y1) {
                         aToBCC.getValue().remove(tX);
                         aToBCCs.merge(
                                 aFId,
@@ -205,6 +220,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                                     return s1;
                                 }
                         );
+                        break;
                     }
                 }
             }
@@ -213,7 +229,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
         Long changeCount = 0L;
         Long nextAToCreate = -1L;
         while (aToBCCs.values().stream().filter(bs -> bs.size() > 1).count() > 0) {
-            for (Map.Entry<Long, Set<Long>> aToBCC : aToBCCs.entrySet()) {
+            outer: for (Map.Entry<Long, Set<Long>> aToBCC : aToBCCs.entrySet()) {
                 if (aToBCC.getValue().size() > 1) {
                     // split component
                     Long bToKeep = 0L;
@@ -225,11 +241,18 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                         }
                     }
                     Long finalBToKeep = bToKeep;
-                    for (Long bId : Sets.newHashSet(aToBTags.get(aToBCC.getKey()))) {
+                    for (Long bId : aToBCC.getValue()) {
                         if (!Objects.equals(bId, bToKeep)) {
+                            // split
+                            aToBCCs.put(nextAToCreate, Sets.newHashSet(bId));
+                            aToBCC.getValue().remove(bId);
                             aToBTags.put(nextAToCreate, aToBTags.get(aToBCC.getKey()).stream().filter(id -> id.equals(bId)).collect(Collectors.toList()));
                             changeCount += aToBTags.get(nextAToCreate).size();
+                            while (aToBTags.get(aToBCC.getKey()).contains(bId)) {
+                                aToBTags.get(aToBCC.getKey()).remove(bId);
+                            }
                             nextAToCreate--;
+                            break outer;
                         }
                     }
                 }
@@ -291,10 +314,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                 }
             }
         }
-        LOG.info("MoJo - Changes Required: " + changeCount);
-        Double quality = (1 - changeCount.doubleValue() / typeRepository.countAllInternalTypes()) * 100;
-        LOG.info("MoJo - Quality: " + quality + "%");
-        return quality;
+        return changeCount;
     }
 
     public void startNewIteration() {
@@ -364,45 +384,5 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                     classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1);
             System.exit(1);
         }
-    }
-
-    private XOManagerFactory setUpDB(URI storeUri) {
-        LOG.info("Setting up Database");
-        Properties p = new Properties();
-        p.put("neo4j.dbms.allow_format_migration", "true");
-        XOUnit xoUnit = XOUnit.builder()
-                .properties(p)
-                .provider(EmbeddedNeo4jXOProvider.class)
-                .type(TypeDescriptor.class)
-                .type(TypeDependsOnDescriptor.class)
-                .type(TypeRepository.class)
-                .type(PackageNamingRuleDescriptor.class)
-                .type(PackageNamingCriterionDescriptor.class)
-                .type(ComponentRepository.class)
-                .type(ComponentDescriptor.class)
-                .type(ComponentDependsOn.class)
-                .type(ClassificationConfigurationDescriptor.class)
-                .type(ClassificationInfoDescriptor.class)
-                .type(ClassificationConfigurationRepository.class)
-                .type(TypeNamingCriterionDescriptor.class)
-                .type(DependencyCriterionDescriptor.class)
-                .type(DependencyDescriptor.class)
-                .type(MetricRepository.class)
-                .type(RuleBasedCriterionDescriptor.class)
-                .type(RuleDescriptor.class)
-                .type(CohesionCriterionDescriptor.class)
-                .type(TypeNamingRuleDescriptor.class)
-                .type(TypeNamingRepository.class)
-                .type(PackageNamingRepository.class)
-                .type(DependencyRepository.class)
-                .type(AnnotatedByDescriptor.class)
-                .type(ExtendsDescriptor.class)
-                .type(ImplementsDescriptor.class)
-                .uri(storeUri)
-                .build();
-        XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
-        SARFRunner.xoManager = factory.createXOManager();
-        LOG.info("Setting up Database Successful");
-        return factory;
     }
 }

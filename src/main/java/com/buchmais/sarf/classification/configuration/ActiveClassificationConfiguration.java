@@ -129,7 +129,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         return components;
     }
 
-    private void prettyPrint(Set<ComponentDescriptor> components, String indentation , PrintWriter pW) {
+    public static void prettyPrint(Set<ComponentDescriptor> components, String indentation , PrintWriter pW) {
         for (ComponentDescriptor component : components) {
             pW.println(indentation + " " + component.getName());
             Result<CompositeRowObject > res = SARFRunner.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + SARFRunner.xoManager.getId(component) + " " +
