@@ -33,9 +33,9 @@ public class Partitioner {
                 .offspringFraction(0.7)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
-                .populationSize(25)
+                .populationSize(50)
                 .fitnessScaler(f -> Math.pow(f, 5))
-                .alterers(new CouplingMutator(0.3), new GaussianMutator<>(0.1), new MultiPointCrossover<>(0.8))
+                .alterers(new MultiPointCrossover<>(1), new CouplingMutator(0.3), new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)))
                 .executor(Runnable::run)
                 .build();
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);

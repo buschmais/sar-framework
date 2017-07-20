@@ -73,8 +73,8 @@ public class LongObjectiveChromosome extends LongChromosome {
                     );
                 }
             }
-            this.couplingObjective /= identifiedComponents.size();
         }
+        this.couplingObjective /= identifiedComponents.size();
         SARFRunner.xoManager.currentTransaction().commit();
         // minimize the difference between min and max component size
         this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
