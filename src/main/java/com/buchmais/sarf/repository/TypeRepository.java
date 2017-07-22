@@ -94,4 +94,34 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "DETACH DELETE" +
             "  i")
     void removeAssignment(@Parameter("t") Long type, @Parameter("c") Long c, @Parameter("i") Integer iteration);
+
+    @ResultOf
+    @Cypher("MATCH\n" +
+            "  (t1:Type:Internal),\n" +
+            "  (t2:Type:Internal)\n" +
+            "WHERE \n" +
+            "  t1 <> t2 AND ID(t1) > ID(t2)\n" +
+            "WITH\n" +
+            "  t1, t2\n" +
+            "OPTIONAL MATCH\n" +
+            "  (t1)-[c1:COUPLES]-(d1:Type:Internal)-[c2:COUPLES]-(t2)\n" +
+            "WHERE\n" +
+            "  d1 <> t1 AND d1 <> t2\n" +
+            "WITH\n" +
+            "  t1, t2, sum(c1.coupling) + sum(c2.coupling) AS intersection\n" +
+            "OPTIONAL MATCH\n" +
+            "  (t1)-[c1:COUPLES]-(d1:Type:Internal)\n" +
+            "WHERE \n" +
+            "  d1 <> t2\n" +
+            "WITH \n" +
+            "  t1, t2, intersection, sum(c1.coupling) AS t1Coup\n" +
+            "OPTIONAL MATCH\n" +
+            "  (t2)-[c2:COUPLES]-(d2:Type:Internal)\n" +
+            "WHERE\n" +
+            "  d2 <> t1\n" +
+            "WITH \n" +
+            "  t1, t2, t1Coup, sum(c2.coupling) AS t2Coup, intersection\n" +
+            "MERGE\n" +
+            "  (t1)-[:IS_SIMILAR_TO{similarity:(intersection / (t1Coup + t2Coup + 0.00001))}]-(t2)")
+    void computeTypeSimilarity();
 }

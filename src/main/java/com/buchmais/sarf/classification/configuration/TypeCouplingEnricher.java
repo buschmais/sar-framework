@@ -40,6 +40,7 @@ public class TypeCouplingEnricher {
             }
         }
         orderedCoupling.forEach(c -> LOG.info("Coupling: " + c));
+        TypeSimilarityEnricher.enrich();
         SARFRunner.xoManager.currentTransaction().commit();
     }
 

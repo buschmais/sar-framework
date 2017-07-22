@@ -297,11 +297,11 @@ public interface MetricRepository {
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (e1)-[c:COUPLES]->(e2) " +
+            "  (e1)-[c:IS_SIMILAR_TO]->(e2) " +
             "WHERE" +
             "  ID(e1) IN {ids} AND ID(e2) IN {ids} " +
             "RETURN" +
-            "  toFloat(SUM(c.coupling))")
+            "  toFloat(SUM(c.similarity))")
     Double computeCohesionInComponent(@Parameter("ids") long[] ids);
 
     @ResultOf
