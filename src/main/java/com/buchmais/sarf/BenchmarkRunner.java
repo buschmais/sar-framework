@@ -58,9 +58,9 @@ public class BenchmarkRunner {
         WeightConstants.COMPOSES_WEIGHT = prospect.get(0, 12).doubleValue();
         ClassificationRunner runner = ClassificationRunner.getInstance();
         try {
-            return runner.run(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"), null,
+            return runner.run(null,
                     new URL("file:///E:/Development/sar-framework/src/main/resources/benchmark3.xml"), null);
-        } catch (URISyntaxException | MalformedURLException e) {
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         }
         return Double.MIN_VALUE;

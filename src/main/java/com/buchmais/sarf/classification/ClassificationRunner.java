@@ -18,7 +18,6 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.*;
-import java.net.URI;
 import java.net.URL;
 import java.util.Set;
 
@@ -40,7 +39,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     private ClassificationRunner() {
     }
 
-    public Double run(URI storeUri, URL configUrl, URL benchmarkUrl, Integer iteration) {
+    public Double run(URL configUrl, URL benchmarkUrl, Integer iteration) {
         //XOManagerFactory factory = setUpDB(storeUri);
         if (iteration != null) {
             loadIteration(iteration);
@@ -76,34 +75,24 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
         SARFRunner.xoManager.currentTransaction().commit();
         try {
             MoJoCalculator moJoCalculator1 = new MoJoCalculator(
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distra.rsf")),
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distrb.rsf"))
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
             );
             MoJoCalculator moJoCalculator2 = new MoJoCalculator(
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distrb.rsf")),
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distra.rsf"))
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes()))),
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes())))
             );
             MoJoCalculator moJoFmCalculator = new MoJoCalculator(
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distra.rsf")),
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distrb.rsf"))
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes()))),
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes())))
             );
             MoJoCalculator moJoPlusCalculator1 = new MoJoCalculator(
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distrb.rsf")),
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distra.rsf"))
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
             );
             MoJoCalculator moJoPlusCalculator2 = new MoJoCalculator(
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distrb.rsf")),
-                    new BufferedReader(new FileReader("C:/Users/steph/Downloads/mojo/distra.rsf"))
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    //new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes()))),
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes())))
             );
             Long mojoCompRef = moJoCalculator1.mojo();
             Long mojoRefComp = moJoCalculator2.mojo();
@@ -129,11 +118,8 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return (1. * mojoFm) / typeCount;
+            return mojoFm;
         } catch (NullPointerException e) {
-            e.printStackTrace();
-            return Double.MIN_VALUE;
-        } catch (FileNotFoundException e) {
             e.printStackTrace();
             return Double.MIN_VALUE;
         }

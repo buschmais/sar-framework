@@ -74,7 +74,7 @@ public class SARFRunner {
             Integer iteration = cmd.hasOption("l") ? Integer.valueOf(cmd.getOptionValue("l")) : null;
             URL benchUrl = cmd.hasOption("b") ? new URL(cmd.getOptionValue("b")) : null;
             setUpDB(storeUri);
-            runner.run(storeUri, configUrl, benchUrl, iteration);
+            runner.run(configUrl, benchUrl, iteration);
         } catch (ParseException e) {
             LOG.error(e.getMessage());
             formatter.printHelp("java -jar sarf.jar", options);
