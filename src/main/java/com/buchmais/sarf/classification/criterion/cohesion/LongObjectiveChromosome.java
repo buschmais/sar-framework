@@ -6,7 +6,6 @@ import com.google.common.collect.Sets;
 import org.jenetics.LongChromosome;
 import org.jenetics.LongGene;
 import org.jenetics.util.ISeq;
-import org.jenetics.util.LongRange;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +15,7 @@ import java.util.Set;
 /**
  * @author Stephan Pirnbaum
  */
-public class LongObjectiveChromosome extends LongChromosome {
+public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private boolean evaluated = false;
 
@@ -54,38 +53,40 @@ public class LongObjectiveChromosome extends LongChromosome {
                         return s1;
                     });
         }
-        SARFRunner.xoManager.currentTransaction().begin();
+        //SARFRunner.xoManager.currentTransaction().begin();
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         // compute fitness for intra-edge coupling (cohesiveness of components)
         for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
             long[] ids1 = component1.getValue().stream().mapToLong(i -> i).toArray();
-            this.cohesionObjective += mR.computeCohesionInComponent(
-                    ids1
-            ) / ids1.length;
+            this.cohesionObjective += computeCohesion(mR, ids1);
             // compute fitness for inter-edge coupling (coupling of components)
             // is compared twice -> punishing inter-edges
             for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
                 long[] ids2 = component2.getValue().stream().mapToLong(i -> i).toArray();
                 if (!Objects.equals(component1.getKey(), component2.getKey())) {
-                    this.couplingObjective -= mR.computeCouplingBetweenComponents(
-                            ids2,
-                            ids1
-                    );
+                    this.couplingObjective -= computeCoupling(mR, ids1, ids2);
                 }
             }
         }
-        this.couplingObjective /= identifiedComponents.size();
-        SARFRunner.xoManager.currentTransaction().commit();
+        this.couplingObjective /= (identifiedComponents.size() * (identifiedComponents.size() - 1)) / 2; // TODO: 22.07.2017 Improve
+        this.cohesionObjective /= identifiedComponents.size();
+        //SARFRunner.xoManager.currentTransaction().commit();
         // minimize the difference between min and max component size
         this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
-                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / 10d;
+                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / (Partitioner.ids.length - 1);
         // punish one-type only components
-        this.componentSizeObjective = - identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / 10d;
+        this.componentSizeObjective = - identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / (double) identifiedComponents.size();
         // maximize component number
-        this.componentCountObjective = ((double) identifiedComponents.size()) / 10d;
+        this.componentCountObjective = ((double) identifiedComponents.size()) / Partitioner.ids.length;
+        System.out.println(identifiedComponents.size() + " " + this.cohesionObjective + " " + this.couplingObjective + " " +
+            this.componentRangeObjective + " " + this.componentSizeObjective + " " + this.componentCountObjective);
         this.evaluated = true;
 
     }
+
+    abstract Double computeCohesion(MetricRepository mR, long[] ids);
+
+    abstract Double computeCoupling(MetricRepository mR, long[] ids1, long[] ids2);
 
     protected Double getCohesionObjective() {
         if (!this.evaluated) evaluate();
@@ -124,86 +125,5 @@ public class LongObjectiveChromosome extends LongChromosome {
                (this.componentSizeObjective > chromosome.componentSizeObjective) ||
                (this.componentRangeObjective > chromosome.componentRangeObjective) ||
                (this.componentCountObjective > chromosome.componentCountObjective);
-    }
-
-    @Override
-    public LongObjectiveChromosome newInstance(ISeq<LongGene> genes) {
-        return new LongObjectiveChromosome(genes);
-    }
-
-    @Override
-    public LongObjectiveChromosome newInstance() {
-        return new LongObjectiveChromosome(this.getMin(), this.getMax(), this.length());
-    }
-
-    /**
-     * Create a new {@code LongObjectiveChromosome} with the given genes.
-     *
-     * @param genes the genes of the chromosome.
-     * @return a new chromosome with the given genes.
-     * @throws IllegalArgumentException if the length of the genes array is
-     *         empty.
-     * @throws NullPointerException if the given {@code genes} are {@code null}
-     */
-    public static LongObjectiveChromosome of(final LongGene... genes) {
-        return new LongObjectiveChromosome(ISeq.of(genes));
-    }
-
-    /**
-     * Create a new random {@code LongObjectiveChromosome}.
-     *
-     * @param min the min value of the {@link LongGene}s (inclusively).
-     * @param max the max value of the {@link LongGene}s (inclusively).
-     * @param length the length of the chromosome.
-     * @return a new {@code LongObjectiveChromosome} with the given gene parameters.
-     * @throws IllegalArgumentException if the {@code length} is smaller than
-     *         one.
-     */
-    public static LongObjectiveChromosome of(
-            final long min,
-            final long max,
-            final int length
-    ) {
-        return new LongObjectiveChromosome(min, max, length);
-    }
-
-    /**
-     * Create a new random {@code LongObjectiveChromosome}.
-     *
-     * @since 3.2
-     *
-     * @param range the long range of the chromosome.
-     * @param length the length of the chromosome.
-     * @return a new random {@code LongObjectiveChromosome}
-     * @throws NullPointerException if the given {@code range} is {@code null}
-     * @throws IllegalArgumentException if the {@code length} is smaller than
-     *         one.
-     */
-    public static LongObjectiveChromosome of(final LongRange range, final int length) {
-        return new LongObjectiveChromosome(range.getMin(), range.getMax(), length);
-    }
-
-    /**
-     * Create a new random {@code LongObjectiveChromosome} of length one.
-     *
-     * @param min the minimal value of this chromosome (inclusively).
-     * @param max the maximal value of this chromosome (inclusively).
-     * @return a new {@code LongObjectiveChromosome} with the given gene parameters.
-     */
-    public static LongObjectiveChromosome of(final long min, final long max) {
-        return new LongObjectiveChromosome(min, max);
-    }
-
-    /**
-     * Create a new random {@code LongObjectiveChromosome} of length one.
-     *
-     * @since 3.2
-     *
-     * @param range the long range of the chromosome.
-     * @return a new random {@code LongObjectiveChromosome} of length one
-     * @throws NullPointerException if the given {@code range} is {@code null}
-     */
-    public static LongObjectiveChromosome of(final LongRange range) {
-        return new LongObjectiveChromosome(range.getMin(), range.getMax());
     }
 }

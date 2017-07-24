@@ -22,20 +22,22 @@ public class Partitioner {
     static int generations;
     private static long bestGeneration;
 
-    public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations) {
+    public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations, boolean similarityBased) {
         Partitioner.best = null;
         Partitioner.bestFitness = Double.MIN_VALUE;
         Partitioner.ids = ids;
         Partitioner.generations = generations;
-        Genotype<LongGene> genotype = createGenotype(initialPartitioning);
+        Genotype<LongGene> genotype = createGenotype(initialPartitioning, similarityBased);
         final Engine<LongGene, Double> engine = Engine
                 .builder(Partitioner::computeFitnessValue, genotype)
                 .offspringFraction(0.7)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
                 .populationSize(50)
-                .fitnessScaler(f -> Math.pow(f, 5))
-                .alterers(new MultiPointCrossover<>(1), new CouplingMutator(0.3), new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)))
+                .alterers(
+                        new MultiPointCrossover<>(1),
+                        similarityBased ? new SimilarityMutator(0.3) : new CouplingMutator(0.3),
+                        new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)))
                 .executor(Runnable::run)
                 .build();
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
@@ -62,7 +64,7 @@ public class Partitioner {
 
     }
 
-    private static Genotype<LongGene> createGenotype(Map<Long, Set<Long>> initialPartitioning) {
+    private static Genotype<LongGene> createGenotype(Map<Long, Set<Long>> initialPartitioning, boolean similarityBased) {
         List<LongGene> genes = new LinkedList<>();
         for (Long id : ids) {
             int compId = 0;
@@ -78,7 +80,10 @@ public class Partitioner {
                 genes.add(LongGene.of(compId, 0, ids.length - 2));
             }
         }
-        Chromosome<LongGene> chromosome = LongObjectiveChromosome.of(genes.toArray(new LongGene[genes.size()]));
+        Chromosome<LongGene> chromosome =
+                similarityBased ?
+                        LongObjectiveSimilarityChromosome.of(genes.toArray(new LongGene[genes.size()])) :
+                        LongObjectiveCouplingChromosome.of(genes.toArray(new LongGene[genes.size()]));
         return Genotype.of(chromosome);
     }
 

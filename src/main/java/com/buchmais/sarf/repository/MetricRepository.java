@@ -295,14 +295,7 @@ public interface MetricRepository {
             "  count(DISTINCT d) > 0")
     boolean declaresInnerClass(@Parameter("t1") Long id1, @Parameter("t2") Long id2);
 
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (e1)-[c:IS_SIMILAR_TO]->(e2) " +
-            "WHERE" +
-            "  ID(e1) IN {ids} AND ID(e2) IN {ids} " +
-            "RETURN" +
-            "  toFloat(SUM(c.similarity))")
-    Double computeCohesionInComponent(@Parameter("ids") long[] ids);
+
 
     @ResultOf
     @Cypher("MATCH" +
@@ -310,7 +303,7 @@ public interface MetricRepository {
             "WHERE" +
             "  ID(e1) IN {ids1} AND ID(e2) IN {ids2} " +
             "RETURN" +
-            "  toFloat(SUM(c.coupling))")
+            "  toFloat(SUM(c.coupling) / COUNT(c))")
     Double computeCouplingBetweenComponents(@Parameter("ids1") long[] ids1, @Parameter("ids2") long[] ids2);
 
     @ResultOf
@@ -330,4 +323,40 @@ public interface MetricRepository {
             "RETURN" +
             "  EXISTS((t1)-[:DEPENDS_ON]->(t2))")
     boolean dependsOn(@Parameter("id1") Long id1, @Parameter("id2") Long id2);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (e1)-[s:IS_SIMILAR_TO]->(e2) " +
+            "WHERE" +
+            "  ID(e1) IN {ids} AND ID(e2) IN {ids} " +
+            "RETURN" +
+            "  toFloat(SUM(s.similarity))")
+    Double computeSimilarityCohesionInComponent(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (e1)-[s:IS_SIMILAR_TO]->(e2) " +
+            "WHERE" +
+            "  ID(e1) IN {ids1} AND ID(e2) IN {ids2} " +
+            "RETURN" +
+            "  toFloat(SUM(s.similarity)/(COUNT(s) + 0.00000001))")
+    Double computeSimilarityCouplingBetweenComponents(@Parameter("ids1") long[] ids1, @Parameter("ids2") long[] ids2);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (e1)-[c:COUPLES]->(e2) " +
+            "WHERE" +
+            "  ID(e1) IN {ids} AND ID(e2) IN {ids} " +
+            "RETURN" +
+            "  toFloat(SUM(c.coupling))")
+    Double computeCouplingCohesionInComponent(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (e1)-[s:IS_SIMILAR_TO]->(e2) " +
+            "WHERE" +
+            "  ID(e1) = {id} AND ID(e2) IN {ids} " +
+            "RETURN" +
+            "  toFloat(SUM(s.similarity))")
+    Double computeSimilarityTo(@Parameter("id") long id, @Parameter("ids") long[] typeIds);
 }
