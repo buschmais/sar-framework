@@ -57,7 +57,8 @@ public class TypeCouplingEnricher {
                 WeightConstants.WRITES_WEIGHT +
                 WeightConstants.WRITES_STATIC_WEIGHT +
                 WeightConstants.COMPOSES_WEIGHT +
-                WeightConstants.INNER_CLASSES_WEIGHT;
+                WeightConstants.INNER_CLASSES_WEIGHT +
+                WeightConstants.DEPENDS_ON_WEIGHT;
 
         Double weightedCoupling =
                 WeightConstants.INVOKES_WEIGHT * computeCouplingInvokes(id1, id2) +
@@ -84,7 +85,7 @@ public class TypeCouplingEnricher {
         System.out.println("8 " + computeCouplingReadsStatic(id1, id2));
         System.out.println("9 " + computeCouplingWrites(id1, id2));
         System.out.println("10 " + computeCouplingWritesStatic(id1, id2));*/
-        Double res = weightedCoupling;// / totalWeight;
+        Double res = weightedCoupling / totalWeight;
         return Double.isNaN(res) ? 0 : res;
     }
 

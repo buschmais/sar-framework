@@ -97,18 +97,21 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
 
     @ResultOf
     @Cypher("MATCH\n" +
-            "  (t1:Type:Internal),\n" +
-            "  (t2:Type:Internal)\n" +
+            "  (t1:Type:Internal)-[:COUPLES]-(d:Type:Internal)-[:COUPLES]-(t2:Type:Internal)\n" +
             "WHERE \n" +
             "  t1 <> t2 AND ID(t1) > ID(t2)\n" +
             "WITH\n" +
-            "  t1, t2\n" +
-            "OPTIONAL MATCH\n" +
-            "  (t1)-[c1:COUPLES]-(d1:Type:Internal)-[c2:COUPLES]-(t2)\n" +
-            "WHERE\n" +
-            "  d1 <> t1 AND d1 <> t2\n" +
+            "  DISTINCT t1, t2, d\n" +
+            "MATCH\n" +
+            "  (t1)-[c1:COUPLES]-(d)\n" +
             "WITH\n" +
-            "  t1, t2, sum(c1.coupling) + sum(c2.coupling) AS intersection\n" +
+            "  t1, t2, d, SUM(c1.coupling) AS t1Coup\n" +
+            "MATCH\n" +
+            "  (t2)-[c2:COUPLES]-(d)\n" +
+            "WITH \n" +
+            "  t1, t2, t1Coup, SUM(c2.coupling) AS t2Coup\n" +
+            "WITH\n" +
+            "  t1, t2, SUM(t1Coup) + SUM(t2Coup) AS intersection\n" +
             "OPTIONAL MATCH\n" +
             "  (t1)-[c1:COUPLES]-(d1:Type:Internal)\n" +
             "WHERE \n" +
@@ -122,6 +125,6 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "WITH \n" +
             "  t1, t2, t1Coup, sum(c2.coupling) AS t2Coup, intersection\n" +
             "MERGE\n" +
-            "  (t1)-[:IS_SIMILAR_TO{similarity:(intersection / (t1Coup + t2Coup + 0.00001))}]-(t2)")
+            "  (t1)-[:IS_SIMILAR_TO{similarity:(intersection / (t1Coup + t2Coup))}]-(t2)")
     void computeTypeSimilarity();
 }

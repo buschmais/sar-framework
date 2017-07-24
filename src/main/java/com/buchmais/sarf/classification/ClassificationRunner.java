@@ -179,7 +179,10 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                     "MATCH (sarf:SARF) DETACH DELETE sarf"
             ).execute();
             SARFRunner.xoManager.createQuery(
-                    "MATCH (:Type)-[c:COUPLES]-(:Type) DELETE c"
+                    "MATCH ()-[c:COUPLES]-() DELETE c"
+            ).execute();
+            SARFRunner.xoManager.createQuery(
+                    "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
             ).execute();
             SARFRunner.xoManager.currentTransaction().commit();
             SARFRunner.xoManager.currentTransaction().begin();
