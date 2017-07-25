@@ -107,7 +107,8 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         //combine(components);
         Set<ComponentDescriptor> cohesionResult = null;
         if (cohesionCriterion != null) {
-            cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components), true);
+            cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components),
+                    getDecomposition() == Decomposition.DEEP);
             // match with manual classification
             components = cohesionResult;
         } else {

@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,9 +26,21 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
 
     private static final Logger LOG = LogManager.getLogger(ClassificationConfiguration.class);
 
+    @XmlType
+    @XmlEnum(String.class)
+    public enum Decomposition {
+        @XmlEnumValue("flat")
+        FLAT,
+        @XmlEnumValue("deep")
+        DEEP
+    }
+
     @Getter
     @XmlAttribute(name = "iteration")
     Integer iteration;
+
+    @XmlAttribute(name = "decomposition")
+    private Decomposition decomposition;
 
     @Getter
     @XmlElement(name = "Component")
@@ -51,6 +62,14 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
 
     public boolean addAllClassificationCriterion(Set<ClassificationCriterion> classificationCriteria) {
         return this.classificationCriteria.addAll(classificationCriteria);
+    }
+
+    public Decomposition getDecomposition() {
+        if (this.decomposition == null) {
+            return Decomposition.DEEP;
+        } else {
+            return this.decomposition;
+        }
     }
 
     public ClassificationConfigurationDescriptor materialize() {
