@@ -170,14 +170,24 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
     Result<ComponentDescriptor> getComponentsWithId(@Parameter("ids") long[] longs);
 
     @ResultOf
-    @Cypher("MATCH" +
-            "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]->(e2)<-[:CONTAINS]-(c2:Component:SARF) " +
-            "WHERE" +
-            "  ID(c1) IN {ids} AND ID(c2) IN {ids} AND NOT ID(c1) = ID(c2) " +
-            "WITH" +
-            "  c1, c2, SUM(coup.coupling) AS coupl " +
-            "MERGE" +
-            "  (c1)-[:COUPLES{coupling:coupl}]->(c2)")
+    @Cypher("MATCH\n" +
+            "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]->(e2)<-[:CONTAINS]-(c2:Component:SARF) \n" +
+            "WHERE\n" +
+            "  NOT ID(c1) = ID(c2) AND c1.name STARTS WITH \"COH\" AND c2.name STARTS WITH \"COH\"\n" +
+            "WITH\n" +
+            "  c1, c2, SUM(coup.coupling) AS coupling\n" +
+            "MATCH\n" +
+            "  (c1)-[:CONTAINS]->(e1)\n" +
+            "WITH \n" +
+            "  c1, c2, count(e1) AS size1, coupling\n" +
+            "MATCH\n" +
+            "  (c2)-[:CONTAINS]->(e2)\n" +
+            "WITH\n" +
+            "  c1, c2, size1 + count(e2) AS size, coupling\n" +
+            "WITH \n" +
+            "  c1, c2, coupling / ((size * (size - 1))/2) AS relCoupling\n" +
+            "MERGE\n" +
+            "  (c1)-[:COUPLES{coupling:relCoupling}]->(c2)")
     void computeCouplingBetweenComponents(@Parameter("ids") long[] ids);
 
     @ResultOf
@@ -189,4 +199,37 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "RETURN" +
             "  exists((c)-[:CONTAINS]->(t))")
     boolean containsType(@Parameter("cId") Long cId, @Parameter("tId") Long tId);
+
+    @ResultOf
+    @Cypher("MATCH\n" +
+            "  (c1:Component:SARF)-[:COUPLES]-(c:Component:SARF)-[:COUPLES]-(c2:Component:SARF)\n" +
+            "WHERE \n" +
+            "  ID(c1) IN {ids} AND ID(c2) IN {ids} AND ID(c1) > ID(c2)\n" +
+            "WITH\n" +
+            "  DISTINCT c1, c2, c\n" +
+            "MATCH\n" +
+            "  (c1)-[coup:COUPLES]-(c)\n" +
+            "WITH\n" +
+            "  c1, c2, c, SUM(coup.coupling) AS c1Coup\n" +
+            "MATCH\n" +
+            "  (c2)-[coup:COUPLES]-(c)\n" +
+            "WITH \n" +
+            "  c1, c2, c1Coup, SUM(coup.coupling) AS c2Coup\n" +
+            "WITH\n" +
+            "  c1, c2, SUM(c1Coup) + SUM(c2Coup) AS intersection\n" +
+            "OPTIONAL MATCH\n" +
+            "  (c1)-[coup:COUPLES]-(c:Component:SARF)\n" +
+            "WHERE \n" +
+            "  c <> c2\n" +
+            "WITH \n" +
+            "  c1, c2, intersection, sum(coup.coupling) AS c1Coup\n" +
+            "OPTIONAL MATCH\n" +
+            "  (c2)-[coup:COUPLES]-(c:Component:SARF)\n" +
+            "WHERE\n" +
+            "  c <> c1\n" +
+            "WITH \n" +
+            "  c1, c2, c1Coup, sum(coup.coupling) AS c2Coup, intersection\n" +
+            "MERGE\n" +
+            "  (c1)-[:IS_SIMILAR_TO{similarity:(intersection / (c1Coup + c2Coup))}]-(c2)")
+    void computeSimilarityBetweenComponents(@Parameter("ids") long[] ids);
 }

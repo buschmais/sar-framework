@@ -23,10 +23,10 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
 
     @Override
     public Set<ComponentDescriptor> classify(Integer iteration) {
-        return classify(iteration, null, true);
+        return classify(iteration, null, true, true);
     }
 
-    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components, boolean hierarchical) {
+    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components, boolean hierarchical, boolean similarityBased) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
         SARFRunner.xoManager.currentTransaction().begin();
@@ -48,25 +48,17 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
-        int iterations = 150;
+        int iterations = 10;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
-            Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, true);
+            Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
             if (!hierarchical) {
                 SARFRunner.xoManager.currentTransaction().begin();
                 Set<ComponentDescriptor> res = new HashSet<>();
                 for (Long id : identifiedGroups) {
-                    try {
-                        ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
-                        res.add(cD);
-                    } catch (ClassCastException e) {
-                        ComponentDescriptor cD = SARFRunner.xoManager.create(ComponentDescriptor.class);
-                        cD.setShape("Component");
-                        cD.setName("COH" + iteration + "L" + componentLevel + "#" + (-id));
-                        cD.getContainedTypes().add(SARFRunner.xoManager.findById(TypeDescriptor.class, id));
-                        res.add(cD);
-                    }
+                    ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                    res.add(cD);
                 }
                 SARFRunner.xoManager.currentTransaction().commit();
                 return res;
@@ -75,6 +67,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
             SARFRunner.xoManager.currentTransaction().begin();
             ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
             componentRepository.computeCouplingBetweenComponents(ids);
+            componentRepository.computeSimilarityBetweenComponents(ids);
             SARFRunner.xoManager.currentTransaction().commit();
             initialPartitioning = partitioningFromGroups(identifiedGroups);
             componentLevel++;
@@ -91,23 +84,20 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().begin();
         Set<Long> identifiedGroups = new HashSet<>();
         for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
-            if (component.getValue().size() > 1) {
-                ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
-                componentDescriptor.setShape("Component");
-                componentDescriptor.setName("COH" + iteration + "L" + level + "#" + component.getKey());
-                for (Long id : component.getValue()) {
-                    try {
-                        ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
-                        componentDescriptor.getContainedComponents().add(cD);
-                    } catch (ClassCastException e) {
-                        TypeDescriptor tD = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
-                        componentDescriptor.getContainedTypes().add(tD);
-                    }
+            ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+            componentDescriptor.setShape("Component");
+            componentDescriptor.setName("COH" + iteration + "L" + level + "#" + component.getKey());
+            for (Long id : component.getValue()) {
+                try {
+                    ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                    componentDescriptor.getContainedComponents().add(cD);
+                } catch (ClassCastException e) {
+                    TypeDescriptor tD = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                    componentDescriptor.getContainedTypes().add(tD);
                 }
-                identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
-            } else if (component.getValue().size() == 1) {
-                identifiedGroups.add(component.getValue().iterator().next());
             }
+            identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
+
         }
         SARFRunner.xoManager.currentTransaction().commit();
         return identifiedGroups;
