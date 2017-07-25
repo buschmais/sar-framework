@@ -61,6 +61,8 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
             throw new IllegalStateException("Existing Singleton can't be overwritten");
         } else {
             ActiveClassificationConfiguration.instance = new ActiveClassificationConfiguration(classificationConfigurationDescriptor.getIteration());
+            ActiveClassificationConfiguration.instance.setDecomposition(Decomposition.valueOf(classificationConfigurationDescriptor.getDecomposition()));
+            ActiveClassificationConfiguration.instance.setOptimization(Optimization.valueOf(classificationConfigurationDescriptor.getOptimization()));
             classificationConfigurationDescriptor.getClassificationCriteria().forEach(c -> {
                 //ActiveClassificationConfiguration.instance.addClassificationCriterion(ClassificationCriterion.of(c)); todo
             });
@@ -108,7 +110,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         Set<ComponentDescriptor> cohesionResult = null;
         if (cohesionCriterion != null) {
             cohesionResult = cohesionCriterion.classify(this.iteration, identifyIntersectingComponents(components),
-                    getDecomposition() == Decomposition.DEEP);
+                    getDecomposition() == Decomposition.DEEP, getOptimization() == Optimization.SIMILARITY);
             // match with manual classification
             components = cohesionResult;
         } else {

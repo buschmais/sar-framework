@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
  * @author Stephan Pirnbaum
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE, force = true)
+@XmlAccessorType(XmlAccessType.FIELD)
 public abstract class ClassificationConfiguration implements Materializable<ClassificationConfigurationDescriptor> {
 
     private static final Logger LOG = LogManager.getLogger(ClassificationConfiguration.class);
@@ -35,12 +36,24 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
         DEEP
     }
 
+    @XmlType
+    @XmlEnum(String.class)
+    public enum Optimization {
+        @XmlEnumValue("similarity")
+        SIMILARITY,
+        @XmlEnumValue("coupling")
+        COUPLING
+    }
+
     @Getter
     @XmlAttribute(name = "iteration")
     Integer iteration;
 
     @XmlAttribute(name = "decomposition")
     private Decomposition decomposition;
+
+    @XmlAttribute(name = "optimization")
+    private Optimization optimization;
 
     @Getter
     @XmlElement(name = "Component")
@@ -49,6 +62,7 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     @Getter
     Set<ClassificationCriterion> classificationCriteria;
 
+    @XmlTransient
     private ClassificationConfigurationDescriptor classificationConfigurationDescriptor;
 
     ClassificationConfiguration(Integer iteration) {
@@ -72,6 +86,22 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
         }
     }
 
+    void setDecomposition(Decomposition decomposition) {
+        this.decomposition = decomposition;
+    }
+
+    public Optimization getOptimization() {
+        if (this.optimization == null) {
+            return Optimization.SIMILARITY;
+        } else {
+            return this.optimization;
+        }
+    }
+
+    public void setOptimization(Optimization optimization) {
+        this.optimization = optimization;
+    }
+
     public ClassificationConfigurationDescriptor materialize() {
         LOG.info("Materializing Configuration to Database");
         Set<ClassificationCriterionDescriptor> descriptors = this.classificationCriteria.stream().map(ClassificationCriterion::materialize).collect(Collectors.toSet());
@@ -80,6 +110,8 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
         if (this.classificationConfigurationDescriptor == null) {
             this.classificationConfigurationDescriptor = SARFRunner.xoManager.create(ClassificationConfigurationDescriptor.class);
             this.classificationConfigurationDescriptor.setIteration(this.iteration);
+            this.classificationConfigurationDescriptor.setDecomposition(this.getDecomposition().toString());
+            this.classificationConfigurationDescriptor.setOptimization(this.getOptimization().toString());
             this.classificationConfigurationDescriptor.getClassificationCriteria().addAll(descriptors);
             this.classificationConfigurationDescriptor.getDefinedComponents().addAll(componentDescriptors);
         }

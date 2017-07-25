@@ -26,4 +26,12 @@ public interface ClassificationConfigurationDescriptor extends SARFNode {
     void setIteration(Integer iteration);
 
     Integer getIteration();
+
+    void setDecomposition(String decomposition);
+
+    String getDecomposition();
+
+    void setOptimization(String optimization);
+
+    String getOptimization();
 }

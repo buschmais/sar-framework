@@ -77,6 +77,7 @@
             </xs:sequence>
             <xs:attribute type="xs:integer" name="iteration" use="required"/>
             <xs:attribute type="xs:string" name="decomposition" use="optional" default="deep"/>
+            <xs:attribute type="xs:string" name="optimization" use="optional" default="similarity"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>
