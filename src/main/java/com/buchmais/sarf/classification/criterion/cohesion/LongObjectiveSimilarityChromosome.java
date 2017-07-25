@@ -24,7 +24,8 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
 
     @Override
     Double computeCohesion(MetricRepository mR, long[] ids) {
-        return mR.computeSimilarityCohesionInComponent(ids) / ids.length;
+        int denominator = ids.length == 1 ? 1 : ((ids.length * (ids.length - 1)) / 2);
+        return mR.computeSimilarityCohesionInComponent(ids) / denominator;
     }
 
     @Override
