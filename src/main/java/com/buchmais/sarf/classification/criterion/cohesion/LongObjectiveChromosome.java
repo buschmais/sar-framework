@@ -1,12 +1,17 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.benchmark.MoJoCalculator;
 import com.buchmais.sarf.repository.MetricRepository;
 import com.google.common.collect.Sets;
 import org.jenetics.LongChromosome;
 import org.jenetics.LongGene;
 import org.jenetics.util.ISeq;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -77,9 +82,13 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         // punish one-type only components
         this.componentSizeObjective = - identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / (double) identifiedComponents.size();
         // maximize component number
-        this.componentCountObjective = ((double) identifiedComponents.size()) / Partitioner.ids.length;
-        System.out.println(identifiedComponents.size() + " " + this.cohesionObjective + " " + this.couplingObjective + " " +
-            this.componentRangeObjective + " " + this.componentSizeObjective + " " + this.componentCountObjective);
+        this.componentCountObjective =
+                identifiedComponents.size() <= 0.25 * Partitioner.ids.length ?
+                        (identifiedComponents.size() / (Partitioner.ids.length / 4d)) :
+                        (Partitioner.ids.length - identifiedComponents.size()) / (0.75 * Partitioner.ids.length);
+        if (MoJoCalculator.reference != null) {
+            writeBenchmarkLine(identifiedComponents);
+        }
         this.evaluated = true;
 
     }
@@ -113,17 +122,67 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         return this.componentCountObjective;
     }
 
+    /**
+     *
+     * @param chromosome
+     * @return True if this dominates, false otherwise (including non-pareto comparable
+     */
     protected boolean dominates(LongObjectiveChromosome chromosome) {
         if (!evaluated) this.evaluate();
-        if (this.cohesionObjective < chromosome.cohesionObjective) return false;
-        if (this.couplingObjective < chromosome.couplingObjective) return false;
-        if (this.componentSizeObjective < chromosome.componentSizeObjective) return false;
-        if (this.componentCountObjective < chromosome.componentCountObjective) return false;
-        if (this.componentRangeObjective < chromosome.componentRangeObjective) return false;
-        return (this.cohesionObjective > chromosome.cohesionObjective) ||
-               (this.couplingObjective > chromosome.couplingObjective) ||
-               (this.componentSizeObjective > chromosome.componentSizeObjective) ||
-               (this.componentRangeObjective > chromosome.componentRangeObjective) ||
-               (this.componentCountObjective > chromosome.componentCountObjective);
+        int better = 0;
+        int equal = 0;
+        int worse = 0;
+        if (this.cohesionObjective < chromosome.cohesionObjective) { worse++; }
+        else if (Objects.equals(this.cohesionObjective, chromosome.cohesionObjective)) { equal++; }
+        else { better++; }
+        if (this.couplingObjective < chromosome.couplingObjective) { worse++; }
+        else if (Objects.equals(this.couplingObjective, chromosome.couplingObjective)) { equal++; }
+        else { better++; }
+        if (this.componentSizeObjective < chromosome.componentSizeObjective) { worse++; }
+        else if (Objects.equals(this.componentSizeObjective, chromosome.componentSizeObjective)) { equal++; }
+        else { better++; }
+        if (this.componentCountObjective < chromosome.componentCountObjective) { worse++; }
+        else if (Objects.equals(this.componentCountObjective, chromosome.componentCountObjective)) { equal++; }
+        else { better++; }
+        if (this.componentRangeObjective < chromosome.componentRangeObjective) { worse++; }
+        else if (Objects.equals(this.componentRangeObjective, chromosome.componentRangeObjective)) { equal++; }
+        else { better++; }
+
+        if (better > 0 && worse == 0) return true;
+        return false;
+
+    }
+
+    private void writeBenchmarkLine(Map<Long, Set<Long>> identifiedComponents) {
+        MoJoCalculator moJoCalculator1 = new MoJoCalculator(identifiedComponents, true);
+        MoJoCalculator moJoCalculator2 = new MoJoCalculator(identifiedComponents, false);
+        MoJoCalculator moJoFmCalculator = new MoJoCalculator(identifiedComponents, true);
+        MoJoCalculator moJoPlusCalculator1 = new MoJoCalculator(identifiedComponents, true);
+        MoJoCalculator moJoPlusCalculator2 = new MoJoCalculator(identifiedComponents, false);
+        Long mojoCompRef = moJoCalculator1.mojo();
+        Long mojoRefComp = moJoCalculator2.mojo();
+        Long mojo = Math.min(mojoCompRef, mojoRefComp);
+        Double mojoFm = moJoFmCalculator.mojofm();
+        Long mojoPlusCompRef = moJoPlusCalculator1.mojoplus();
+        Long mojoPlusRefComp = moJoPlusCalculator2.mojoplus();
+        Long mojoPlus = Math.min(mojoPlusCompRef, mojoPlusRefComp);
+        Double fitness = this.cohesionObjective + this.couplingObjective + this.componentCountObjective +
+                this.componentRangeObjective + this.componentSizeObjective;
+        try(FileWriter fw = new FileWriter("benchmark.csv", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw)) {
+            out.print(Partitioner.lastGeneration + 1 + " , ");
+            out.print(identifiedComponents.size() + ", ");
+            out.print(this.cohesionObjective + ", ");
+            out.print(this.couplingObjective + ", ");
+            out.print(this.componentSizeObjective + ", ");
+            out.print(this.componentRangeObjective + ", ");
+            out.print(this.componentCountObjective + ", ");
+            out.print(mojo + ", ");
+            out.print(mojoFm + ", ");
+            out.print(mojoPlus + ", ");
+            out.println(fitness);
+        } catch (IOException e) {
+        }
     }
 }
