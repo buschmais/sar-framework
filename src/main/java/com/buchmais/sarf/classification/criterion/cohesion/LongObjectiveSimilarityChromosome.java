@@ -1,9 +1,13 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
+import com.buchmais.sarf.benchmark.ModularizationQualityCalculator;
 import com.buchmais.sarf.repository.MetricRepository;
 import org.jenetics.LongGene;
 import org.jenetics.util.ISeq;
 import org.jenetics.util.LongRange;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
@@ -30,7 +34,12 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
 
     @Override
     Double computeCoupling(MetricRepository mR, long[] ids1, long[] ids2) {
-        return mR.computeSimilarityCouplingBetweenComponents(ids1, ids2);
+        return mR.computeSimilarityCouplingBetweenComponents(ids1, ids2) / ((ids1.length + ids2.length) * (ids1.length + ids2.length - 1) / 2);
+    }
+
+    @Override
+    Double computeMQ(Map<Long, Set<Long>> decomposition) {
+        return ModularizationQualityCalculator.computeSimilarityBasedMQ(decomposition);
     }
 
     @Override

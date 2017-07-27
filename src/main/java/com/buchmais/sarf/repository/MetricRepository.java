@@ -303,7 +303,7 @@ public interface MetricRepository {
             "WHERE" +
             "  ID(e1) IN {ids1} AND ID(e2) IN {ids2} " +
             "RETURN" +
-            "  toFloat(SUM(c.coupling) / COUNT(c))")
+            "  toFloat(SUM(c.coupling))")
     Double computeCouplingBetweenComponents(@Parameter("ids1") long[] ids1, @Parameter("ids2") long[] ids2);
 
     @ResultOf
@@ -339,7 +339,7 @@ public interface MetricRepository {
             "WHERE" +
             "  ID(e1) IN {ids1} AND ID(e2) IN {ids2} " +
             "RETURN" +
-            "  toFloat(SUM(s.similarity)/(COUNT(s) + 0.00000001))")
+            "  toFloat(SUM(s.similarity))")
     Double computeSimilarityCouplingBetweenComponents(@Parameter("ids1") long[] ids1, @Parameter("ids2") long[] ids2);
 
     @ResultOf

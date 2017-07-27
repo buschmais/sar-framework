@@ -1,4 +1,5 @@
-<Configuration iteration="1">
+<Configuration iteration="1"
+    decomposition="deep">
     <Component shape="Layer" name="DataLayer">
         <Rules>
             <!--Dependency rule="javax\.persistence.*" weight="50"/>

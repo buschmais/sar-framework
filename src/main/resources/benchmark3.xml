@@ -1,4 +1,5 @@
-<Configuration iteration="1">
+<Configuration iteration="1"
+    decomposition="flat" optimization="similarity">
     <Component shape="Component" name="1">
         <Rules>
             <Name rule="IndexController" weight="100"/>

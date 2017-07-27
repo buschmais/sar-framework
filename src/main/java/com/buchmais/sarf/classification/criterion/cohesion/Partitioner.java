@@ -33,15 +33,15 @@ public class Partitioner {
         Genotype<LongGene> genotype = createGenotype(initialPartitioning, similarityBased);
         final Engine<LongGene, Double> engine = Engine
                 .builder(Partitioner::computeFitnessValue, genotype)
-                .offspringFraction(0.7)
+                .offspringFraction(0.5)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
                 .populationSize(100)
                 .alterers(
                         new MultiPointCrossover<>(1),
                         similarityBased ?
-                                new SimilarityMutator(0.004 * Math.log10(ids.length) / Math.log10(2)) :
-                                new CouplingMutator(0.004 * Math.log10(ids.length) / Math.log10(2)),
+                                new SimilarityMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
+                                new CouplingMutator(0.008 * Math.log10(ids.length) / Math.log10(2)),
                         new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)))
                 .executor(Runnable::run)
                 .build();
@@ -94,7 +94,7 @@ public class Partitioner {
 
     static Double computeFitnessValue(final Genotype<LongGene> prospect) {
         LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
-        return chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentRangeObjective() + chromosome.getComponentSizeObjective();
+        return chromosome.getMQ();
     }
 
     private static void update(final EvolutionResult<LongGene, Double> result) {
