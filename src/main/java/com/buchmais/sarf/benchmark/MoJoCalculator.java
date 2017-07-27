@@ -1,16 +1,71 @@
 package com.buchmais.sarf.benchmark;
 
+import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.metamodel.ComponentDescriptor;
+import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 public class MoJoCalculator {
 
     private BufferedReader br_s, br_t;
 
+    public static Set<ComponentDescriptor> reference = null;
+
     public MoJoCalculator(BufferedReader br_s, BufferedReader br_t) {
         this.br_s = br_s;
         this.br_t = br_t;
+    }
+
+    public MoJoCalculator(Map<Long, Set<Long>> decomposition, boolean isFrom) {
+        if (SARFRunner.xoManager.currentTransaction().isActive()) {
+            SARFRunner.xoManager.currentTransaction().commit();
+        }
+        SARFRunner.xoManager.currentTransaction().begin();
+        StringBuilder builder1 = new StringBuilder();
+        for (Map.Entry<Long, Set<Long>> dec : decomposition.entrySet()) {
+            for (Long id : dec.getValue()) {
+                TypeDescriptor typeDescriptor = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                builder1.append("contain " + dec.getKey() + " " + typeDescriptor.getName() + "\n");
+            }
+        }
+        StringBuilder builder2 = new StringBuilder();
+        for (ComponentDescriptor componentDescriptor : reference) {
+            for (TypeDescriptor typeDescriptor : componentDescriptor.getContainedTypes()) {
+                builder2.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
+            }
+        }
+        if (isFrom) {
+            this.br_s = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder1.toString().getBytes())));
+            this.br_t = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder2.toString().getBytes())));
+        } else {
+            this.br_s = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder2.toString().getBytes())));
+            this.br_t = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder1.toString().getBytes())));
+        }
+        SARFRunner.xoManager.currentTransaction().commit();
+    }
+
+    public MoJoCalculator(Set<ComponentDescriptor> from, Set<ComponentDescriptor> to) {
+        StringBuilder fromRsf = new StringBuilder();
+        SARFRunner.xoManager.currentTransaction().begin();
+        for (ComponentDescriptor componentDescriptor : from) {
+            for (TypeDescriptor typeDescriptor : componentDescriptor.getContainedTypes()) {
+                fromRsf.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
+            }
+        }
+        StringBuilder toRsf = new StringBuilder();
+        for (ComponentDescriptor componentDescriptor : to) {
+            for (TypeDescriptor typeDescriptor : componentDescriptor.getContainedTypes()) {
+                toRsf.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
+            }
+        }
+        SARFRunner.xoManager.currentTransaction().commit();
+        this.br_s = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fromRsf.toString().getBytes())));
+        this.br_t = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(toRsf.toString().getBytes())));
     }
 
     /* The mapping between objects and clusters in B */

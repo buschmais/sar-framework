@@ -20,6 +20,9 @@ public class Partitioner {
     static long[] ids;
 
     static int generations;
+
+    static long lastGeneration = 0;
+
     private static long bestGeneration;
 
     public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations, boolean similarityBased) {
@@ -33,10 +36,12 @@ public class Partitioner {
                 .offspringFraction(0.7)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
-                .populationSize(50)
+                .populationSize(100)
                 .alterers(
                         new MultiPointCrossover<>(1),
-                        similarityBased ? new SimilarityMutator(0.3) : new CouplingMutator(0.3),
+                        similarityBased ?
+                                new SimilarityMutator(0.004 * Math.log10(ids.length) / Math.log10(2)) :
+                                new CouplingMutator(0.004 * Math.log10(ids.length) / Math.log10(2)),
                         new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)))
                 .executor(Runnable::run)
                 .build();
@@ -71,13 +76,13 @@ public class Partitioner {
             boolean found = false;
             for (Map.Entry<Long, Set<Long>> entry : initialPartitioning.entrySet()) {
                 if (entry.getValue().contains(id)) {
-                    genes.add(LongGene.of(compId, 0, ids.length - 2));
+                    genes.add(LongGene.of(compId, 0, ids.length / 2 - 1));
                     found = true;
                 }
                 compId++;
             }
             if (!found) {
-                genes.add(LongGene.of(compId, 0, ids.length - 2));
+                genes.add(LongGene.of(compId, 0, ids.length / 2 - 1));
             }
         }
         Chromosome<LongGene> chromosome =
@@ -100,6 +105,7 @@ public class Partitioner {
             bestGeneration = result.getGeneration();
             best = result.getBestPhenotype().getGenotype();
         }
+        lastGeneration = result.getGeneration();
         Long components = best.getChromosome().stream().mapToLong(l -> l.getAllele()).distinct().count();
         System.out.print("\rProgress: " + Strings.repeat("=", percentage) + Strings.repeat(" ", left) + "| ");
         System.out.print("Best Genotype at Generation: " + bestGeneration + " with Fitness: " + bestFitness + " with Components: " + components);

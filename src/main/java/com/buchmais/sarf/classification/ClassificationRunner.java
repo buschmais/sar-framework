@@ -6,7 +6,6 @@ import com.buchmais.sarf.classification.configuration.*;
 import com.buchmais.sarf.classification.criterion.cohesion.CohesionCriterion;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.TypeRepository;
-import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.xml.sax.SAXException;
@@ -17,7 +16,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Set;
 
@@ -57,44 +59,17 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
         this.setUpData();
         this.activeClassificationConfiguration.materialize();
         Set<ComponentDescriptor> reference = this.activeClassificationConfiguration.execute();
+        MoJoCalculator.reference = reference;
         CohesionCriterion cohesionCriterion = new CohesionCriterion();
         Set<ComponentDescriptor> comp = cohesionCriterion.classify(2, null, false,
                 this.activeClassificationConfiguration.getOptimization() == ClassificationConfiguration.Optimization.SIMILARITY);
-        StringBuilder referenceRsf = new StringBuilder();
-        SARFRunner.xoManager.currentTransaction().begin();
-        for (ComponentDescriptor componentDescriptor : reference) {
-            for (TypeDescriptor typeDescriptor : componentDescriptor.getContainedTypes()) {
-                referenceRsf.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
-            }
-        }
-        StringBuilder compRsf = new StringBuilder();
-        for (ComponentDescriptor componentDescriptor : comp) {
-            for (TypeDescriptor typeDescriptor : componentDescriptor.getContainedTypes()) {
-                compRsf.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
-            }
-        }
-        SARFRunner.xoManager.currentTransaction().commit();
+
         try {
-            MoJoCalculator moJoCalculator1 = new MoJoCalculator(
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
-            );
-            MoJoCalculator moJoCalculator2 = new MoJoCalculator(
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes()))),
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes())))
-            );
-            MoJoCalculator moJoFmCalculator = new MoJoCalculator(
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes()))),
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes())))
-            );
-            MoJoCalculator moJoPlusCalculator1 = new MoJoCalculator(
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes()))),
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes())))
-            );
-            MoJoCalculator moJoPlusCalculator2 = new MoJoCalculator(
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(compRsf.toString().getBytes()))),
-                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(referenceRsf.toString().getBytes())))
-            );
+            MoJoCalculator moJoCalculator1 = new MoJoCalculator(reference, comp);
+            MoJoCalculator moJoCalculator2 = new MoJoCalculator(comp, reference);
+            MoJoCalculator moJoFmCalculator = new MoJoCalculator(comp, reference);
+            MoJoCalculator moJoPlusCalculator1 = new MoJoCalculator(reference, comp);
+            MoJoCalculator moJoPlusCalculator2 = new MoJoCalculator(comp, reference);
             Long mojoCompRef = moJoCalculator1.mojo();
             Long mojoRefComp = moJoCalculator2.mojo();
             Long mojo = Math.min(mojoCompRef, mojoRefComp);
