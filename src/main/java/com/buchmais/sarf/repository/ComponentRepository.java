@@ -2,6 +2,7 @@ package com.buchmais.sarf.repository;
 
 import com.buchmais.sarf.classification.criterion.ClassificationInfoDescriptor;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
+import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.annotation.Repository;
 import com.buschmais.xo.api.annotation.ResultOf;
@@ -232,4 +233,13 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "MERGE\n" +
             "  (c1)-[:IS_SIMILAR_TO{similarity:(intersection / (c1Coup + c2Coup))}]-(c2)")
     void computeSimilarityBetweenComponents(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:Component)-[:CONTAINS]-(t:Type:Internal) " +
+            "WHERE" +
+            "  ID(c) = {id} " +
+            "RETURN" +
+            "  DISTINCT t")
+    Result<TypeDescriptor> getContainedTypesRecursively(@Parameter("id") long id);
 }

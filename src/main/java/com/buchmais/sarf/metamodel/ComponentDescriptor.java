@@ -62,4 +62,8 @@ public interface ComponentDescriptor extends SARFNode {
     @Relation("CONTAINS")
     @Outgoing
     Set<TypeDescriptor> getContainedTypes();
+
+    String[] getTopWords();
+
+    void setTopWords(String[] topWords);
 }

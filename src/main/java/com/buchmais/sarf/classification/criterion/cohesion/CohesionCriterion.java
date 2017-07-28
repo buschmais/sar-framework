@@ -8,7 +8,8 @@ import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.TypeRepository;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.xo.api.Query.Result;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -83,6 +84,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
     private Set<Long> materializeGroups(Map<Long, Set<Long>> partitioning, int iteration, int level) {
         SARFRunner.xoManager.currentTransaction().begin();
         Set<Long> identifiedGroups = new HashSet<>();
+        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
         for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
             ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
             componentDescriptor.setShape("Component");
@@ -97,7 +99,23 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
                 }
             }
             identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
-
+            Result<TypeDescriptor> typeDescriptors = componentRepository.getContainedTypesRecursively(SARFRunner.xoManager.getId(componentDescriptor));
+            Map<String, Long> wordCount = new HashMap<>();
+            for (TypeDescriptor typeDescriptor : typeDescriptors) {
+                String[] words = StringUtils.splitByCharacterTypeCamelCase(typeDescriptor.getName());
+                for (String word : words) {
+                    wordCount.merge(
+                            word,
+                            1L,
+                            (w1, w2) -> w1 + 1
+                    );
+                }
+            }
+            ListMultimap<Long, String> sorted = new ImmutableListMultimap.Builder<Long, String>()
+                    .orderKeysBy(Ordering.natural().reverse())
+                    .putAll(Multimaps.invertFrom(Multimaps.forMap(wordCount), ArrayListMultimap.create()))
+                    .build();
+            componentDescriptor.setTopWords(sorted.entries().stream().limit(10).map(Map.Entry::getValue).toArray(String[]::new));
         }
         SARFRunner.xoManager.currentTransaction().commit();
         return identifiedGroups;
