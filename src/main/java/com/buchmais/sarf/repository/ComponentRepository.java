@@ -236,7 +236,7 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (c:Component)-[:CONTAINS]-(t:Type:Internal) " +
+            "  (c:Component)-[:CONTAINS*]->(t:Type:Internal) " +
             "WHERE" +
             "  ID(c) = {id} " +
             "RETURN" +
