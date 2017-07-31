@@ -39,7 +39,7 @@ public class ModularizationQualityCalculator {
         MetricRepository metricRepository = SARFRunner.xoManager.getRepository(MetricRepository.class);
         for (Map.Entry<Long, Set<Long>> component1 : decomposition.entrySet()) {
             long[] ids1 = component1.getValue().stream().mapToLong(l -> l).toArray();
-            int denominator = ids1.length == 1 ? 1 : ((ids1.length * (ids1.length - 1)) / 2);
+            int denominator = ids1.length == 1 ? 1 : ((ids1.length * (ids1.length - 1)));
             intraConnectivity += metricRepository.computeCouplingCohesionInComponent(ids1) / denominator;
             for (Map.Entry<Long, Set<Long>> component2 : decomposition.entrySet()) {
                 if (!Objects.equals(component1.getKey(), component2.getKey())) {
