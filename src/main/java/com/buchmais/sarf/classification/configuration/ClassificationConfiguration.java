@@ -49,6 +49,10 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     @XmlAttribute(name = "iteration")
     Integer iteration;
 
+    @Getter
+    @XmlAttribute(name = "basePackage")
+    String basePackage;
+
     @XmlAttribute(name = "decomposition")
     private Decomposition decomposition;
 

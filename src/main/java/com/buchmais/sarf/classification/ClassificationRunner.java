@@ -160,10 +160,13 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             SARFRunner.xoManager.createQuery(
                     "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
             ).execute();
+            SARFRunner.xoManager.createQuery(
+                    "MATCH (t:Type:Internal) REMOVE t:Internal"
+            ).execute();
             SARFRunner.xoManager.currentTransaction().commit();
             SARFRunner.xoManager.currentTransaction().begin();
             LOG.info("Preparing Data Set");
-            SARFRunner.xoManager.getRepository(TypeRepository.class).markAllInternalTypes("de.htw");
+            SARFRunner.xoManager.getRepository(TypeRepository.class).markAllInternalTypes(this.activeClassificationConfiguration.getBasePackage());
             SARFRunner.xoManager.currentTransaction().commit();
             TypeCouplingEnricher.enrich();
         } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
