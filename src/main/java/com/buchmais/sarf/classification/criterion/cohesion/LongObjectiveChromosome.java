@@ -37,6 +37,8 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private Double mQ = 0d;
 
+    public  double moJoFM;
+
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes);
     }
@@ -89,7 +91,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
                 identifiedComponents.size() <= 0.25 * Partitioner.ids.length ?
                         (identifiedComponents.size() / (Partitioner.ids.length / 4d)) :
                         (Partitioner.ids.length - identifiedComponents.size()) / (0.75 * Partitioner.ids.length);
-        this.mQ = computeMQ(identifiedComponents);
         if (MoJoCalculator.reference != null) {
             writeBenchmarkLine(identifiedComponents);
         }
@@ -126,11 +127,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     protected Double getComponentCountObjective() {
         if (!this.evaluated) evaluate();
         return this.componentCountObjective;
-    }
-
-    protected Double getMQ() {
-        if (!this.evaluated) evaluate();
-        return this.mQ;
     }
 
     /**

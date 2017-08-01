@@ -18,7 +18,7 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
     @Cypher("MATCH" +
             "  (t:Type) " +
             "WHERE" +
-            "  t.fqn STARTS WITH {basePackage} " +
+            "  t.fqn =~ {basePackage} " +
             "SET" +
             "  t:Internal " +
             "RETURN" +

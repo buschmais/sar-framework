@@ -36,9 +36,9 @@ public class Partitioner {
                 .offspringFraction(0.5)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
-                .populationSize(100)
+                .populationSize(10)
                 .alterers(
-                        new MultiPointCrossover<>(1),
+                        new SinglePointCrossover<>(1),
                         similarityBased ?
                                 new SimilarityMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
                                 new CouplingMutator(0.008 * Math.log10(ids.length) / Math.log10(2)),
@@ -94,7 +94,7 @@ public class Partitioner {
 
     static Double computeFitnessValue(final Genotype<LongGene> prospect) {
         LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
-        return chromosome.getMQ();
+        return chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective();
     }
 
     private static void update(final EvolutionResult<LongGene, Double> result) {

@@ -8,9 +8,6 @@ import com.buschmais.xo.api.Query.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Set;
-import java.util.TreeSet;
-
 /**
  * @author Stephan Pirnbaum
  */
@@ -21,11 +18,12 @@ public class TypeCouplingEnricher {
     public static void enrich() {
         LOG.info("Computing Coupling between Types");
         SARFRunner.xoManager.currentTransaction().begin();
-        Set<String> orderedCoupling = new TreeSet<>();
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes())
         {
+            int c = 0;
             for (TypeDescriptor t1 : descriptors) {
+                LOG.info(c);
                 final Long id1 = SARFRunner.xoManager.getId(t1);
                 try (Result<TypeDescriptor> dependencies = SARFRunner.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
                     for (TypeDescriptor t2 : dependencies) {
@@ -34,14 +32,13 @@ public class TypeCouplingEnricher {
                         if (coupling > 0) {
                             mR.setCoupling(id1, id2, coupling);
                         }
-                        orderedCoupling.add(coupling + " " + t1.getFullQualifiedName() + " " + t2.getFullQualifiedName());
                     }
                 }
+                c++;
             }
         }
-        orderedCoupling.forEach(c -> LOG.info("Coupling: " + c));
-        TypeSimilarityEnricher.enrich();
         SARFRunner.xoManager.currentTransaction().commit();
+        TypeSimilarityEnricher.enrich();
     }
 
     private static Double computeCoupling(Long id1, Long id2) {

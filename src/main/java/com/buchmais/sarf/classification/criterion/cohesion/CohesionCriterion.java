@@ -49,7 +49,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
-        int iterations = 10;
+        int iterations = 300;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);

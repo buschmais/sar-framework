@@ -10,6 +10,8 @@ public class TypeSimilarityEnricher {
 
     public static void enrich() {
         TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        SARFRunner.xoManager.currentTransaction().begin();
         repository.computeTypeSimilarity();
+        SARFRunner.xoManager.currentTransaction().commit();
     }
 }
