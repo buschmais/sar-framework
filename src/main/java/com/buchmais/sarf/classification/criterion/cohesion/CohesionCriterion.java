@@ -85,35 +85,33 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
     }
 
     private Problem createProblem(long[] ids) {
-        Map<Long, Node> nodes = new HashMap<>();
-        for (long id : ids) {
-            nodes.put(id, new Node(id));
+        int maxId = (int) Arrays.stream(ids).max().orElse(0);
+        Problem p = Problem.newInstance(maxId + 1, maxId + 1);
+        LOG.info("Creating Problem");
+        Query<CompositeRowObject> q1 = SARFRunner.xoManager.createQuery(
+                "MATCH\n" +
+                "  (t:Type:Internal)-[c:COUPLES]->(d:Type:Internal) \n" +
+                "WHERE\n" +
+                "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
+                "RETURN\n" +
+                "  ID(t) AS t, ID(d) AS d, toFloat(c.coupling) AS c");
+        try (Result<CompositeRowObject> res = q1.execute()) {
+            res.forEach(r -> p.addCoupling(r.get("t", Long.class).intValue(), r.get("d", Long.class).intValue(), r.get("c", Double.class)));
         }
-        for (Long id : ids) {
-            Node node = nodes.get(id);
-            Query<CompositeRowObject> q1 = SARFRunner.xoManager.createQuery(
-                    "MATCH\n" +
-                    "  (t:Type:Internal)-[c:COUPLES]->(d:Type:Internal) \n" +
-                    "WHERE\n" +
-                    "  ID(t) = " + id + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
-                    "RETURN\n" +
-                    "  ID(d) AS d, toFloat(c.coupling) AS c");
-            try (Result<CompositeRowObject> res = q1.execute()) {
-                res.forEach(r -> node.addCoupling(nodes.get(r.get("d", Long.class)), r.get("c", Double.class)));
-            }
-            Query<CompositeRowObject> q2 = SARFRunner.xoManager.createQuery(
-                    "MATCH\n" +
-                    "  (t:Type:Internal)-[s:IS_SIMILAR_TO]->(d:Type:Internal) \n" +
-                    "WHERE\n" +
-                    "  ID(t) = " + id + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
-                    "RETURN\n" +
-                    "  ID(d) AS d, toFloat(s.similarity) AS s"
-            );
-            try (Result<CompositeRowObject> res = q2.execute()) {
-                res.forEach(r -> node.addSimilarity(nodes.get(r.get("d", Long.class)), r.get("s", Double.class)));
-            }
+
+        Query<CompositeRowObject> q2 = SARFRunner.xoManager.createQuery(
+                "MATCH\n" +
+                "  (t:Type:Internal)-[s:IS_SIMILAR_TO]->(d:Type:Internal) \n" +
+                "WHERE\n" +
+                "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
+                "RETURN\n" +
+                "  ID(t) AS t, ID(d) AS d, toFloat(s.similarity) AS s"
+        );
+        try (Result<CompositeRowObject> res = q2.execute()) {
+            res.forEach(r -> p.addSimilarity(r.get("t", Long.class).intValue(), r.get("d", Long.class).intValue(), r.get("s", Double.class)));
         }
-        return Problem.newInstance(Sets.newHashSet(nodes.values()));
+        LOG.info("Creating Problem Successful");
+        return p;
     }
 
     private Set<Long> materializeGroups(Map<Long, Set<Long>> partitioning, int iteration, int level) {

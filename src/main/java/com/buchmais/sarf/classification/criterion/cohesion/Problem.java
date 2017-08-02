@@ -1,35 +1,46 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
-import java.util.*;
+import mikera.matrixx.AMatrix;
+import mikera.matrixx.impl.SparseRowMatrix;
+
+import java.util.Collection;
 
 /**
  * @author Stephan Pirnbaum
  */
 public class Problem {
 
-    private Map<Long, Node> nodes;
+    private AMatrix couplings;
 
+    private AMatrix similarities;
 
     private static Problem instance;
 
-    private Problem(Set<Node> nodes) {
-        this.nodes = new HashMap<>();
-        nodes.forEach(n -> this.nodes.put(n.getId(), n));
-
+    private Problem(int rows, int columns) {
+        this.couplings = SparseRowMatrix.create(rows, columns);
+        this.similarities = SparseRowMatrix.create(rows, columns);
     }
 
     public static Problem getInstance() {
         return Problem.instance;
     }
 
-    public static Problem newInstance(HashSet<Node> nodes) {
-        Problem p = new Problem(nodes);
+    public static Problem newInstance(int rows, int columns) {
+        Problem p = new Problem(rows, columns);
         Problem.instance = p;
         return p;
     }
 
+    public void addCoupling(int from, int to, double coupling) {
+        this.couplings.set(from, to, coupling);
+    }
+
+    public void addSimilarity(int from, int to, double similarity) {
+        this.similarities.set(from, to, similarity);
+    }
+
     public Double computeCouplingTo(Long from, Collection<Long> to) {
-        return this.nodes.get(from).computeCouplingTo(to);
+        return to.stream().mapToDouble(id -> this.couplings.get(from, id)).sum();
     }
 
     public Double computeCouplingCohesionInComponent(Collection<Long> ids) {
@@ -43,7 +54,7 @@ public class Problem {
     }
 
     public Double computeSimilarityTo(long from, Collection<Long> to) {
-        return this.nodes.get(from).computeSimilarityTo(to);
+        return to.stream().mapToDouble(id -> this.similarities.get(from, id)).sum();
     }
 
     public Double computeSimilarityCohesionInComponent(Collection<Long> ids) {
