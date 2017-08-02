@@ -11,10 +11,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Stephan Pirnbaum
@@ -63,14 +60,13 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         }
         // compute fitness for intra-edge coupling (cohesiveness of components)
         for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
-            long[] ids1 = component1.getValue().stream().mapToLong(i -> i).toArray();
-            this.cohesionObjective += computeCohesion(ids1);
+            this.cohesionObjective += computeCohesion(component1.getValue());
             // compute fitness for inter-edge coupling (coupling of components)
             // is compared twice -> punishing inter-edges
             for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
                 long[] ids2 = component2.getValue().stream().mapToLong(i -> i).toArray();
                 if (!Objects.equals(component1.getKey(), component2.getKey())) {
-                    this.couplingObjective -= computeCoupling(ids1, ids2);
+                    this.couplingObjective -= computeCoupling(component1.getValue(), component2.getValue());
                 }
             }
         }
@@ -93,9 +89,9 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     }
 
-    abstract Double computeCohesion(long[] ids);
+    abstract Double computeCohesion(Collection<Long> ids);
 
-    abstract Double computeCoupling(long[] ids1, long[] ids2);
+    abstract Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
 
     abstract Double computeMQ(Map<Long, Set<Long>> decomposition);
 

@@ -5,6 +5,7 @@ import org.jenetics.LongGene;
 import org.jenetics.util.ISeq;
 import org.jenetics.util.LongRange;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,14 +27,14 @@ public class LongObjectiveCouplingChromosome extends  LongObjectiveChromosome {
     }
 
     @Override
-    Double computeCohesion(long[] ids) {
-        int denominator = ids.length == 1 ? 1 : ((ids.length * (ids.length - 1)) / 2);
+    Double computeCohesion(Collection<Long> ids) {
+        int denominator = ids.size() == 1 ? 1 : ((ids.size() * (ids.size() - 1)) / 2);
         return Problem.getInstance().computeCouplingCohesionInComponent(ids) / denominator;
     }
 
     @Override
-    Double computeCoupling(long[] ids1, long[] ids2) {
-        return Problem.getInstance().computeCouplingBetweenComponents(ids1, ids2) / ((ids1.length + ids2.length) * (ids1.length + ids2.length - 1) / 2);
+    Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2) {
+        return Problem.getInstance().computeCouplingBetweenComponents(ids1, ids2) / ((ids1.size() + ids2.size()) * (ids1.size() + ids2.size() - 1) / 2);
     }
 
     @Override

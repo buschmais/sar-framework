@@ -28,31 +28,31 @@ public class Problem {
         return p;
     }
 
-    public Double computeCouplingTo(Long from, long[] to) {
+    public Double computeCouplingTo(Long from, Collection<Long> to) {
         return this.nodes.get(from).computeCouplingTo(to);
     }
 
-    public Double computeCouplingCohesionInComponent(long[] ids) {
-        return Arrays.stream(ids).mapToDouble(id -> computeCouplingTo(id, ids)).sum();
+    public Double computeCouplingCohesionInComponent(Collection<Long> ids) {
+        return ids.stream().mapToDouble(id -> computeCouplingTo(id, ids)).sum();
     }
 
-    public Double computeCouplingBetweenComponents(long[] ids1, long[] ids2) {
-        Double res = Arrays.stream(ids1).mapToDouble(id -> computeCouplingTo(id, ids2)).sum();
-        res += Arrays.stream(ids2).mapToDouble(id -> computeCouplingTo(id, ids1)).sum();
+    public Double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2) {
+        Double res = ids1.stream().mapToDouble(id -> computeCouplingTo(id, ids2)).sum();
+        res += ids2.stream().mapToDouble(id -> computeCouplingTo(id, ids1)).sum();
         return res;
     }
 
-    public Double computeSimilarityTo(long from, long[] to) {
-        return this.nodes.get(from).computeCouplingTo(to);
+    public Double computeSimilarityTo(long from, Collection<Long> to) {
+        return this.nodes.get(from).computeSimilarityTo(to);
     }
 
-    public Double computeSimilarityCohesionInComponent(long[] ids) {
-        return Arrays.stream(ids).mapToDouble(id -> computeSimilarityTo(id, ids)).sum();
+    public Double computeSimilarityCohesionInComponent(Collection<Long> ids) {
+        return ids.stream().mapToDouble(id -> computeSimilarityTo(id, ids)).sum();
     }
 
-    public Double computeSimilarityCouplingBetweenComponents(long[] ids1, long[] ids2) {
-        Double res = Arrays.stream(ids1).mapToDouble(id -> computeSimilarityTo(id, ids2)).sum();
-        res += Arrays.stream(ids2).mapToDouble(id -> computeSimilarityTo(id, ids1)).sum();
+    public Double computeSimilarityCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2) {
+        Double res = ids1.stream().mapToDouble(id -> computeSimilarityTo(id, ids2)).sum();
+        res += ids2.stream().mapToDouble(id -> computeSimilarityTo(id, ids1)).sum();
         return res;
     }
 }

@@ -1,8 +1,8 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
-import com.google.common.primitives.Longs;
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,10 +58,17 @@ public class Node implements Comparable<Node> {
         return this.id.compareTo(o.id);
     }
 
-    public Double computeCouplingTo(long[] to) {
+    public Double computeCouplingTo(Collection<Long> to) {
         return this.couplings.entrySet()
                 .stream()
-                .filter(e -> Longs.contains(to, e.getKey().getId()))
+                .filter(e -> to.contains(e.getKey().getId()))
+                .mapToDouble(Map.Entry::getValue).sum();
+    }
+
+    public Double computeSimilarityTo(Collection<Long> to) {
+        return this.similarities.entrySet()
+                .stream()
+                .filter(e -> to.contains(e.getKey().getId()))
                 .mapToDouble(Map.Entry::getValue).sum();
     }
 }

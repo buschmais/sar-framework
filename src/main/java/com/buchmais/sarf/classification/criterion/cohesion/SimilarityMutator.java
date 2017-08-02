@@ -1,12 +1,13 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.jenetics.LongGene;
 import org.jenetics.Mutator;
 import org.jenetics.util.MSeq;
 import org.jenetics.util.RandomRegistry;
 
 import java.util.Objects;
-import java.util.stream.IntStream;
 
 /**
  * @author Stephan Pirnbaum
@@ -24,17 +25,20 @@ public class SimilarityMutator extends Mutator<LongGene, Double> {
     protected int mutate(MSeq<LongGene> genes, double p) {
         int mutated = 0;
         long[] componentIds = genes.stream().mapToLong(i -> i.getAllele()).distinct().toArray();
+        Multimap<Long, Long> componentToTypes = HashMultimap.create();
+        for (int i = 0; i < genes.length(); i++) {
+            componentToTypes.put(genes.get(i).getAllele(), Partitioner.ids[i]);
+        }
         for (int i = 0; i < genes.size(); i++) {
             if (RandomRegistry.getRandom().nextDouble() < p) {
                 // mutate gene
                 Long componentId = genes.get(i).getAllele();
                 // compute coupling to elements in same component
-                long[] typeIds = getIdsInSameComponent(componentId, genes);
-                Double maxCoupling = Problem.getInstance().computeSimilarityTo(Partitioner.ids[i], typeIds);
+                Double maxCoupling = Problem.getInstance().computeSimilarityTo(Partitioner.ids[i], componentToTypes.get(componentId));
                 Long maxComponent = componentId;
                 // the coupling to another component can be higher, find the component with the highest coupling
                 for (long l : componentIds) {
-                    Double coup = Problem.getInstance().computeSimilarityTo(Partitioner.ids[i], getIdsInSameComponent(l, genes));
+                    Double coup = Problem.getInstance().computeSimilarityTo(Partitioner.ids[i], componentToTypes.get(l));
                     if (coup > maxCoupling) {
                         maxCoupling = coup;
                         maxComponent = l;
@@ -47,12 +51,5 @@ public class SimilarityMutator extends Mutator<LongGene, Double> {
             }
         }
         return mutated;
-    }
-
-    private long[] getIdsInSameComponent(Long componentId, MSeq<LongGene> genes) {
-        return IntStream.range(0, genes.size())
-                .filter(index -> Objects.equals(genes.get(index).getAllele(), componentId))
-                .mapToLong(index -> Partitioner.ids[index])
-                .toArray();
     }
 }
