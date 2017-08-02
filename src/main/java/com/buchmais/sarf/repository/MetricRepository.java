@@ -308,15 +308,6 @@ public interface MetricRepository {
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (e1)-[c:COUPLES]->(e2) " +
-            "WHERE" +
-            "  ID(e1) = {id} AND ID(e2) IN {ids} " +
-            "RETURN" +
-            "  toFloat(SUM(c.coupling))")
-    Double computeCouplingTo(@Parameter("id") long id, @Parameter("ids") long[] ids);
-
-    @ResultOf
-    @Cypher("MATCH" +
             "  (t1:Type), (t2:Type) " +
             "WHERE" +
             "  ID(t1) = {id1} AND ID(t2) = {id2} " +
@@ -350,13 +341,4 @@ public interface MetricRepository {
             "RETURN" +
             "  toFloat(SUM(c.coupling))")
     Double computeCouplingCohesionInComponent(@Parameter("ids") long[] ids);
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (e1)-[s:IS_SIMILAR_TO]->(e2) " +
-            "WHERE" +
-            "  ID(e1) = {id} AND ID(e2) IN {ids} " +
-            "RETURN" +
-            "  toFloat(SUM(s.similarity))")
-    Double computeSimilarityTo(@Parameter("id") long id, @Parameter("ids") long[] typeIds);
 }
