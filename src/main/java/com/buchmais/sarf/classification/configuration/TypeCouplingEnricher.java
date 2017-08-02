@@ -21,9 +21,7 @@ public class TypeCouplingEnricher {
         MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes())
         {
-            int c = 0;
             for (TypeDescriptor t1 : descriptors) {
-                LOG.info(c);
                 final Long id1 = SARFRunner.xoManager.getId(t1);
                 try (Result<TypeDescriptor> dependencies = SARFRunner.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
                     for (TypeDescriptor t2 : dependencies) {
@@ -34,9 +32,9 @@ public class TypeCouplingEnricher {
                         }
                     }
                 }
-                c++;
             }
         }
+        LOG.info("Coupling between Types Successfully Computed");
         SARFRunner.xoManager.currentTransaction().commit();
         TypeSimilarityEnricher.enrich();
     }
