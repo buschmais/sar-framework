@@ -42,7 +42,6 @@ public class Partitioner {
                                 new SimilarityMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
                                 new CouplingMutator(0.008 * Math.log10(ids.length) / Math.log10(2)),
                         new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)))
-                .executor(Runnable::run)
                 .build();
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
 
