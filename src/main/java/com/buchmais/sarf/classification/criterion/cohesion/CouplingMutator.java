@@ -1,7 +1,5 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
-import com.buchmais.sarf.SARFRunner;
-import com.buchmais.sarf.repository.MetricRepository;
 import org.jenetics.LongGene;
 import org.jenetics.Mutator;
 import org.jenetics.util.MSeq;
@@ -26,18 +24,17 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
     protected int mutate(MSeq<LongGene> genes, double p) {
         int mutated = 0;
         long[] componentIds = genes.stream().mapToLong(i -> i.getAllele()).distinct().toArray();
-        SARFRunner.xoManager.currentTransaction().begin();
         for (int i = 0; i < genes.size(); i++) {
             if (RandomRegistry.getRandom().nextDouble() < p) {
                 // mutate gene
                 Long componentId = genes.get(i).getAllele();
                 // compute coupling to elements in same component
                 long[] typeIds = getIdsInSameComponent(componentId, genes);
-                Double maxCoupling = SARFRunner.xoManager.getRepository(MetricRepository.class).computeCouplingTo(Partitioner.ids[i], typeIds);
+                Double maxCoupling = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], typeIds);
                 Long maxComponent = componentId;
                 // the coupling to another component can be higher, find the component with the highest coupling
                 for (long l : componentIds) {
-                    Double coup = SARFRunner.xoManager.getRepository(MetricRepository.class).computeCouplingTo(Partitioner.ids[i], getIdsInSameComponent(l, genes));
+                    Double coup = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], getIdsInSameComponent(l, genes));
                     if (coup > maxCoupling) {
                         maxCoupling = coup;
                         maxComponent = l;
@@ -49,7 +46,6 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
                 }
             }
         }
-        SARFRunner.xoManager.currentTransaction().commit();
         return mutated;
     }
 

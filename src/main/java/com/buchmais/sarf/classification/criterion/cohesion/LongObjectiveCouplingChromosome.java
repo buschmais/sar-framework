@@ -1,7 +1,6 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
 import com.buchmais.sarf.benchmark.ModularizationQualityCalculator;
-import com.buchmais.sarf.repository.MetricRepository;
 import org.jenetics.LongGene;
 import org.jenetics.util.ISeq;
 import org.jenetics.util.LongRange;
@@ -27,14 +26,14 @@ public class LongObjectiveCouplingChromosome extends  LongObjectiveChromosome {
     }
 
     @Override
-    Double computeCohesion(MetricRepository mR, long[] ids) {
+    Double computeCohesion(long[] ids) {
         int denominator = ids.length == 1 ? 1 : ((ids.length * (ids.length - 1)) / 2);
-        return mR.computeCouplingCohesionInComponent(ids) / denominator;
+        return Problem.getInstance().computeCouplingCohesionInComponent(ids) / denominator;
     }
 
     @Override
-    Double computeCoupling(MetricRepository mR, long[] ids1, long[] ids2) {
-        return mR.computeCouplingBetweenComponents(ids1, ids2) / ((ids1.length + ids2.length) * (ids1.length + ids2.length - 1) / 2);
+    Double computeCoupling(long[] ids1, long[] ids2) {
+        return Problem.getInstance().computeCouplingBetweenComponents(ids1, ids2) / ((ids1.length + ids2.length) * (ids1.length + ids2.length - 1) / 2);
     }
 
     @Override

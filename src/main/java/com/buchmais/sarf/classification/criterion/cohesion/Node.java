@@ -1,5 +1,6 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
+import com.google.common.primitives.Longs;
 import lombok.Getter;
 
 import java.util.HashMap;
@@ -55,5 +56,12 @@ public class Node implements Comparable<Node> {
     @Override
     public int compareTo(Node o) {
         return this.id.compareTo(o.id);
+    }
+
+    public Double computeCouplingTo(long[] to) {
+        return this.couplings.entrySet()
+                .stream()
+                .filter(e -> Longs.contains(to, e.getKey().getId()))
+                .mapToDouble(Map.Entry::getValue).sum();
     }
 }

@@ -1,9 +1,7 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
-import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.benchmark.MoJoCalculator;
 import com.buchmais.sarf.benchmark.ModularizationQualityCalculator;
-import com.buchmais.sarf.repository.MetricRepository;
 import com.google.common.collect.Sets;
 import org.jenetics.LongChromosome;
 import org.jenetics.LongGene;
@@ -63,24 +61,21 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
                         return s1;
                     });
         }
-        //SARFRunner.xoManager.currentTransaction().begin();
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
         // compute fitness for intra-edge coupling (cohesiveness of components)
         for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
             long[] ids1 = component1.getValue().stream().mapToLong(i -> i).toArray();
-            this.cohesionObjective += computeCohesion(mR, ids1);
+            this.cohesionObjective += computeCohesion(ids1);
             // compute fitness for inter-edge coupling (coupling of components)
             // is compared twice -> punishing inter-edges
             for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
                 long[] ids2 = component2.getValue().stream().mapToLong(i -> i).toArray();
                 if (!Objects.equals(component1.getKey(), component2.getKey())) {
-                    this.couplingObjective -= computeCoupling(mR, ids1, ids2);
+                    this.couplingObjective -= computeCoupling(ids1, ids2);
                 }
             }
         }
         this.couplingObjective /= (identifiedComponents.size() * (identifiedComponents.size() - 1)) / 2; // TODO: 27.07.2017 Similarity undirected, coupling directed
         this.cohesionObjective /= identifiedComponents.size();
-        //SARFRunner.xoManager.currentTransaction().commit();
         // minimize the difference between min and max component size
         this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
                 identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / (Partitioner.ids.length - 1);
@@ -98,9 +93,9 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     }
 
-    abstract Double computeCohesion(MetricRepository mR, long[] ids);
+    abstract Double computeCohesion(long[] ids);
 
-    abstract Double computeCoupling(MetricRepository mR, long[] ids1, long[] ids2);
+    abstract Double computeCoupling(long[] ids1, long[] ids2);
 
     abstract Double computeMQ(Map<Long, Set<Long>> decomposition);
 

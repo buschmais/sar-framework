@@ -1,6 +1,5 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
-import com.buchmais.sarf.SARFRunner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.jenetics.*;
@@ -36,7 +35,7 @@ public class Partitioner {
                 .offspringFraction(0.5)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
-                .populationSize(10)
+                .populationSize(100)
                 .alterers(
                         new SinglePointCrossover<>(1),
                         similarityBased ?
@@ -52,8 +51,6 @@ public class Partitioner {
                 .limit(generations)
                 .peek(Partitioner::update)
                 .collect(EvolutionResult.toBestGenotype());
-        // print result
-        SARFRunner.xoManager.currentTransaction().begin();
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < best.getChromosome().length(); i++) {
             identifiedComponents.merge(
@@ -64,7 +61,6 @@ public class Partitioner {
                         return s1;
                     });
         }
-        SARFRunner.xoManager.currentTransaction().close();
         return identifiedComponents;
 
     }

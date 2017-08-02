@@ -40,7 +40,6 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         }
         types.close();
         long[] ids = typeIds.stream().mapToLong(l -> l).sorted().toArray();
-        Problem problem = createProblem(ids);
         // create initial partitioning
         Map<Long, Set<Long>> initialPartitioning;
         if (components != null && components.size() > 0) {
@@ -55,6 +54,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         int iterations = 300;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
+            createProblem(ids);
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
             if (!hierarchical) {
