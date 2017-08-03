@@ -1,9 +1,13 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import mikera.matrixx.AMatrix;
 import mikera.matrixx.impl.SparseRowMatrix;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
@@ -65,5 +69,37 @@ public class Problem {
         Double res = ids1.stream().mapToDouble(id -> computeSimilarityTo(id, ids2)).sum();
         res += ids2.stream().mapToDouble(id -> computeSimilarityTo(id, ids1)).sum();
         return res;
+    }
+
+    public Multimap<Integer, Long> connectedComponents(Collection<Long> ids) {
+        Collection<Long> idCopy = Sets.newHashSet(ids);
+        Multimap<Integer, Long> connectedComponents = HashMultimap.create();
+        Integer compId = 0;
+        while (connectedComponents.size() < ids.size()) {
+            Long id = idCopy.iterator().next();
+            Set<Long> identified = Sets.newHashSet(id);
+            getConnectedNodes(id, idCopy, identified);
+            idCopy.removeAll(identified);
+            connectedComponents.putAll(compId, identified);
+            compId++;
+        }
+        return connectedComponents;
+    }
+
+    public void getConnectedNodes(long from, Collection<Long> ids, Set<Long> identified) {
+        for (long id : ids) {
+            if (!identified.contains(id) && areConnected(from, id)) {
+                identified.add(id);
+                if (identified.size() < ids.size()) {
+                    getConnectedNodes(id, ids, identified);
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    public boolean areConnected(long id1, long id2) {
+        return this.couplings.get(id1, id2) > 0 || this.couplings.get(id2, id1) > 0;
     }
 }

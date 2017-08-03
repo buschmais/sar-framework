@@ -47,6 +47,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     }
 
     private void evaluate() {
+        boolean invalid = false;
         // mapping from component id to a set of type ids
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < this.length(); i++) {
@@ -60,11 +61,14 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         }
         // compute fitness for intra-edge coupling (cohesiveness of components)
         for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
-            this.cohesionObjective += computeCohesion(component1.getValue());
+            Double cohesion = computeCohesion(component1.getValue());
+            //if (cohesion == 0) {
+            //    invalid = true;
+            //}
+            this.cohesionObjective += cohesion;
             // compute fitness for inter-edge coupling (coupling of components)
             // is compared twice -> punishing inter-edges
             for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
-                long[] ids2 = component2.getValue().stream().mapToLong(i -> i).toArray();
                 if (!Objects.equals(component1.getKey(), component2.getKey())) {
                     this.couplingObjective -= computeCoupling(component1.getValue(), component2.getValue());
                 }
@@ -82,6 +86,13 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
                 identifiedComponents.size() <= 0.25 * Partitioner.ids.length ?
                         (identifiedComponents.size() / (Partitioner.ids.length / 4d)) :
                         (Partitioner.ids.length - identifiedComponents.size()) / (0.75 * Partitioner.ids.length);
+        if (invalid) {
+            //this.couplingObjective = -1D;
+            this.cohesionObjective = -1D;
+            //this.componentSizeObjective = -1D;
+            //this.componentRangeObjective = -1D;
+            //this.componentCountObjective = -1D;
+        }
         if (MoJoCalculator.reference != null) {
             writeBenchmarkLine(identifiedComponents);
         }

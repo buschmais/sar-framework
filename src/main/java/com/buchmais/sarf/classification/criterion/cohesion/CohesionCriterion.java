@@ -90,7 +90,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         LOG.info("Creating Problem");
         Query<CompositeRowObject> q1 = SARFRunner.xoManager.createQuery(
                 "MATCH\n" +
-                "  (t:Type:Internal)-[c:COUPLES]->(d:Type:Internal) \n" +
+                "  (t)-[c:COUPLES]->(d) \n" +
                 "WHERE\n" +
                 "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
                 "RETURN\n" +
@@ -101,7 +101,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
 
         Query<CompositeRowObject> q2 = SARFRunner.xoManager.createQuery(
                 "MATCH\n" +
-                "  (t:Type:Internal)-[s:IS_SIMILAR_TO]->(d:Type:Internal) \n" +
+                "  (t)-[s:IS_SIMILAR_TO]->(d) \n" +
                 "WHERE\n" +
                 "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
                 "RETURN\n" +
