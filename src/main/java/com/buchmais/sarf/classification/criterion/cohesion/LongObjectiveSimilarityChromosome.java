@@ -38,6 +38,11 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
     }
 
     @Override
+    Double normalizeCoupling(Double coupling, int components) {
+        return 2 * coupling / (components * (components - 1));
+    }
+
+    @Override
     Double computeMQ(Map<Long, Set<Long>> decomposition) {
         return ModularizationQualityCalculator.computeSimilarityBasedMQ(decomposition);
     }

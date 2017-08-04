@@ -32,7 +32,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private Double mQ = 0d;
 
-    public  double moJoFM;
+    public double moJoFM;
 
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes);
@@ -61,11 +61,13 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         }
         // compute fitness for intra-edge coupling (cohesiveness of components)
         for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
-            Double cohesion = computeCohesion(component1.getValue());
-            //if (cohesion == 0) {
-            //    invalid = true;
-            //}
-            this.cohesionObjective += cohesion;
+            if (!invalid) {
+                Double cohesion = computeCohesion(component1.getValue());
+                if (cohesion == 0) {
+                    invalid = true;
+                }
+                this.cohesionObjective += cohesion;
+            }
             // compute fitness for inter-edge coupling (coupling of components)
             // is compared twice -> punishing inter-edges
             for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
@@ -74,13 +76,13 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
                 }
             }
         }
-        this.couplingObjective /= (identifiedComponents.size() * (identifiedComponents.size() - 1)) / 2; // TODO: 27.07.2017 Similarity undirected, coupling directed
+        this.couplingObjective = normalizeCoupling(this.couplingObjective, identifiedComponents.size()); // TODO: 27.07.2017 Similarity undirected, coupling directed
         this.cohesionObjective /= identifiedComponents.size();
         // minimize the difference between min and max component size
         this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
                 identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / (Partitioner.ids.length - 1);
         // punish one-type only components
-        this.componentSizeObjective = - identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / (double) identifiedComponents.size();
+        this.componentSizeObjective = -identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / (double) identifiedComponents.size();
         // maximize component number
         this.componentCountObjective =
                 identifiedComponents.size() <= 0.25 * Partitioner.ids.length ?
@@ -103,6 +105,8 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     abstract Double computeCohesion(Collection<Long> ids);
 
     abstract Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
+
+    abstract Double normalizeCoupling(Double coupling, int components);
 
     abstract Double computeMQ(Map<Long, Set<Long>> decomposition);
 
@@ -132,7 +136,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     }
 
     /**
-     *
      * @param chromosome
      * @return True if this dominates, false otherwise (including non-pareto comparable
      */
@@ -141,21 +144,41 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         int better = 0;
         int equal = 0;
         int worse = 0;
-        if (this.cohesionObjective < chromosome.cohesionObjective) { worse++; }
-        else if (Objects.equals(this.cohesionObjective, chromosome.cohesionObjective)) { equal++; }
-        else { better++; }
-        if (this.couplingObjective < chromosome.couplingObjective) { worse++; }
-        else if (Objects.equals(this.couplingObjective, chromosome.couplingObjective)) { equal++; }
-        else { better++; }
-        if (this.componentSizeObjective < chromosome.componentSizeObjective) { worse++; }
-        else if (Objects.equals(this.componentSizeObjective, chromosome.componentSizeObjective)) { equal++; }
-        else { better++; }
-        if (this.componentCountObjective < chromosome.componentCountObjective) { worse++; }
-        else if (Objects.equals(this.componentCountObjective, chromosome.componentCountObjective)) { equal++; }
-        else { better++; }
-        if (this.componentRangeObjective < chromosome.componentRangeObjective) { worse++; }
-        else if (Objects.equals(this.componentRangeObjective, chromosome.componentRangeObjective)) { equal++; }
-        else { better++; }
+        if (this.cohesionObjective < chromosome.cohesionObjective) {
+            worse++;
+        } else if (Objects.equals(this.cohesionObjective, chromosome.cohesionObjective)) {
+            equal++;
+        } else {
+            better++;
+        }
+        if (this.couplingObjective < chromosome.couplingObjective) {
+            worse++;
+        } else if (Objects.equals(this.couplingObjective, chromosome.couplingObjective)) {
+            equal++;
+        } else {
+            better++;
+        }
+        if (this.componentSizeObjective < chromosome.componentSizeObjective) {
+            worse++;
+        } else if (Objects.equals(this.componentSizeObjective, chromosome.componentSizeObjective)) {
+            equal++;
+        } else {
+            better++;
+        }
+        if (this.componentCountObjective < chromosome.componentCountObjective) {
+            worse++;
+        } else if (Objects.equals(this.componentCountObjective, chromosome.componentCountObjective)) {
+            equal++;
+        } else {
+            better++;
+        }
+        if (this.componentRangeObjective < chromosome.componentRangeObjective) {
+            worse++;
+        } else if (Objects.equals(this.componentRangeObjective, chromosome.componentRangeObjective)) {
+            equal++;
+        } else {
+            better++;
+        }
 
         if (better > 0 && worse == 0) return true;
         return false;
@@ -179,9 +202,9 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
                 this.componentRangeObjective + this.componentSizeObjective;
         Double mQSim = ModularizationQualityCalculator.computeSimilarityBasedMQ(identifiedComponents);
         Double mQCoup = ModularizationQualityCalculator.computeCouplingBasedMQ(identifiedComponents);
-        try(FileWriter fw = new FileWriter("benchmark.csv", true);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw)) {
+        try (FileWriter fw = new FileWriter("benchmark.csv", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
             out.print(Partitioner.lastGeneration + 1 + " , ");
             out.print(identifiedComponents.size() + ", ");
             out.print(this.cohesionObjective + ", ");
