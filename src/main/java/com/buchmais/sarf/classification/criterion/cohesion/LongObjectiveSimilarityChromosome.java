@@ -34,7 +34,7 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
 
     @Override
     Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2) {
-        return Problem.getInstance().computeSimilarityCouplingBetweenComponents(ids1, ids2) / ((ids1.size() + ids2.size()) * (ids1.size() + ids2.size() - 1) / 2);
+        return Problem.getInstance().computeSimilarityCouplingBetweenComponents(ids1, ids2) / (ids1.size() * ids2.size());
     }
 
     @Override
