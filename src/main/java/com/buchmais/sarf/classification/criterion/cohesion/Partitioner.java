@@ -1,15 +1,14 @@
 package com.buchmais.sarf.classification.criterion.cohesion;
 
+import com.buchmais.sarf.SARFRunner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-import org.jenetics.Chromosome;
-import org.jenetics.Genotype;
-import org.jenetics.LongGene;
-import org.jenetics.SinglePointCrossover;
+import org.jenetics.*;
 import org.jenetics.engine.Engine;
 import org.jenetics.engine.EvolutionResult;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Stephan Pirnbaum
@@ -39,21 +38,23 @@ public class Partitioner {
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
                 .populationSize(100)
+                .maximalPhenotypeAge(20)
                 .alterers(
                         new SinglePointCrossover<>(1),
-                        //new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)),
+                        new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)),
                         similarityBased ?
                                 new SimilarityMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
-                                new CouplingMutator(0.008 * Math.log10(ids.length) / Math.log10(2)),
-                        new SplitMutator(1d))
+                                new CouplingMutator(1),
+                        new SplitMutator(1))
+                .executor(Runnable::run)
                 .build();
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
-
-        engine
+        List<EvolutionResult> r = engine
                 .stream(genotypes)
+                //.limit(limit.byFitnessThreshold(1d))
                 .limit(generations)
                 .peek(Partitioner::update)
-                .collect(EvolutionResult.toBestGenotype());
+                .collect(Collectors.toList());
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < best.getChromosome().length(); i++) {
             identifiedComponents.merge(
@@ -93,7 +94,10 @@ public class Partitioner {
 
     static Double computeFitnessValue(final Genotype<LongGene> prospect) {
         LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
-        return chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective();
+        SARFRunner.xoManager.currentTransaction().begin();
+        Double res = chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective() + chromosome.getCohesiveComponentObjective();
+        SARFRunner.xoManager.currentTransaction().commit();
+        return res;
     }
 
     private static void update(final EvolutionResult<LongGene, Double> result) {

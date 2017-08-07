@@ -86,6 +86,12 @@ public class Problem {
         return connectedComponents;
     }
 
+    public boolean isFullyConnected(Collection<Long> ids) {
+        Set<Long> connectedNodes = Sets.newHashSet(ids.iterator().next());
+        getConnectedNodes(ids.iterator().next(), ids, connectedNodes);
+        return connectedNodes.size() == ids.size();
+    }
+
     public void getConnectedNodes(long from, Collection<Long> ids, Set<Long> identified) {
         for (long id : ids) {
             if (!identified.contains(id) && areConnected(from, id)) {

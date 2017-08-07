@@ -30,11 +30,12 @@ public class CouplingMutator extends Mutator<LongGene, Double> {
             componentToTypes.put(genes.get(i).getAllele(), Partitioner.ids[i]);
         }
         for (int i = 0; i < genes.size(); i++) {
-            if (RandomRegistry.getRandom().nextDouble() < p) {
+            Long componentId = genes.get(i).getAllele();
+            Double maxCoupling = 0d;
+            if (RandomRegistry.getRandom().nextDouble() < (0.008 * Math.log10(Partitioner.ids.length) / Math.log10(2)) || componentToTypes.get(componentId).size() == 1 ||
+                    (maxCoupling = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], componentToTypes.get(componentId))) == 0) {
                 // mutate gene
-                Long componentId = genes.get(i).getAllele();
                 // compute coupling to elements in same component
-                Double maxCoupling = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], componentToTypes.get(componentId));
                 Long maxComponent = componentId;
                 // the coupling to another component can be higher, find the component with the highest coupling
                 for (long l : componentIds) {

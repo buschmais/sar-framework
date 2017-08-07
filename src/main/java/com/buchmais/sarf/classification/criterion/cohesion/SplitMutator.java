@@ -6,7 +6,9 @@ import org.jenetics.LongGene;
 import org.jenetics.Mutator;
 import org.jenetics.util.MSeq;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Stephan Pirnbaum
@@ -24,24 +26,40 @@ public class SplitMutator extends Mutator<LongGene, Double> {
         for (int i = 0; i < genes.length(); i++) {
             componentToTypes.put(genes.get(i).getAllele(), Partitioner.ids[i]);
         }
-        Long maxComponent = componentToTypes.keySet().stream().mapToLong(l -> l).max().orElse(0);
-        for (Long component : componentToTypes.keySet()) {
+        List<Long> unusedComponentIds = new ArrayList<>();
+        for (long i = 0; i < genes.get(0).getMax(); i++) {
+            if (!componentToTypes.keySet().contains(i)) {
+                unusedComponentIds.add(i);
+            }
+        }
+        //System.out.print("Un-Cohesive Compoents Before: " + componentToTypes.keySet().stream()
+        //        .mapToDouble(c -> Problem.getInstance().computeCouplingCohesionInComponent(componentToTypes.get(c))).filter(cnt -> cnt == 0).count());
+        outer: for (Long component : componentToTypes.keySet()) {
             Multimap<Integer, Long> connectedComponents = Problem.getInstance().connectedComponents(componentToTypes.get(component));
             if (connectedComponents.keySet().size() > 1) {
-                long cmpId = component;
+                boolean first = true;
                 for (Integer c : connectedComponents.keySet()) {
                     Collection<Long> types = connectedComponents.get(c);
+                    if (unusedComponentIds.size() == 0) break outer;
                     for (int i = 0; i < Partitioner.ids.length; i++) {
                         if (types.contains(Partitioner.ids[i])) {
-                            genes.set(i, LongGene.of(cmpId, genes.get(i).getMin(), genes.get(i).getMax()));
+                            genes.set(i, genes.get(i).newInstance(first ? component : unusedComponentIds.get(0)));
                             mutated++;
                         }
                     }
-                    cmpId = maxComponent + 1;
-                    maxComponent = maxComponent + 1;
+                    if (!first) unusedComponentIds.remove(0);
+                    first = false;
                 }
             }
         }
+        Multimap<Long, Long> componentsAfter = HashMultimap.create();
+        for (int i = 0; i < genes.length(); i++) {
+            componentsAfter.put(genes.get(i).getAllele(), Partitioner.ids[i]);
+        }
+        //System.out.print(" After: " + componentsAfter.keySet().stream()
+        //        .mapToDouble(c -> Problem.getInstance().computeCouplingCohesionInComponent(componentsAfter.get(c))).filter(cnt -> cnt == 0).count());
+        //System.out.print(" Mutated: " + mutated);
+        //System.out.println(" Components: " + componentsAfter.asMap().size());
         return mutated;
     }
 }
