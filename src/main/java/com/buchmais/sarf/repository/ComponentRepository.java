@@ -174,7 +174,7 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
     @Cypher("MATCH\n" +
             "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]->(e2)<-[:CONTAINS]-(c2:Component:SARF) \n" +
             "WHERE\n" +
-            "  NOT ID(c1) = ID(c2) AND c1.name STARTS WITH \"COH\" AND c2.name STARTS WITH \"COH\"\n" +
+            "  NOT ID(c1) = ID(c2) AND ID(c1) IN {ids} AND ID(c2) IN {ids}\n" +
             "WITH\n" +
             "  c1, c2, SUM(coup.coupling) AS coupling\n" +
             "MATCH\n" +
