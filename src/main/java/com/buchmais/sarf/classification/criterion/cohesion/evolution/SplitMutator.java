@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -32,8 +32,6 @@ public class SplitMutator extends Mutator<LongGene, Double> {
                 unusedComponentIds.add(i);
             }
         }
-        //System.out.print("Un-Cohesive Compoents Before: " + componentToTypes.keySet().stream()
-        //        .mapToDouble(c -> Problem.getInstance().computeCouplingCohesionInComponent(componentToTypes.get(c))).filter(cnt -> cnt == 0).count());
         outer: for (Long component : componentToTypes.keySet()) {
             Multimap<Integer, Long> connectedComponents = Problem.getInstance().connectedComponents(componentToTypes.get(component));
             if (connectedComponents.keySet().size() > 1) {
@@ -52,14 +50,6 @@ public class SplitMutator extends Mutator<LongGene, Double> {
                 }
             }
         }
-        Multimap<Long, Long> componentsAfter = HashMultimap.create();
-        for (int i = 0; i < genes.length(); i++) {
-            componentsAfter.put(genes.get(i).getAllele(), Partitioner.ids[i]);
-        }
-        //System.out.print(" After: " + componentsAfter.keySet().stream()
-        //        .mapToDouble(c -> Problem.getInstance().computeCouplingCohesionInComponent(componentsAfter.get(c))).filter(cnt -> cnt == 0).count());
-        //System.out.print(" Mutated: " + mutated);
-        //System.out.println(" Components: " + componentsAfter.asMap().size());
         return mutated;
     }
 }

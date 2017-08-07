@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.buchmais.sarf.benchmark.MoJoCalculator;
 import com.buchmais.sarf.benchmark.ModularizationQualityCalculator;
@@ -31,10 +31,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     private Double componentRangeObjective = 0d;
 
     private Double cohesiveComponentObjective = 0d;
-
-    private Double mQ = 0d;
-
-    public double moJoFM;
 
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes);
@@ -99,13 +95,11 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     }
 
-    abstract Double computeCohesion(Collection<Long> ids);
+    protected abstract Double computeCohesion(Collection<Long> ids);
 
-    abstract Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
+    protected abstract Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
 
-    abstract Double normalizeCoupling(Double coupling, int components);
-
-    abstract Double computeMQ(Map<Long, Set<Long>> decomposition);
+    protected abstract Double normalizeCoupling(Double coupling, int components);
 
     protected Double getCohesionObjective() {
         if (!this.evaluated) evaluate();
@@ -208,8 +202,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         Long mojoPlus = Math.min(mojoPlusCompRef, mojoPlusRefComp);
         Double fitness = this.cohesionObjective + this.couplingObjective + this.componentCountObjective +
                 this.componentRangeObjective + this.componentSizeObjective + this.cohesiveComponentObjective;
-        Double mQSim = ModularizationQualityCalculator.computeSimilarityBasedMQ(identifiedComponents);
-        Double mQCoup = ModularizationQualityCalculator.computeCouplingBasedMQ(identifiedComponents);
+        Double mQ = ModularizationQualityCalculator.computeMQ(identifiedComponents);
         try (FileWriter fw = new FileWriter("benchmark.csv", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
@@ -224,8 +217,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
             out.print(mojo + ", ");
             out.print(mojoFm + ", ");
             out.print(mojoPlus + ", ");
-            out.print(mQSim + ", ");
-            out.print(mQCoup + ", ");
+            out.print(mQ + ", ");
             out.println(fitness);
         } catch (IOException e) {
         }

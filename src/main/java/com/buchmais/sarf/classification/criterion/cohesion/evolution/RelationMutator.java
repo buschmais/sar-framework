@@ -1,4 +1,4 @@
-package com.buchmais.sarf.classification.criterion.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -12,13 +12,10 @@ import java.util.Objects;
 /**
  * @author Stephan Pirnbaum
  */
-public class SimilarityMutator extends Mutator<LongGene, Double> {
+public abstract class RelationMutator extends Mutator<LongGene, Double> {
 
-    public SimilarityMutator(double probability) {
+    public RelationMutator(double probability) {
         super(probability);
-    }
-
-    public SimilarityMutator() {
     }
 
     @Override
@@ -30,15 +27,16 @@ public class SimilarityMutator extends Mutator<LongGene, Double> {
             componentToTypes.put(genes.get(i).getAllele(), Partitioner.ids[i]);
         }
         for (int i = 0; i < genes.size(); i++) {
-            if (RandomRegistry.getRandom().nextDouble() < p) {
+            Long componentId = genes.get(i).getAllele();
+            Double maxCoupling = 0d;
+            if (RandomRegistry.getRandom().nextDouble() < (0.008 * Math.log10(Partitioner.ids.length) / Math.log10(2)) || componentToTypes.get(componentId).size() == 1 ||
+                    (maxCoupling = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], componentToTypes.get(componentId))) == 0) {
                 // mutate gene
-                Long componentId = genes.get(i).getAllele();
                 // compute coupling to elements in same component
-                Double maxCoupling = Problem.getInstance().computeSimilarityTo(Partitioner.ids[i], componentToTypes.get(componentId));
                 Long maxComponent = componentId;
                 // the coupling to another component can be higher, find the component with the highest coupling
                 for (long l : componentIds) {
-                    Double coup = Problem.getInstance().computeSimilarityTo(Partitioner.ids[i], componentToTypes.get(l));
+                    Double coup = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], componentToTypes.get(l));
                     if (coup > maxCoupling) {
                         maxCoupling = coup;
                         maxComponent = l;

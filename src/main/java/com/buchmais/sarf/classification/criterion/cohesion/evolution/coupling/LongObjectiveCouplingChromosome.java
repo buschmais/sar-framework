@@ -1,60 +1,54 @@
-package com.buchmais.sarf.classification.criterion.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution.coupling;
 
-import com.buchmais.sarf.benchmark.ModularizationQualityCalculator;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.LongObjectiveChromosome;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.Problem;
 import org.jenetics.LongGene;
 import org.jenetics.util.ISeq;
 import org.jenetics.util.LongRange;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
  */
-public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
+public class LongObjectiveCouplingChromosome extends LongObjectiveChromosome {
 
-    protected LongObjectiveSimilarityChromosome(ISeq<LongGene> genes) {
+    protected LongObjectiveCouplingChromosome(ISeq<LongGene> genes) {
         super(genes);
     }
 
-    public LongObjectiveSimilarityChromosome(Long min, Long max, int length) {
+    public LongObjectiveCouplingChromosome(Long min, Long max, int length) {
         super(min, max, length);
     }
 
-    public LongObjectiveSimilarityChromosome(Long min, Long max) {
+    public LongObjectiveCouplingChromosome(Long min, Long max) {
         super(min, max);
     }
 
     @Override
-    Double computeCohesion(Collection<Long> ids) {
+    protected Double computeCohesion(Collection<Long> ids) {
         int denominator = ids.size() == 1 ? 1 : ((ids.size() * (ids.size() - 1)) / 2);
-        return Problem.getInstance().computeSimilarityCohesionInComponent(ids) / denominator;
+        return Problem.getInstance().computeCohesionInComponent(ids) / denominator;
     }
 
     @Override
-    Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2) {
-        return Problem.getInstance().computeSimilarityCouplingBetweenComponents(ids1, ids2) / (ids1.size() * ids2.size());
+    protected Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2) {
+        return Problem.getInstance().computeCouplingBetweenComponents(ids1, ids2) / (2 * ids1.size() * ids2.size());
     }
 
     @Override
-    Double normalizeCoupling(Double coupling, int components) {
-        return 2 * coupling / (components * (components - 1));
+    protected Double normalizeCoupling(Double coupling, int components) {
+        return coupling / (components * (components - 1));
     }
 
     @Override
-    Double computeMQ(Map<Long, Set<Long>> decomposition) {
-        return ModularizationQualityCalculator.computeSimilarityBasedMQ(decomposition);
+    public LongObjectiveCouplingChromosome newInstance(ISeq<LongGene> genes) {
+        return new LongObjectiveCouplingChromosome(genes);
     }
 
     @Override
-    public LongObjectiveSimilarityChromosome newInstance(ISeq<LongGene> genes) {
-        return new LongObjectiveSimilarityChromosome(genes);
-    }
-
-    @Override
-    public LongObjectiveSimilarityChromosome newInstance() {
-        return new LongObjectiveSimilarityChromosome(this.getMin(), this.getMax(), this.length());
+    public LongObjectiveCouplingChromosome newInstance() {
+        return new LongObjectiveCouplingChromosome(this.getMin(), this.getMax(), this.length());
     }
 
     /**
@@ -66,8 +60,8 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
      *         empty.
      * @throws NullPointerException if the given {@code genes} are {@code null}
      */
-    public static LongObjectiveSimilarityChromosome of(final LongGene... genes) {
-        return new LongObjectiveSimilarityChromosome(ISeq.of(genes));
+    public static LongObjectiveCouplingChromosome of(final LongGene... genes) {
+        return new LongObjectiveCouplingChromosome(ISeq.of(genes));
     }
 
     /**
@@ -80,12 +74,12 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
      * @throws IllegalArgumentException if the {@code length} is smaller than
      *         one.
      */
-    public static LongObjectiveSimilarityChromosome of(
+    public static LongObjectiveCouplingChromosome of(
             final long min,
             final long max,
             final int length
     ) {
-        return new LongObjectiveSimilarityChromosome(min, max, length);
+        return new LongObjectiveCouplingChromosome(min, max, length);
     }
 
     /**
@@ -100,8 +94,8 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
      * @throws IllegalArgumentException if the {@code length} is smaller than
      *         one.
      */
-    public static LongObjectiveSimilarityChromosome of(final LongRange range, final int length) {
-        return new LongObjectiveSimilarityChromosome(range.getMin(), range.getMax(), length);
+    public static LongObjectiveCouplingChromosome of(final LongRange range, final int length) {
+        return new LongObjectiveCouplingChromosome(range.getMin(), range.getMax(), length);
     }
 
     /**
@@ -111,8 +105,8 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
      * @param max the maximal value of this chromosome (inclusively).
      * @return a new {@code LongObjectiveChromosome} with the given gene parameters.
      */
-    public static LongObjectiveSimilarityChromosome of(final long min, final long max) {
-        return new LongObjectiveSimilarityChromosome(min, max);
+    public static LongObjectiveCouplingChromosome of(final long min, final long max) {
+        return new LongObjectiveCouplingChromosome(min, max);
     }
 
     /**
@@ -124,8 +118,7 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
      * @return a new random {@code LongObjectiveChromosome} of length one
      * @throws NullPointerException if the given {@code range} is {@code null}
      */
-    public static LongObjectiveSimilarityChromosome of(final LongRange range) {
-        return new LongObjectiveSimilarityChromosome(range.getMin(), range.getMax());
+    public static LongObjectiveCouplingChromosome of(final LongRange range) {
+        return new LongObjectiveCouplingChromosome(range.getMin(), range.getMax());
     }
-
 }

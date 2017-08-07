@@ -3,6 +3,8 @@ package com.buchmais.sarf.classification.criterion.cohesion;
 import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buchmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.Partitioner;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.Problem;
 import com.buchmais.sarf.metamodel.ComponentDescriptor;
 import com.buchmais.sarf.repository.ComponentRepository;
 import com.buchmais.sarf.repository.TypeRepository;
@@ -54,7 +56,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         int iterations = 300;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
-            createProblem(ids);
+            createProblem(ids, similarityBased);
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
             if (!hierarchical) {
@@ -84,31 +86,30 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         return Sets.newHashSet(result);
     }
 
-    private Problem createProblem(long[] ids) {
+    private Problem createProblem(long[] ids, boolean similarityBased) {
         int maxId = (int) Arrays.stream(ids).max().orElse(0);
-        Problem p = Problem.newInstance(maxId + 1, maxId + 1);
+        Problem p = Problem.newInstance(maxId + 1, maxId + 1, similarityBased);
         LOG.info("Creating Problem");
-        Query<CompositeRowObject> q1 = SARFRunner.xoManager.createQuery(
-                "MATCH\n" +
-                "  (t)-[c:COUPLES]->(d) \n" +
-                "WHERE\n" +
-                "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
-                "RETURN\n" +
-                "  ID(t) AS t, ID(d) AS d, toFloat(c.coupling) AS c");
-        try (Result<CompositeRowObject> res = q1.execute()) {
-            res.forEach(r -> p.addCoupling(r.get("t", Long.class).intValue(), r.get("d", Long.class).intValue(), r.get("c", Double.class)));
+        Query<CompositeRowObject> query;
+        if (similarityBased) {
+            query = SARFRunner.xoManager.createQuery(
+                    "MATCH\n" +
+                            "  (t)-[s:IS_SIMILAR_TO]->(d) \n" +
+                            "WHERE\n" +
+                            "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
+                            "RETURN\n" +
+                            "  ID(t) AS t, ID(d) AS d, toFloat(s.similarity) AS r");
+        } else {
+            query = SARFRunner.xoManager.createQuery(
+                    "MATCH\n" +
+                            "  (t)-[c:COUPLES]->(d) \n" +
+                            "WHERE\n" +
+                            "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
+                            "RETURN\n" +
+                            "  ID(t) AS t, ID(d) AS d, toFloat(c.coupling) AS r");
         }
-
-        Query<CompositeRowObject> q2 = SARFRunner.xoManager.createQuery(
-                "MATCH\n" +
-                "  (t)-[s:IS_SIMILAR_TO]->(d) \n" +
-                "WHERE\n" +
-                "  ID(t) IN " + Arrays.toString(ids) + " AND ID(d) IN " + Arrays.toString(ids) + "\n" +
-                "RETURN\n" +
-                "  ID(t) AS t, ID(d) AS d, toFloat(s.similarity) AS s"
-        );
-        try (Result<CompositeRowObject> res = q2.execute()) {
-            res.forEach(r -> p.addSimilarity(r.get("t", Long.class).intValue(), r.get("d", Long.class).intValue(), r.get("s", Double.class)));
+        try (Result<CompositeRowObject> res = query.execute()) {
+            res.forEach(r -> p.addRelation(r.get("t", Long.class).intValue(), r.get("d", Long.class).intValue(), r.get("r", Double.class)));
         }
         LOG.info("Creating Problem Successful");
         return p;

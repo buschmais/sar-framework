@@ -1,6 +1,10 @@
-package com.buchmais.sarf.classification.criterion.cohesion;
+package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
 import com.buchmais.sarf.SARFRunner;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.coupling.CouplingDrivenMutator;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.coupling.LongObjectiveCouplingChromosome;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.similarity.LongObjectiveSimilarityChromosome;
+import com.buchmais.sarf.classification.criterion.cohesion.evolution.similarity.SimilarityDrivenMutator;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import org.jenetics.*;
@@ -43,8 +47,8 @@ public class Partitioner {
                         new SinglePointCrossover<>(1),
                         new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)),
                         similarityBased ?
-                                new SimilarityMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
-                                new CouplingMutator(1),
+                                new SimilarityDrivenMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
+                                new CouplingDrivenMutator(1),
                         new SplitMutator(1))
                 .executor(Runnable::run)
                 .build();
