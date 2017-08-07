@@ -22,10 +22,6 @@ public class MoJoCalculator {
     }
 
     public MoJoCalculator(Map<Long, Set<Long>> decomposition, boolean isFrom) {
-        if (SARFRunner.xoManager.currentTransaction().isActive()) {
-            SARFRunner.xoManager.currentTransaction().commit();
-        }
-        SARFRunner.xoManager.currentTransaction().begin();
         StringBuilder builder1 = new StringBuilder();
         for (Map.Entry<Long, Set<Long>> dec : decomposition.entrySet()) {
             for (Long id : dec.getValue()) {
@@ -46,12 +42,10 @@ public class MoJoCalculator {
             this.br_s = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder2.toString().getBytes())));
             this.br_t = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder1.toString().getBytes())));
         }
-        SARFRunner.xoManager.currentTransaction().commit();
     }
 
     public MoJoCalculator(Set<ComponentDescriptor> from, Set<ComponentDescriptor> to) {
         StringBuilder fromRsf = new StringBuilder();
-        SARFRunner.xoManager.currentTransaction().begin();
         for (ComponentDescriptor componentDescriptor : from) {
             for (TypeDescriptor typeDescriptor : componentDescriptor.getContainedTypes()) {
                 fromRsf.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
@@ -63,7 +57,6 @@ public class MoJoCalculator {
                 toRsf.append("contain " + componentDescriptor.getName() + " " + typeDescriptor.getName() + "\n");
             }
         }
-        SARFRunner.xoManager.currentTransaction().commit();
         this.br_s = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fromRsf.toString().getBytes())));
         this.br_t = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(toRsf.toString().getBytes())));
     }

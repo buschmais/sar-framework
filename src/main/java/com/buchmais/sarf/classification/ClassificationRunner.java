@@ -65,6 +65,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                 this.activeClassificationConfiguration.getOptimization() == ClassificationConfiguration.Optimization.SIMILARITY);
 
         try {
+            SARFRunner.xoManager.currentTransaction().begin();
             MoJoCalculator moJoCalculator1 = new MoJoCalculator(reference, comp);
             MoJoCalculator moJoCalculator2 = new MoJoCalculator(comp, reference);
             MoJoCalculator moJoFmCalculator = new MoJoCalculator(comp, reference);
@@ -86,8 +87,6 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                 pW.println("MoJo Quality: " + (100 - (100. * mojo / typeCount)) + " %");
                 pW.println("MoJoFM Quality: " + mojoFm + " %");
                 pW.println("MoJo Plus Quality: " + (100 - (100. * mojoPlus / typeCount)) + " %");
-
-                SARFRunner.xoManager.currentTransaction().begin();
                 ActiveClassificationConfiguration.prettyPrint(comp, "", pW);
                 SARFRunner.xoManager.currentTransaction().commit();
                 pW.flush();
