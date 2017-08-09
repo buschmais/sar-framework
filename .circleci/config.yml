@@ -2,39 +2,58 @@
 #
 # Check https://circleci.com/docs/2.0/language-java/ for more details
 #
-version: 2
-jobs:
-  build:
-    docker:
-      # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
+workflows:
+  version: 2
+  builddeploy:
+    jobs:
+      - build:
+        docker:
+        # specify the version you desire here
+          - image: circleci/openjdk:8-jdk
 
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+        # Specify service dependencies here if necessary
+        # CircleCI maintains a library of pre-built images
+        # documented at https://circleci.com/docs/2.0/circleci-images/
+        # - image: circleci/postgres:9.4
+        working_directory: ~/sar-framework
 
-    working_directory: ~/sar-framework
+        environment:
+          # Customize the JVM maximum heap limit
+          MAVEN_OPTS: -Xmx3200m
 
-    environment:
-      # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx3200m
+        steps:
+          - checkout
 
-    steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
+          # Download and cache dependencies
+          - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "pom.xml" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: mvn dependency:go-offline
+          - run: mvn dependency:go-offline
 
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          - save_cache:
+            paths:
+              - ~/.m2
+            key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      - run: mvn package
+          - run: mvn package
+
+      - deploy:
+        filters:
+          tags:
+            only: /.*/
+          branches:
+            ignore: /.*/
+        steps:
+          - run: go get github.com/aktau/github-release
+          - run: npm install github-release-notes -g
+          - run: mvn package
+
+          - store_artifacts:
+            path: /tmp/$CIRCLE_TAG.jar
+
+          - run: git config user.name $CIRCLE_PROJECT_USERNAME
+          - run: gren --override --data-source=commits
+          - run: github-release upload --user $CIRCLE_PROJECT_USERNAME --repo $CIRCLE_PROJECT_REPONAME --tag $CIRCLE_TAG --name $CIRCLE_PROJECT_REPONAME"."$CIRCLE_TAG".jar" --file /tmp/$CIRCLE_TAG.jar
