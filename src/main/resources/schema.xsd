@@ -51,13 +51,13 @@
     </xs:element>
     <xs:element name="Rules">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="DependsOn" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element ref="DependsOn" minOccurs="0"/>
                 <xs:element ref="Implements" minOccurs="0"/>
                 <xs:element ref="AnnotatedBy" minOccurs="0"/>
-                <xs:element ref="Name" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="Name" minOccurs="0"/>
                 <xs:element ref="Package" minOccurs="0"/>
-            </xs:sequence>
+            </xs:choice>
         </xs:complexType>
     </xs:element>
     <xs:element name="Component">
