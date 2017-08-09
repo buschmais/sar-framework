@@ -20,10 +20,7 @@ jobs:
 
       # Download and cache dependencies
       - restore_cache:
-      keys:
-      - v1-dependencies-{{ checksum "pom.xml" }}
-      # fallback to using the latest cache if no exact match is found
-      - v1-dependencies-
+        key: v1-dependencies-{{ checksum "pom.xml" }}
 
       - run: mvn dependency:go-offline
 
@@ -35,20 +32,28 @@ jobs:
       - run: mvn package
 
   deploy:
-    requires: build
-      filters:
-        tags:
-          only: /.*/
-        branches:
-          ignore: /.*/
-      steps:
-        - run: go get github.com/aktau/github-release
-        - run: npm install github-release-notes -g
-        - run: mvn package
+    steps:
+      - run: go get github.com/aktau/github-release
+      - run: npm install github-release-notes -g
+      - run: mvn package
 
-        - store_artifacts:
-          path: /tmp/$CIRCLE_TAG.jar
+      - store_artifacts:
+        path: /tmp/$CIRCLE_TAG.jar
 
-        - run: git config user.name $CIRCLE_PROJECT_USERNAME
-        - run: gren --override --data-source=commits
-        - run: github-release upload --user $CIRCLE_PROJECT_USERNAME --repo $CIRCLE_PROJECT_REPONAME --tag $CIRCLE_TAG --name $CIRCLE_PROJECT_REPONAME"."$CIRCLE_TAG".jar" --file /tmp/$CIRCLE_TAG.jar
+      - run: git config user.name $CIRCLE_PROJECT_USERNAME
+      - run: gren --override --data-source=commits
+      - run: github-release upload --user $CIRCLE_PROJECT_USERNAME --repo $CIRCLE_PROJECT_REPONAME --tag $CIRCLE_TAG --name $CIRCLE_PROJECT_REPONAME"."$CIRCLE_TAG".jar" --file /tmp/$CIRCLE_TAG.jar
+
+workflows:
+  version: 2
+  builddeploy:
+    jobs:
+      - build
+      - deploy:
+        requires:
+          - build
+        filters:
+          tags:
+            only: /.*/
+          branches:
+            ignore: /.*/
