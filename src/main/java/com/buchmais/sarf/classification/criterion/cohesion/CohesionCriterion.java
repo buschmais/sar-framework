@@ -140,11 +140,13 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
             for (TypeDescriptor typeDescriptor : typeDescriptors) {
                 String[] words = StringUtils.splitByCharacterTypeCamelCase(typeDescriptor.getName());
                 for (String word : words) {
-                    wordCount.merge(
-                            word,
-                            1L,
-                            (w1, w2) -> w1 + 1
-                    );
+                    if (!word.equals("$") && !word.matches("\\d+")) {
+                        wordCount.merge(
+                                word,
+                                1L,
+                                (w1, w2) -> w1 + 1
+                        );
+                    }
                 }
             }
             ListMultimap<Long, String> sorted = new ImmutableListMultimap.Builder<Long, String>()
