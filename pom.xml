@@ -65,11 +65,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <!-- Classpath scanning -->
-        <dependency>
-            <groupId>org.scannotation</groupId>
-            <artifactId>scannotation</artifactId>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -152,12 +147,6 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>1.16.16</version>
-            </dependency>
-            <!-- Classpath scanning -->
-            <dependency>
-                <groupId>org.scannotation</groupId>
-                <artifactId>scannotation</artifactId>
-                <version>1.0.4</version>
             </dependency>
             <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
             <dependency>
