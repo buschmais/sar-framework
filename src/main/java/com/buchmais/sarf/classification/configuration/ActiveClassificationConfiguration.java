@@ -147,7 +147,7 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 } catch (ClassCastException e) {
                     TypeDescriptor t = r.get("e", TypeDescriptor.class);
                     if (t != null) {
-                        pW.println(indentation + "\t" + t.getName());
+                        pW.println(indentation + "\t" + t.getFullQualifiedName());
                     }
                 }
             }
