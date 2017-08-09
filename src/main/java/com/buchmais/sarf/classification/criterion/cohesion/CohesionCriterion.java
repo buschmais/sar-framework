@@ -57,7 +57,9 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
             createProblem(ids, similarityBased);
+            SARFRunner.xoManager.currentTransaction().begin();
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);
+            SARFRunner.xoManager.currentTransaction().commit();
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
             if (!hierarchical) {
                 SARFRunner.xoManager.currentTransaction().begin();

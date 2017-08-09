@@ -1,6 +1,5 @@
 package com.buchmais.sarf.classification.criterion.cohesion.evolution;
 
-import com.buchmais.sarf.SARFRunner;
 import com.buchmais.sarf.classification.criterion.cohesion.evolution.coupling.CouplingDrivenMutator;
 import com.buchmais.sarf.classification.criterion.cohesion.evolution.coupling.LongObjectiveCouplingChromosome;
 import com.buchmais.sarf.classification.criterion.cohesion.evolution.similarity.LongObjectiveSimilarityChromosome;
@@ -98,9 +97,7 @@ public class Partitioner {
 
     static Double computeFitnessValue(final Genotype<LongGene> prospect) {
         LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
-        SARFRunner.xoManager.currentTransaction().begin();
         Double res = chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective() + chromosome.getCohesiveComponentObjective();
-        SARFRunner.xoManager.currentTransaction().commit();
         return res;
     }
 
