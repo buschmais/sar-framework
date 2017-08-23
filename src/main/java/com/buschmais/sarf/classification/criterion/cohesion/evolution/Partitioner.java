@@ -97,7 +97,7 @@ public class Partitioner {
 
     static Double computeFitnessValue(final Genotype<LongGene> prospect) {
         LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
-        Double res = chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentCountObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective() + chromosome.getCohesiveComponentObjective();
+        Double res = chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective() + chromosome.getCohesiveComponentObjective();
         return res;
     }
 

@@ -24,8 +24,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private Double couplingObjective = 0d;
 
-    private Double componentCountObjective = 0d;
-
     private Double componentSizeObjective = 0d;
 
     private Double componentRangeObjective = 0d;
@@ -83,11 +81,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         //punish un-cohesive components
         this.cohesiveComponentObjective = uncohesiveComponents == 0 ? 1 : (totalSubComponents > identifiedComponents.size() ? 0 : (1 - ((double) totalSubComponents) / identifiedComponents.size()));
         this.componentSizeObjective = -identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / (double) identifiedComponents.size();
-        // maximize component number
-        this.componentCountObjective =
-                identifiedComponents.size() <= 0.25 * Partitioner.ids.length ?
-                        (identifiedComponents.size() / (Partitioner.ids.length / 4d)) :
-                        (Partitioner.ids.length - identifiedComponents.size()) / (0.75 * Partitioner.ids.length);
         if (MoJoCalculator.reference != null) {
             writeBenchmarkLine(identifiedComponents);
         }
@@ -119,11 +112,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     protected Double getComponentRangeObjective() {
         if (!this.evaluated) evaluate();
         return this.componentRangeObjective;
-    }
-
-    protected Double getComponentCountObjective() {
-        if (!this.evaluated) evaluate();
-        return this.componentCountObjective;
     }
 
     protected Double getCohesiveComponentObjective() {
@@ -161,13 +149,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         } else {
             better++;
         }
-        if (this.componentCountObjective < chromosome.componentCountObjective) {
-            worse++;
-        } else if (Objects.equals(this.componentCountObjective, chromosome.componentCountObjective)) {
-            equal++;
-        } else {
-            better++;
-        }
         if (this.componentRangeObjective < chromosome.componentRangeObjective) {
             worse++;
         } else if (Objects.equals(this.componentRangeObjective, chromosome.componentRangeObjective)) {
@@ -200,8 +181,8 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         Long mojoPlusCompRef = moJoPlusCalculator1.mojoplus();
         Long mojoPlusRefComp = moJoPlusCalculator2.mojoplus();
         Long mojoPlus = Math.min(mojoPlusCompRef, mojoPlusRefComp);
-        Double fitness = this.cohesionObjective + this.couplingObjective + this.componentCountObjective +
-                this.componentRangeObjective + this.componentSizeObjective + this.cohesiveComponentObjective;
+        Double fitness = this.cohesionObjective + this.couplingObjective + this.componentRangeObjective
+                + this.componentSizeObjective + this.cohesiveComponentObjective;
         Double mQ = ModularizationQualityCalculator.computeMQ(identifiedComponents);
         try (FileWriter fw = new FileWriter("benchmark.csv", true);
              BufferedWriter bw = new BufferedWriter(fw);
@@ -212,7 +193,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
             out.print(this.couplingObjective + ", ");
             out.print(this.componentSizeObjective + ", ");
             out.print(this.componentRangeObjective + ", ");
-            out.print(this.componentCountObjective + ", ");
             out.print(this.cohesiveComponentObjective + ", ");
             out.print(mojo + ", ");
             out.print(mojoFm + ", ");
