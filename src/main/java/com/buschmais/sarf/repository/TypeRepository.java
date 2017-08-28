@@ -21,11 +21,13 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "  a.fileName =~ {artifact}" +
             "    AND" +
             "  p.fqn =~ {basePackage}" +
+            "    AND" +
+            "  t.name =~ {typeName} " +
             "SET" +
             "  t:Internal " +
             "RETURN" +
             "  count(t)")
-    Long markAllInternalTypes(@Parameter("basePackage") String basePackage, @Parameter("artifact") String artifact);
+    Long markAllInternalTypes(@Parameter("typeName") String typeName, @Parameter("basePackage") String basePackage, @Parameter("artifact") String artifact);
 
     @ResultOf
     @Cypher("MATCH" +

@@ -54,6 +54,10 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     String basePackage;
 
     @Getter
+    @XmlAttribute(name = "typeName")
+    String typeName;
+
+    @Getter
     @XmlAttribute(name = "artifact")
     String artifact;
 
