@@ -16,14 +16,16 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (t:Type) " +
+            "  (a:Artifact)-[:CONTAINS]->(p:Package)-[:CONTAINS]->(t:Type) " +
             "WHERE" +
-            "  t.fqn =~ {basePackage} " +
+            "  a.fileName =~ {artifact}" +
+            "    AND" +
+            "  p.fqn =~ {basePackage}" +
             "SET" +
             "  t:Internal " +
             "RETURN" +
             "  count(t)")
-    Long markAllInternalTypes(@Parameter("basePackage") String basePackage);
+    Long markAllInternalTypes(@Parameter("basePackage") String basePackage, @Parameter("artifact") String artifact);
 
     @ResultOf
     @Cypher("MATCH" +

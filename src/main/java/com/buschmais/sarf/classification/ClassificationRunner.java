@@ -165,7 +165,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             SARFRunner.xoManager.currentTransaction().commit();
             SARFRunner.xoManager.currentTransaction().begin();
             LOG.info("Preparing Data Set");
-            SARFRunner.xoManager.getRepository(TypeRepository.class).markAllInternalTypes(this.activeClassificationConfiguration.getBasePackage());
+            SARFRunner.xoManager.getRepository(TypeRepository.class).markAllInternalTypes(this.activeClassificationConfiguration.getBasePackage(), this.activeClassificationConfiguration.getArtifact());
             SARFRunner.xoManager.currentTransaction().commit();
             TypeCouplingEnricher.enrich();
         } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {

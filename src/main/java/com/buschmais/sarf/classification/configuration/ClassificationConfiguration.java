@@ -53,6 +53,10 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     @XmlAttribute(name = "basePackage")
     String basePackage;
 
+    @Getter
+    @XmlAttribute(name = "artifact")
+    String artifact;
+
     @XmlAttribute(name = "decomposition")
     private Decomposition decomposition;
 
