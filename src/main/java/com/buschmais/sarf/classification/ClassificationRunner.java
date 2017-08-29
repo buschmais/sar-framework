@@ -146,10 +146,10 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     }
 
     private void setUpData() {
+        SARFRunner.xoManager.currentTransaction().begin();
         ClassificationConfigurationRepository classificationConfigurationRepository = SARFRunner.xoManager.getRepository(ClassificationConfigurationRepository.class);
         if (this.activeClassificationConfiguration.getIteration() == 1) {
             LOG.info("Resetting Data");
-            SARFRunner.xoManager.currentTransaction().begin();
             SARFRunner.xoManager.createQuery(
                     "MATCH (sarf:SARF) DETACH DELETE sarf"
             ).execute();
@@ -169,12 +169,13 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                     this.activeClassificationConfiguration.getTypeName(),
                     this.activeClassificationConfiguration.getBasePackage(),
                     this.activeClassificationConfiguration.getArtifact());
-            SARFRunner.xoManager.currentTransaction().commit();
             TypeCouplingEnricher.enrich();
         } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             LOG.error("Specified Configuration Iteration must be either 1 or " +
                     classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1);
+            SARFRunner.xoManager.currentTransaction().commit();
             System.exit(1);
         }
+        SARFRunner.xoManager.currentTransaction().commit();
     }
 }

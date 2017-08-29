@@ -15,7 +15,7 @@ public interface ClassificationConfigurationRepository extends TypedNeo4jReposit
     @Cypher("MATCH" +
             "  (conf:ClassificationConfiguration) " +
             "WITH" +
-            "  max(conf.iteration) AS current" +
+            "  max(conf.iteration) AS current " +
             "MATCH" +
             "  (conf:ClassificationConfiguration{iteration: current}) " +
             "RETURN" +
