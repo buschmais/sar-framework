@@ -53,11 +53,9 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     @XmlAttribute(name = "basePackage")
     String basePackage;
 
-    @Getter
     @XmlAttribute(name = "typeName")
     String typeName;
 
-    @Getter
     @XmlAttribute(name = "artifact")
     String artifact;
 
@@ -107,6 +105,22 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
             return Optimization.SIMILARITY;
         } else {
             return this.optimization;
+        }
+    }
+
+    public String getTypeName() {
+        if (this.typeName == null) {
+            return ".*";
+        } else {
+            return this.typeName;
+        }
+    }
+
+    public String getArtifact() {
+        if (this.artifact == null) {
+            return ".*";
+        } else {
+            return this.artifact;
         }
     }
 

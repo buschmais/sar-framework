@@ -16,7 +16,7 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
 
     @ResultOf
     @Cypher("MATCH" +
-            "  (a:Artifact)-[:CONTAINS]->(p:Package)-[:CONTAINS]->(t:Type) " +
+            "  (a:Artifact)-[:CONTAINS*]->(p:Package)-[:CONTAINS]->(t:Type) " +
             "WHERE" +
             "  a.fileName =~ {artifact}" +
             "    AND" +
