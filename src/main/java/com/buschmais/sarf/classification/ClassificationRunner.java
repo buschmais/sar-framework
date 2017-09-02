@@ -169,6 +169,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                     this.activeClassificationConfiguration.getTypeName(),
                     this.activeClassificationConfiguration.getBasePackage(),
                     this.activeClassificationConfiguration.getArtifact());
+            SARFRunner.xoManager.currentTransaction().commit();
             TypeCouplingEnricher.enrich();
         } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             LOG.error("Specified Configuration Iteration must be either 1 or " +
@@ -176,6 +177,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             SARFRunner.xoManager.currentTransaction().commit();
             System.exit(1);
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        if (SARFRunner.xoManager.currentTransaction().isActive())
+            SARFRunner.xoManager.currentTransaction().commit();
     }
 }
