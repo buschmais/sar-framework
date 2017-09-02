@@ -53,7 +53,8 @@ public class TypeCouplingEnricher {
                 WeightConstants.WRITES_STATIC_WEIGHT +
                 WeightConstants.COMPOSES_WEIGHT +
                 WeightConstants.INNER_CLASSES_WEIGHT +
-                WeightConstants.DEPENDS_ON_WEIGHT;
+                WeightConstants.DEPENDS_ON_WEIGHT +
+                WeightConstants.INVOKES_ABSTRACT_WEIGHT;
 
         Double weightedCoupling =
                 WeightConstants.INVOKES_WEIGHT * computeCouplingInvokes(id1, id2) +
@@ -68,7 +69,8 @@ public class TypeCouplingEnricher {
                 WeightConstants.WRITES_STATIC_WEIGHT * computeCouplingWritesStatic(id1, id2) +
                 WeightConstants.COMPOSES_WEIGHT * computeCouplingComposes(id1, id2) +
                 WeightConstants.INNER_CLASSES_WEIGHT * computeCouplingDeclaresInnerClass(id1, id2) +
-                WeightConstants.DEPENDS_ON_WEIGHT * computeSimpleDependsOn(id1, id2);
+                WeightConstants.DEPENDS_ON_WEIGHT * computeSimpleDependsOn(id1, id2) +
+                WeightConstants.INVOKES_ABSTRACT_WEIGHT * computeCouplingInvokesAbstract(id1, id2);
 
         /*System.out.println("1 " + computeCouplingInvokes(id1, id2));
         System.out.println("2 " + computeCouplingInvokesStatic(id1, id2));
@@ -81,6 +83,12 @@ public class TypeCouplingEnricher {
         System.out.println("9 " + computeCouplingWrites(id1, id2));
         System.out.println("10 " + computeCouplingWritesStatic(id1, id2));*/
         Double res = weightedCoupling / totalWeight;
+        return Double.isNaN(res) ? 0 : res;
+    }
+
+    private static Double computeCouplingInvokesAbstract(Long id1, Long id2) {
+        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        Double res = (double) mR.countInvokesAbstract(id1, id2) / mR.countAllInvokesExternalAbstract(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 

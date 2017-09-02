@@ -341,4 +341,38 @@ public interface MetricRepository {
             "RETURN" +
             "  toFloat(SUM(c.coupling))")
     Double computeCouplingCohesionInComponent(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t1:Type) " +
+            "WHERE" +
+            "  ID(t1) = {t1} " +
+            "WITH" +
+            "  t1 " +
+            "MATCH" +
+            "  (t2:Type) " +
+            "WHERE" +
+            "  ID(t2) = {t2} " +
+            "WITH" +
+            "  t1, t2 " +
+            "MATCH" +
+            " (t1)-[:DECLARES]->(:Method)-[i:INVOKES]->(:Method{abstract:true})<-[:DECLARES]-(t2) " +
+            "RETURN" +
+            "  count(i)")
+    Long countInvokesAbstract(@Parameter("t1") Long id1, @Parameter("t2") Long id2);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (t:Type) " +
+            "WHERE" +
+            "  ID(t) = {t} " +
+            "WITH" +
+            "  t " +
+            "MATCH" +
+            "  (t)-[:DECLARES]->(:Method)-[i:INVOKES]->(:Method{abstract:true})<-[:DECLARES]-(t2:Type) " +
+            "WHERE" +
+            "  ID(t) <> ID(t2) " +
+            "RETURN" +
+            "  count(i)")
+    Long countAllInvokesExternalAbstract(@Parameter("t") Long t);
 }

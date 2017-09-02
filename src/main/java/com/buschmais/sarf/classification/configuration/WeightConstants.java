@@ -32,6 +32,8 @@ public abstract class WeightConstants {
 
     public static Double COMPOSES_WEIGHT = 1d; // 12
 
+    public static Double INVOKES_ABSTRACT_WEIGHT = -1d;
+
     public static String stringify() {
         StringBuilder builder = new StringBuilder();
         for (Field f : WeightConstants.class.getFields()) {
