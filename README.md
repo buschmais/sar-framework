@@ -7,7 +7,7 @@
 
 A decomposition can be generated using the options:
 
-    -s /path/to/store -c /path/to/configuration.xml
+    -s file:///path/to/store -c file:///path/to/configuration.xml
 
 ## Configuration
 
