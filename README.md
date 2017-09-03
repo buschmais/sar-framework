@@ -16,6 +16,7 @@ A basic configuration.xml:
 ```
 <Configuration iteration="1" 
                artifact=".*" basePackage=".*" typeName=".*"
+               generations="300" populationSize="100"
                decomposition="hierarchical" optimization="coupling">
 </Configuration>
 ```
