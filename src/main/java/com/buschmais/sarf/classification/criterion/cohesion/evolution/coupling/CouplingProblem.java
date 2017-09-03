@@ -15,7 +15,7 @@ public class CouplingProblem extends Problem {
 
     @Override
     public Double computeCouplingTo(Long from, Collection<Long> to) {
-        return to.stream().mapToDouble(id -> this.relations.get(from, id)).sum();
+        return to.stream().mapToDouble(id -> this.relations.get(from, id) + this.relations.get(id, from)).sum();
     }
 
     @Override
