@@ -203,7 +203,7 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
 
     @ResultOf
     @Cypher("MATCH\n" +
-            "  (c1:Component:SARF)-[:COUPLES]-(c:Component:SARF)-[:COUPLES]-(c2:Component:SARF)\n" +
+            "  (c1:Component:SARF)-[:COUPLES]-(c)-[:COUPLES]-(c2:Component:SARF)\n" +
             "WHERE \n" +
             "  ID(c1) IN {ids} AND ID(c2) IN {ids} AND ID(c1) > ID(c2)\n" +
             "WITH\n" +
@@ -219,13 +219,13 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "WITH\n" +
             "  c1, c2, SUM(c1Coup) + SUM(c2Coup) AS intersection\n" +
             "OPTIONAL MATCH\n" +
-            "  (c1)-[coup:COUPLES]-(c:Component:SARF)\n" +
+            "  (c1)-[coup:COUPLES]-(c)\n" +
             "WHERE \n" +
             "  c <> c2\n" +
             "WITH \n" +
             "  c1, c2, intersection, sum(coup.coupling) AS c1Coup\n" +
             "OPTIONAL MATCH\n" +
-            "  (c2)-[coup:COUPLES]-(c:Component:SARF)\n" +
+            "  (c2)-[coup:COUPLES]-(c)\n" +
             "WHERE\n" +
             "  c <> c1\n" +
             "WITH \n" +
@@ -242,4 +242,67 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "RETURN" +
             "  DISTINCT t")
     Result<TypeDescriptor> getContainedTypesRecursively(@Parameter("id") long id);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:Component:SARF)-[:CONTAINS]->(e)-[coup:COUPLES]->(t:Type:Internal) " +
+            "WHERE" +
+            "  ID(c) IN {ids} AND ID(t) IN {ids} " +
+            "WITH" +
+            "  c, sum(coup.coupling) AS coupling, t " +
+            "MATCH" +
+            "  (c)-[cont:CONTAINS]->(e) " +
+            "WITH" +
+            "  c, coupling, count(e) AS max, t " +
+            "MERGE " +
+            "  (c)-[:COUPLES{coupling:(coupling / max)}]->(t)")
+    void computeCouplingBetweenComponentsAndTypes(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH" +
+            "  (c:Component:SARF)-[:CONTAINS]->(e)<-[coup:COUPLES]-(t:Type:Internal) " +
+            "WHERE" +
+            "  ID(c) IN {ids} AND ID(t) IN {ids} " +
+            "WITH" +
+            "  c, sum(coup.coupling) AS coupling, t " +
+            "MATCH" +
+            "  (c)-[cont:CONTAINS]->(e) " +
+            "WITH" +
+            "  c, coupling, count(e) AS max, t " +
+            "MERGE " +
+            "  (c)<-[:COUPLES{coupling:(coupling / max)}]-(t)")
+    void computeCouplingBetweenTypesAndComponents(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH\n" +
+            "  (c:Component:SARF)-[:COUPLES]-(e)-[:COUPLES]-(t:Type:Internal)\n" +
+            "WHERE \n" +
+            "  ID(c) IN {ids} AND ID(t) IN {ids}\n" +
+            "WITH\n" +
+            "  DISTINCT c, e, t\n" +
+            "MATCH\n" +
+            "  (c)-[coup:COUPLES]-(e)\n" +
+            "WITH\n" +
+            "  c, e, t, SUM(coup.coupling) AS cCoup\n" +
+            "MATCH\n" +
+            "  (t)-[coup:COUPLES]-(e)\n" +
+            "WITH \n" +
+            "  c, t, cCoup, SUM(coup.coupling) AS tCoup\n" +
+            "WITH\n" +
+            "  c, t, SUM(cCoup) + SUM(tCoup) AS intersection\n" +
+            "OPTIONAL MATCH\n" +
+            "  (c)-[coup:COUPLES]-(e)\n" +
+            "WHERE \n" +
+            "  e <> t\n" +
+            "WITH \n" +
+            "  c, t, intersection, sum(coup.coupling) AS cCoup\n" +
+            "OPTIONAL MATCH\n" +
+            "  (t)-[coup:COUPLES]-(e)\n" +
+            "WHERE\n" +
+            "  c <> e\n" +
+            "WITH \n" +
+            "  c, t, cCoup, sum(coup.coupling) AS tCoup, intersection\n" +
+            "MERGE\n" +
+            "  (c)-[:IS_SIMILAR_TO{similarity:(intersection / (cCoup + tCoup))}]-(t)")
+    void computeSimilarityBetweenComponentsAndTypes(@Parameter("ids") long[] ids);
 }

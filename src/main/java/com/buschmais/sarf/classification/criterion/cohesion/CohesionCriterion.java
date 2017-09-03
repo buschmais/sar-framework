@@ -60,7 +60,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
             SARFRunner.xoManager.currentTransaction().begin();
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);
             SARFRunner.xoManager.currentTransaction().commit();
-            Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel);
+            Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel, !hierarchical);
             if (!hierarchical) {
                 SARFRunner.xoManager.currentTransaction().begin();
                 Set<ComponentDescriptor> res = new HashSet<>();
@@ -75,7 +75,10 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
             SARFRunner.xoManager.currentTransaction().begin();
             ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
             componentRepository.computeCouplingBetweenComponents(ids);
+            componentRepository.computeCouplingBetweenComponentsAndTypes(ids);
+            componentRepository.computeCouplingBetweenTypesAndComponents(ids);
             componentRepository.computeSimilarityBetweenComponents(ids);
+            componentRepository.computeSimilarityBetweenComponentsAndTypes(ids);
             SARFRunner.xoManager.currentTransaction().commit();
             initialPartitioning = partitioningFromGroups(identifiedGroups);
             componentLevel++;
@@ -117,43 +120,47 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         return p;
     }
 
-    private Set<Long> materializeGroups(Map<Long, Set<Long>> partitioning, int iteration, int level) {
+    private Set<Long> materializeGroups(Map<Long, Set<Long>> partitioning, int iteration, int level, boolean typeWrapper) {
         SARFRunner.xoManager.currentTransaction().begin();
         Set<Long> identifiedGroups = new HashSet<>();
         ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
         for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
-            ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
-            componentDescriptor.setShape("Component");
-            componentDescriptor.setName("COH" + iteration + "L" + level + "#" + component.getKey());
-            for (Long id : component.getValue()) {
-                try {
-                    ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
-                    componentDescriptor.getContainedComponents().add(cD);
-                } catch (ClassCastException e) {
-                    TypeDescriptor tD = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
-                    componentDescriptor.getContainedTypes().add(tD);
-                }
-            }
-            identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
-            Result<TypeDescriptor> typeDescriptors = componentRepository.getContainedTypesRecursively(SARFRunner.xoManager.getId(componentDescriptor));
-            Map<String, Long> wordCount = new HashMap<>();
-            for (TypeDescriptor typeDescriptor : typeDescriptors) {
-                String[] words = StringUtils.splitByCharacterTypeCamelCase(typeDescriptor.getName());
-                for (String word : words) {
-                    if (!word.equals("$") && !word.matches("\\d+")) {
-                        wordCount.merge(
-                                word,
-                                1L,
-                                (w1, w2) -> w1 + 1
-                        );
+            if (component.getValue().size() == 1 && !typeWrapper) {
+                identifiedGroups.add(component.getValue().iterator().next());
+            } else {
+                ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+                componentDescriptor.setShape("Component");
+                componentDescriptor.setName("COH" + iteration + "L" + level + "#" + component.getKey());
+                for (Long id : component.getValue()) {
+                    try {
+                        ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                        componentDescriptor.getContainedComponents().add(cD);
+                    } catch (ClassCastException e) {
+                        TypeDescriptor tD = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                        componentDescriptor.getContainedTypes().add(tD);
                     }
                 }
+                identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
+                Result<TypeDescriptor> typeDescriptors = componentRepository.getContainedTypesRecursively(SARFRunner.xoManager.getId(componentDescriptor));
+                Map<String, Long> wordCount = new HashMap<>();
+                for (TypeDescriptor typeDescriptor : typeDescriptors) {
+                    String[] words = StringUtils.splitByCharacterTypeCamelCase(typeDescriptor.getName());
+                    for (String word : words) {
+                        if (!word.equals("$") && !word.matches("\\d+")) {
+                            wordCount.merge(
+                                    word,
+                                    1L,
+                                    (w1, w2) -> w1 + 1
+                            );
+                        }
+                    }
+                }
+                ListMultimap<Long, String> sorted = new ImmutableListMultimap.Builder<Long, String>()
+                        .orderKeysBy(Ordering.natural().reverse())
+                        .putAll(Multimaps.invertFrom(Multimaps.forMap(wordCount), ArrayListMultimap.create()))
+                        .build();
+                componentDescriptor.setTopWords(sorted.entries().stream().limit(10).map(Map.Entry::getValue).toArray(String[]::new));
             }
-            ListMultimap<Long, String> sorted = new ImmutableListMultimap.Builder<Long, String>()
-                    .orderKeysBy(Ordering.natural().reverse())
-                    .putAll(Multimaps.invertFrom(Multimaps.forMap(wordCount), ArrayListMultimap.create()))
-                    .build();
-            componentDescriptor.setTopWords(sorted.entries().stream().limit(10).map(Map.Entry::getValue).toArray(String[]::new));
         }
         SARFRunner.xoManager.currentTransaction().commit();
         return identifiedGroups;
