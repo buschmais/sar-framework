@@ -59,6 +59,12 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
     @XmlAttribute(name = "artifact")
     String artifact;
 
+    @XmlAttribute(name = "generations")
+    Integer generations;
+
+    @XmlAttribute(name = "populationSize")
+    Integer populationSize;
+
     @XmlAttribute(name = "decomposition")
     private Decomposition decomposition;
 
@@ -122,6 +128,18 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
         } else {
             return this.artifact;
         }
+    }
+
+    public Integer getGenerations() {
+        if (this.generations == null) {
+            return 300;
+        } else {
+            return this.generations;
+        }
+    }
+
+    public Integer getPopulationSize() {
+        return this.populationSize == null ? 100 : this.populationSize;
     }
 
     public void setOptimization(Optimization optimization) {

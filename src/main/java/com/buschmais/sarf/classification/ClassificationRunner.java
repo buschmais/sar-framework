@@ -61,8 +61,9 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
         Set<ComponentDescriptor> reference = this.activeClassificationConfiguration.execute();
         MoJoCalculator.reference = reference;
         CohesionCriterion cohesionCriterion = new CohesionCriterion();
-        Set<ComponentDescriptor> comp = cohesionCriterion.classify(2, null, false,
-                this.activeClassificationConfiguration.getOptimization() == ClassificationConfiguration.Optimization.SIMILARITY);
+        Set<ComponentDescriptor> comp = cohesionCriterion.classify(2, null,
+                this.activeClassificationConfiguration.getGenerations(), this.activeClassificationConfiguration.getPopulationSize(),
+                false, this.activeClassificationConfiguration.getOptimization() == ClassificationConfiguration.Optimization.SIMILARITY);
 
         try {
             SARFRunner.xoManager.currentTransaction().begin();

@@ -29,7 +29,7 @@ public class Partitioner {
 
     private static long bestGeneration;
 
-    public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations, boolean similarityBased) {
+    public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations, int populationSize, boolean similarityBased) {
         Partitioner.best = null;
         Partitioner.bestFitness = Double.MIN_VALUE;
         Partitioner.ids = ids;
@@ -40,7 +40,7 @@ public class Partitioner {
                 .offspringFraction(0.5)
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
-                .populationSize(100)
+                .populationSize(populationSize)
                 .maximalPhenotypeAge(20)
                 .alterers(
                         new SinglePointCrossover<>(1),

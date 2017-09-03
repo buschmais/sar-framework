@@ -81,6 +81,8 @@
             <xs:attribute type="xs:string" name="typeName" use="optional" default=".*"/>
             <xs:attribute type="xs:string" name="decomposition" use="optional" default="deep"/>
             <xs:attribute type="xs:string" name="optimization" use="optional" default="similarity"/>
+            <xs:attribute type="xs:integer" name="generations" use="optional" default="300"/>
+            <xs:attribute type="xs:integer" name="populationSize" use="optional" default="100"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>

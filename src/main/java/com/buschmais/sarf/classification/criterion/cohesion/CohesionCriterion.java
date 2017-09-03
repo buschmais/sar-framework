@@ -28,10 +28,12 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
 
     @Override
     public Set<ComponentDescriptor> classify(Integer iteration) {
-        return classify(iteration, null, true, true);
+        return classify(iteration, null, 300, 100, true, true);
     }
 
-    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components, boolean hierarchical, boolean similarityBased) {
+    public Set<ComponentDescriptor> classify(Integer iteration, Map<Long, Set<Long>> components,
+                                             Integer generations, Integer populationSize,
+                                             boolean hierarchical, boolean similarityBased) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
         SARFRunner.xoManager.currentTransaction().begin();
@@ -53,12 +55,11 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         SARFRunner.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
-        int iterations = 300;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
             createProblem(ids, similarityBased);
             SARFRunner.xoManager.currentTransaction().begin();
-            Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, iterations, similarityBased);
+            Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, generations, populationSize, similarityBased);
             SARFRunner.xoManager.currentTransaction().commit();
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel, !hierarchical);
             if (!hierarchical) {
@@ -82,7 +83,6 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
             SARFRunner.xoManager.currentTransaction().commit();
             initialPartitioning = partitioningFromGroups(identifiedGroups);
             componentLevel++;
-            iterations = 100;
         } while (ids.length > 1);
         SARFRunner.xoManager.currentTransaction().begin();
         ComponentDescriptor result = SARFRunner.xoManager.findById(ComponentDescriptor.class, ids[0]);
