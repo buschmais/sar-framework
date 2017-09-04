@@ -174,7 +174,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             TypeCouplingEnricher.enrich();
         } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             LOG.error("Specified Configuration Iteration must be either 1 or " +
-                    classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1);
+                    (classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1));
             SARFRunner.xoManager.currentTransaction().commit();
             System.exit(1);
         }
