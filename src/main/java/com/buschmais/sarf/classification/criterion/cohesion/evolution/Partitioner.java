@@ -41,7 +41,6 @@ public class Partitioner {
                 .survivorsSelector(new ParetoFrontierSelector())
                 .offspringSelector(new ParetoFrontierSelector())
                 .populationSize(populationSize)
-                .maximalPhenotypeAge(20)
                 .alterers(
                         new SinglePointCrossover<>(1),
                         new GaussianMutator<>(0.004 * Math.log10(ids.length) / Math.log10(2)),
