@@ -6,7 +6,7 @@
 
     <groupId>com.buschmais.sarf</groupId>
     <artifactId>sar-framework</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
     <build>
         <plugins>
             <plugin>
