@@ -88,7 +88,9 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                 pW.println("MoJo Quality: " + (100 - (100. * mojo / typeCount)) + " %");
                 pW.println("MoJoFM Quality: " + mojoFm + " %");
                 pW.println("MoJo Plus Quality: " + (100 - (100. * mojoPlus / typeCount)) + " %");
-                ActiveClassificationConfiguration.prettyPrint(comp, "", pW);
+                StringBuilder formatted = new StringBuilder();
+                ActiveClassificationConfiguration.prettyPrint(comp, "", formatted);
+                pW.println(formatted.toString());
                 SARFRunner.xoManager.currentTransaction().commit();
                 pW.flush();
             } catch (IOException e) {

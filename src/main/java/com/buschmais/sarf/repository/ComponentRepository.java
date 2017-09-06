@@ -10,6 +10,8 @@ import com.buschmais.xo.api.annotation.ResultOf.Parameter;
 import com.buschmais.xo.neo4j.api.TypedNeo4jRepository;
 import com.buschmais.xo.neo4j.api.annotation.Cypher;
 
+import java.util.Map;
+
 /**
  * @author Stephan Pirnbaum
  */
@@ -305,4 +307,18 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "MERGE\n" +
             "  (c)-[:IS_SIMILAR_TO{similarity:(intersection / (cCoup + tCoup))}]-(t)")
     void computeSimilarityBetweenComponentsAndTypes(@Parameter("ids") long[] ids);
+
+    @ResultOf
+    @Cypher("MATCH\n" +
+            "  (c:Component:SARF)\n" +
+            "WHERE\n" +
+            "  c.name STARTS WITH \"COH1\"\n" +
+            "OPTIONAL MATCH\n" +
+            "  (c)-[cont:CONTAINS]->(c1)\n" +
+            "RETURN\n" +
+            "  { c: c, " +
+            "    cont: cont, " +
+            "    c1: c1" +
+            "  }")
+    Result<Map> getDecomposition(@Parameter("ids") long[] ids);
 }

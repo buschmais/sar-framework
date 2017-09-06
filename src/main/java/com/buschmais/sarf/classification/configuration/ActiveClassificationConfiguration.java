@@ -10,6 +10,7 @@ import com.buschmais.sarf.metamodel.Component;
 import com.buschmais.sarf.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.repository.ComponentRepository;
 import com.buschmais.sarf.repository.TypeRepository;
+import com.buschmais.xo.api.CompositeObject;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.Query.Result.CompositeRowObject;
 import com.google.common.collect.ArrayListMultimap;
@@ -22,12 +23,15 @@ import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author Stephan Pirnbaum
@@ -121,21 +125,97 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
 
         SARFRunner.xoManager.currentTransaction().begin();
         LOG.info("Pretty Printing the Result");
-        try (FileWriter fW = new FileWriter("Result_" + System.currentTimeMillis())) {
-            BufferedWriter bW = new BufferedWriter(fW);
-            PrintWriter pW = new PrintWriter(bW);
-            prettyPrint(components, "", pW);
-            pW.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        exportResults(components);
         SARFRunner.xoManager.currentTransaction().commit();
         return components;
     }
 
-    public static void prettyPrint(Set<ComponentDescriptor> components, String indentation , PrintWriter pW) {
+    public static void exportResults(Set<ComponentDescriptor> components) {
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream("Result_" + System.currentTimeMillis() + ".zip");
+            ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+            // add resource files
+            List<String> resources = Arrays.asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js");
+            for (String resource : resources) {
+                ZipEntry entry = new ZipEntry(resource);
+                InputStream in = SARFRunner.class.getClassLoader().getResourceAsStream(resource);
+                zipOutputStream.putNextEntry(entry);
+                byte[] bytes = new byte[1024];
+                int length;
+                while ((length = in.read(bytes)) >= 0) {
+                    zipOutputStream.write(bytes, 0, length);
+                }
+                in.close();
+            }
+            // write formatted text
+            ZipEntry entry = new ZipEntry("decomposition.txt");
+            zipOutputStream.putNextEntry(entry);
+            StringBuilder formatted = new StringBuilder();
+            prettyPrint(components, "", formatted);
+            zipOutputStream.write(formatted.toString().getBytes());
+            // write json
+            entry = new ZipEntry("sarf.json");
+            ComponentRepository repository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+            Result<Map> result
+                    = repository.getDecomposition(components.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray());
+            zipOutputStream.putNextEntry(entry);
+            formatted = new StringBuilder();
+            zipOutputStream.write(("[\n").getBytes());
+            String entries = StreamSupport.stream(result.spliterator(), false)
+                    .map(ActiveClassificationConfiguration::formatEntry)
+                    .reduce((s1, s2) -> s1 + ",\n" + s2).get();
+            zipOutputStream.write(entries.getBytes());
+            zipOutputStream.write(("\n]").getBytes());
+            zipOutputStream.write(formatted.toString().getBytes());
+            zipOutputStream.close();
+            fileOutputStream.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String formatEntry (Map m) {
+        StringBuilder formatted = new StringBuilder();
+        formatted.append("\t{\n");
+        formatted.append("\t\t\"entry\" : [\n");
+        formatted.append("\t\t\t{\n");
+        ComponentDescriptor c = (ComponentDescriptor) m.get("c");
+        formatted.append("\t\t\t\t\"shape\": \"" + c.getShape() + "\",\n");
+        formatted.append("\t\t\t\t\"name\": \"" + c.getName() + "\",\n");
+        formatted.append("\t\t\t\t\"topWords\": [" +
+                Arrays.stream(c.getTopWords()).map(s -> "\"" + s + "\"").reduce((s1, s2) -> s1 + ", " + s2).get() + "]\n"
+        );
+        formatted.append("\t\t\t},\n");
+        CompositeObject cont = (CompositeObject) m.get("cont");
+        if (cont == null) {
+            formatted.append("\t\t\tnull\n");
+        } else if (m.get("c1") instanceof ComponentDescriptor) {
+            c = (ComponentDescriptor) m.get("c1");
+            formatted.append("\t\t\t{\n");
+            formatted.append("\t\t\t\t\"shape\": \"" + c.getShape() + "\",\n");
+            formatted.append("\t\t\t\t\"name\": \"" + c.getName() + "\",\n");
+            formatted.append("\t\t\t\t\"topWords\": [" +
+                    Arrays.stream(c.getTopWords()).map(s -> "\"" + s + "\"").reduce((s1, s2) -> s1 + ", " + s2).get() + "]\n"
+            );
+            formatted.append("\t\t\t}\n");
+        } else {
+            TypeDescriptor t = (TypeDescriptor) m.get("c1");
+            formatted.append("\t\t\t{\n");
+            formatted.append("\t\t\t\t\"id\": \"" + SARFRunner.xoManager.getId(t) + "\",\n");
+            formatted.append("\t\t\t\t\"fqn\": \"" + t.getFullQualifiedName() + "\",\n");
+            formatted.append("\t\t\t\t\"name\": \"" + t.getName() + "\"\n");
+            formatted.append("\t\t\t}\n");
+        }
+        formatted.append("\t\t]\n\t}\n");
+        return formatted.toString();
+    }
+
+    public static void prettyPrint(Set<ComponentDescriptor> components, String indentation , StringBuilder builder) throws IOException {
         for (ComponentDescriptor component : components) {
-            pW.println(indentation + " " + component.getName() + " " + Arrays.toString(component.getTopWords()));
+            builder.append(indentation + " " + component.getName() + " " + Arrays.toString(component.getTopWords()) + "\n");
             Result<CompositeRowObject > res = SARFRunner.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + SARFRunner.xoManager.getId(component) + " " +
                     "OPTIONAL MATCH (c)-[:CONTAINS]->(e) RETURN e").execute(); // TODO: 05.07.2017 Improve !!!
             Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
@@ -143,17 +223,17 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
                 try {
                     ComponentDescriptor c = r.get("e", ComponentDescriptor.class);
                     if (c != null) {
-                        componentDescriptors.add(c); // 19269, 19285, 19292
+                        componentDescriptors.add(c);
                     }
                 } catch (ClassCastException e) {
                     TypeDescriptor t = r.get("e", TypeDescriptor.class);
                     if (t != null) {
-                        pW.println(indentation + "\t" + t.getFullQualifiedName());
+                        builder.append(indentation + "\t" + t.getFullQualifiedName() + "\n");
                     }
                 }
             }
             res.close();
-            prettyPrint(componentDescriptors, indentation + "\t", pW);
+            prettyPrint(componentDescriptors, indentation + "\t", builder);
         }
       }
 
@@ -363,4 +443,6 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         }
         return rules;
     }
+
+
 }
