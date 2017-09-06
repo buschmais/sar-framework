@@ -11,6 +11,7 @@ import org.jenetics.engine.Engine;
 import org.jenetics.engine.EvolutionResult;
 
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +49,7 @@ public class Partitioner {
                                 new SimilarityDrivenMutator(0.008 * Math.log10(ids.length) / Math.log10(2)) :
                                 new CouplingDrivenMutator(1),
                         new SplitMutator(1))
-                .executor(Runnable::run)
+                .executor(Executors.newCachedThreadPool())
                 .build();
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
         List<EvolutionResult> r = engine
