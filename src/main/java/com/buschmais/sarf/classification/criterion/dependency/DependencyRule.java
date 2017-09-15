@@ -2,7 +2,7 @@ package com.buschmais.sarf.classification.criterion.dependency;
 
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.classification.criterion.Rule;
 import com.buschmais.sarf.classification.criterion.RuleBasedCriterion;
 import com.buschmais.xo.api.Query.Result;
@@ -31,7 +31,7 @@ public class DependencyRule<R extends DependencyRule, T extends DependencyDescri
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {
         Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
-        DependencyRepository repository = SARFRunner.xoManager.getRepository(DependencyRepository.class);
+        DependencyRepository repository = DatabaseHelper.xoManager.getRepository(DependencyRepository.class);
         Result<TypeDescriptor> result = getMatchingTypes(repository);
         for (TypeDescriptor t : result) {
             types.add(t);
@@ -46,7 +46,7 @@ public class DependencyRule<R extends DependencyRule, T extends DependencyDescri
 
     @Override
     protected T instantiateDescriptor() {
-        return (T) SARFRunner.xoManager.create(DependencyDescriptor.class);
+        return (T) DatabaseHelper.xoManager.create(DependencyDescriptor.class);
     }
 
     public static DependencyRule of(DependencyDescriptor dependencyDescriptor) {

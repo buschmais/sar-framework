@@ -1,7 +1,7 @@
 package com.buschmais.sarf.classification.criterion.dependency;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.xo.api.Query.Result;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -24,6 +24,6 @@ public class ExtendsRule extends DependencyRule<ExtendsRule, ExtendsDescriptor> 
 
     @Override
     protected ExtendsDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(ExtendsDescriptor.class);
+        return DatabaseHelper.xoManager.create(ExtendsDescriptor.class);
     }
 }

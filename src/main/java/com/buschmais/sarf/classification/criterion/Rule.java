@@ -1,8 +1,8 @@
 package com.buschmais.sarf.classification.criterion;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.Materializable;
-import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.metamodel.Component;
 import com.buschmais.sarf.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.repository.ComponentRepository;
@@ -47,13 +47,13 @@ public abstract class Rule<T extends RuleDescriptor> implements Comparable<Rule>
     }
 
     public ComponentDescriptor getOrCreateComponentOfCurrentIteration() {
-        ComponentRepository repository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        ComponentRepository repository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
         Result<ComponentDescriptor> result = repository.getComponentOfCurrentIteration(this.shape, this.name);
         ComponentDescriptor componentDescriptor;
         if (result.hasResult()) {
             componentDescriptor = result.getSingleResult();
         } else {
-            componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+            componentDescriptor = DatabaseHelper.xoManager.create(ComponentDescriptor.class);
             componentDescriptor.setShape(this.shape);
             componentDescriptor.setName(this.name);
         }

@@ -2,7 +2,7 @@ package com.buschmais.sarf.classification.criterion.typenaming;
 
 import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.classification.criterion.Rule;
 import com.buschmais.xo.api.Query;
 import lombok.AccessLevel;
@@ -39,7 +39,7 @@ public class TypeNamingRule extends Rule<TypeNamingRuleDescriptor> {
     @Override
     public Set<TypeDescriptor> getMatchingTypes() {
         Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
-        TypeNamingRepository repository = SARFRunner.xoManager.getRepository(TypeNamingRepository.class);
+        TypeNamingRepository repository = DatabaseHelper.xoManager.getRepository(TypeNamingRepository.class);
         Query.Result<TypeDescriptor> result = repository.getAllInternalTypesByNameLike(this.rule);
         for (TypeDescriptor t : result) {
             types.add(t);
@@ -50,7 +50,7 @@ public class TypeNamingRule extends Rule<TypeNamingRuleDescriptor> {
 
     @Override
     protected TypeNamingRuleDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(TypeNamingRuleDescriptor.class);
+        return DatabaseHelper.xoManager.create(TypeNamingRuleDescriptor.class);
     }
 
     @Override

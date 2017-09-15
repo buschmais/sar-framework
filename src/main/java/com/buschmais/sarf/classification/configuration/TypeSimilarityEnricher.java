@@ -1,6 +1,6 @@
 package com.buschmais.sarf.classification.configuration;
 
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.repository.TypeRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,10 +14,10 @@ public class TypeSimilarityEnricher {
 
     public static void enrich() {
         LOG.info("Computing Similarity between Types");
-        TypeRepository repository = SARFRunner.xoManager.getRepository(TypeRepository.class);
-        SARFRunner.xoManager.currentTransaction().begin();
+        TypeRepository repository = DatabaseHelper.xoManager.getRepository(TypeRepository.class);
+        DatabaseHelper.xoManager.currentTransaction().begin();
         repository.computeTypeSimilarity();
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         LOG.info("Similarity between Types Successfully Computed");
     }
 }

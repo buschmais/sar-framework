@@ -1,7 +1,7 @@
 package com.buschmais.sarf.classification.configuration;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.repository.MetricRepository;
 import com.buschmais.sarf.repository.TypeRepository;
 import com.buschmais.xo.api.Query.Result;
@@ -17,15 +17,15 @@ public class TypeCouplingEnricher {
 
     public static void enrich() {
         LOG.info("Computing Coupling between Types");
-        SARFRunner.xoManager.currentTransaction().begin();
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
-        try (Result<TypeDescriptor> descriptors = SARFRunner.xoManager.getRepository(TypeRepository.class).getAllInternalTypes())
+        DatabaseHelper.xoManager.currentTransaction().begin();
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
+        try (Result<TypeDescriptor> descriptors = DatabaseHelper.xoManager.getRepository(TypeRepository.class).getAllInternalTypes())
         {
             for (TypeDescriptor t1 : descriptors) {
-                final Long id1 = SARFRunner.xoManager.getId(t1);
-                try (Result<TypeDescriptor> dependencies = SARFRunner.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
+                final Long id1 = DatabaseHelper.xoManager.getId(t1);
+                try (Result<TypeDescriptor> dependencies = DatabaseHelper.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
                     for (TypeDescriptor t2 : dependencies) {
-                        final Long id2 = SARFRunner.xoManager.getId(t2);
+                        final Long id2 = DatabaseHelper.xoManager.getId(t2);
                         Double coupling = computeCoupling(id1, id2);
                         if (coupling > 0) {
                             mR.setCoupling(id1, id2, coupling);
@@ -35,7 +35,7 @@ public class TypeCouplingEnricher {
             }
         }
         LOG.info("Coupling between Types Successfully Computed");
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         TypeSimilarityEnricher.enrich();
     }
 
@@ -87,87 +87,87 @@ public class TypeCouplingEnricher {
     }
 
     private static Double computeCouplingInvokesAbstract(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         Double res = (double) mR.countInvokesAbstract(id1, id2) / mR.countAllInvokesExternalAbstract(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingInvokes(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         Double res = (double) mR.countInvokes(id1, id2) / mR.countAllInvokesExternal(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingInvokesStatic(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         Double res = (double) mR.countInvokesStatic(id1, id2) / mR.countAllInvokesExternalStatic(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingExtends(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         return mR.typeExtends(id1, id2) ? 1d : 0d;
     }
 
     private static Double computeCouplingImplements(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         return mR.typeImplements(id1, id2) ? 1d : 0d;
     }
 
     private static Double computeCouplingReturns(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         // todo generics
         Double res = (double) mR.countReturns(id1, id2) / mR.countMethods(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingParameterized(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         // todo generics
         Double res = (double) mR.countParameterized(id1, id2) / mR.countMethods(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingReads(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         final Long readsT1T2 = mR.countReads(id1, id2);
         Double res = ((double) readsT1T2 * readsT1T2) / (mR.countReadsExternal(id1) * mR.countReadByExternal(id2)); // TODO: 07.07.2017 correct?
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingReadsStatic(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         final Long readsT1T2 = mR.countReadsStatic(id1, id2);
         Double res = ((double) readsT1T2 * readsT1T2) / (mR.countReadsStaticExternal(id1) * mR.countReadByExternalStatic(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingWrites(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         final Long writesT1T2 = mR.countWrites(id1, id2);
         Double res = ((double) writesT1T2 * writesT1T2) / (mR.countWritesExternal(id1) * mR.countWrittenByExternal(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingWritesStatic(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         final Long writesT1T2 = mR.countWritesStatic(id1, id2);
         Double res = ((double) writesT1T2 * writesT1T2) / (mR.countWritesStaticExternal(id1) * mR.countWrittenByExternalStatic(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private static Double computeCouplingComposes(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         return (mR.typeComposes(id1, id2) ? 1d : 0d);
     }
 
     private static Double computeCouplingDeclaresInnerClass(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         return mR.declaresInnerClass(id1, id2) ? 1d : 0d;
     }
 
     private static Double computeSimpleDependsOn(Long id1, Long id2) {
-        MetricRepository mR = SARFRunner.xoManager.getRepository(MetricRepository.class);
+        MetricRepository mR = DatabaseHelper.xoManager.getRepository(MetricRepository.class);
         return mR.dependsOn(id1, id2) ? 1d : 0d;
     }
 }

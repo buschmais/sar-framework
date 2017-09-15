@@ -1,7 +1,7 @@
 package com.buschmais.sarf.benchmark;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.repository.ComponentRepository;
 import com.buschmais.sarf.repository.TypeRepository;
@@ -18,22 +18,22 @@ import java.util.stream.Collectors;
  */
 public class MoJoMetric {
     private Long computeMoJoOperations (Set<ComponentDescriptor> reference, Set<ComponentDescriptor> comp) {
-        long[] bIds = comp.stream().mapToLong(c -> SARFRunner.xoManager.getId(c)).toArray();
+        long[] bIds = comp.stream().mapToLong(c -> DatabaseHelper.xoManager.getId(c)).toArray();
         Map<Long, List<Long>> aToBTags = new HashMap<>();
         // there are two partitionings, create a mapping from each component in the reference to all components of the
         // competing partition, so that for each type present in the reference component, its component mapping is added
         // algorithm based on http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.115.2944&rep=rep1&type=pdf
         // if you don't understand it, don't change it
-        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
-        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
-        SARFRunner.xoManager.currentTransaction().begin();
+        TypeRepository typeRepository = DatabaseHelper.xoManager.getRepository(TypeRepository.class);
+        ComponentRepository componentRepository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
+        DatabaseHelper.xoManager.currentTransaction().begin();
         for (TypeDescriptor t : typeRepository.getAllInternalTypes()) {
-            Long tId = SARFRunner.xoManager.getId(t);
+            Long tId = DatabaseHelper.xoManager.getId(t);
             for (ComponentDescriptor a : reference) {
-                Long aId = SARFRunner.xoManager.getId(a);
+                Long aId = DatabaseHelper.xoManager.getId(a);
                 if (componentRepository.containsType(aId, tId)) {
                     for (ComponentDescriptor b : comp) {
-                        Long bId = SARFRunner.xoManager.getId(b);
+                        Long bId = DatabaseHelper.xoManager.getId(b);
                         if (componentRepository.containsType(bId, tId)) {
                             aToBTags.merge(
                                     aId,
@@ -50,7 +50,7 @@ public class MoJoMetric {
                 }
             }
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         // center components must now be computed, key is center componenet, values are b components of whose the key is the center component
         Map<Long, Set<Long>> aToBCCs = new HashMap<>();
         for (Long bId : bIds) {

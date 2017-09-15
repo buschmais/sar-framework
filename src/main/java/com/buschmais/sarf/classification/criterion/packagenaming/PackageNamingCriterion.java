@@ -1,6 +1,6 @@
 package com.buschmais.sarf.classification.criterion.packagenaming;
 
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.classification.criterion.RuleBasedCriterion;
 
 /**
@@ -10,6 +10,6 @@ public class PackageNamingCriterion extends RuleBasedCriterion<PackageNamingRule
 
     @Override
     protected PackageNamingCriterionDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(PackageNamingCriterionDescriptor.class);
+        return DatabaseHelper.xoManager.create(PackageNamingCriterionDescriptor.class);
     }
 }

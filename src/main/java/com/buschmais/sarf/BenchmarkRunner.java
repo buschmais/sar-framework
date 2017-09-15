@@ -22,7 +22,7 @@ import java.util.concurrent.Executors;
 public class BenchmarkRunner {
 
     public static void main(String[] args) throws URISyntaxException {
-        SARFRunner.setUpDB(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"));
+        DatabaseHelper.setUpDB(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"));
         LongChromosome chromosome = LongChromosome.of(0, 3, 13);
         Genotype<LongGene> genotype = Genotype.of(chromosome);
         Engine<LongGene, Double> engine = Engine

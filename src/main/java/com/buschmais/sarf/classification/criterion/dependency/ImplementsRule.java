@@ -1,7 +1,7 @@
 package com.buschmais.sarf.classification.criterion.dependency;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.xo.api.Query.Result;
 
 /**
@@ -16,6 +16,6 @@ public class ImplementsRule extends DependencyRule<ImplementsRule, ImplementsDes
 
     @Override
     protected ImplementsDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(ImplementsDescriptor.class);
+        return DatabaseHelper.xoManager.create(ImplementsDescriptor.class);
     }
 }

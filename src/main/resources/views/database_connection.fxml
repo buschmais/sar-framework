@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane prefHeight="196.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.controller.DatabaseConnectionController">
+   <children>
+      <VBox>
+         <children>
+            <HBox prefWidth="600.0" spacing="20.0">
+               <children>
+                  <Label text="Database Folder:" />
+                  <TextField fx:id="storePath" editable="false" prefHeight="25.0" prefWidth="380.0" />
+                  <Button fx:id="choose" alignment="CENTER_RIGHT" contentDisplay="RIGHT" mnemonicParsing="false" text="Choose" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </HBox>
+            <HBox spacing="20.0">
+               <children>
+                  <Button fx:id="connect" disable="true" mnemonicParsing="false" text="Connect" HBox.hgrow="NEVER" />
+                  <Button fx:id="disconnect" disable="true" mnemonicParsing="false" text="Disconnect" HBox.hgrow="NEVER" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

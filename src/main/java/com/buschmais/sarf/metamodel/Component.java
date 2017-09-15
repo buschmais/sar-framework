@@ -1,7 +1,7 @@
 package com.buschmais.sarf.metamodel;
 
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.Materializable;
-import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.classification.criterion.Rule;
 import com.buschmais.sarf.classification.criterion.dependency.AnnotatedByRule;
 import com.buschmais.sarf.classification.criterion.dependency.DependencyRule;
@@ -64,14 +64,14 @@ public class Component implements Comparable<Component>, Materializable<Componen
         if (this.containedComponents != null) {
             containedDescriptors = this.containedComponents.stream().map(Component::materialize).collect(Collectors.toSet());
         }
-        SARFRunner.xoManager.currentTransaction().begin();
-        ComponentDescriptor descriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+        DatabaseHelper.xoManager.currentTransaction().begin();
+        ComponentDescriptor descriptor = DatabaseHelper.xoManager.create(ComponentDescriptor.class);
         descriptor.setShape(this.shape);
         descriptor.setName(this.name);
         if (containedDescriptors != null) {
             descriptor.getContainedComponents().addAll(containedDescriptors);
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         return descriptor;
     }
 }

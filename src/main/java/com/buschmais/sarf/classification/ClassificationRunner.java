@@ -1,5 +1,6 @@
 package com.buschmais.sarf.classification;
 
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.benchmark.MoJoCalculator;
 import com.buschmais.sarf.classification.configuration.*;
@@ -66,7 +67,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                 false, this.activeClassificationConfiguration.getOptimization() == ClassificationConfiguration.Optimization.SIMILARITY);
 
         try {
-            SARFRunner.xoManager.currentTransaction().begin();
+            DatabaseHelper.xoManager.currentTransaction().begin();
             MoJoCalculator moJoCalculator1 = new MoJoCalculator(reference, comp);
             MoJoCalculator moJoCalculator2 = new MoJoCalculator(comp, reference);
             MoJoCalculator moJoFmCalculator = new MoJoCalculator(comp, reference);
@@ -79,7 +80,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             Long mojoPlusCompRef = moJoPlusCalculator1.mojoplus();
             Long mojoPlusRefComp = moJoPlusCalculator2.mojoplus();
             Long mojoPlus = Math.min(mojoPlusCompRef, mojoPlusRefComp);
-            TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+            TypeRepository typeRepository = DatabaseHelper.xoManager.getRepository(TypeRepository.class);
             Long typeCount = typeRepository.countAllInternalTypes();
             try (FileWriter fW = new FileWriter("Result_Benchmark_" + System.currentTimeMillis())) {
                 BufferedWriter bW = new BufferedWriter(fW);
@@ -91,7 +92,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                 StringBuilder formatted = new StringBuilder();
                 ActiveClassificationConfiguration.prettyPrint(comp, "", formatted);
                 pW.println(formatted.toString());
-                SARFRunner.xoManager.currentTransaction().commit();
+                DatabaseHelper.xoManager.currentTransaction().commit();
                 pW.flush();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -149,38 +150,38 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     }
 
     private void setUpData() {
-        SARFRunner.xoManager.currentTransaction().begin();
-        ClassificationConfigurationRepository classificationConfigurationRepository = SARFRunner.xoManager.getRepository(ClassificationConfigurationRepository.class);
+        DatabaseHelper.xoManager.currentTransaction().begin();
+        ClassificationConfigurationRepository classificationConfigurationRepository = DatabaseHelper.xoManager.getRepository(ClassificationConfigurationRepository.class);
         if (this.activeClassificationConfiguration.getIteration() == 1) {
             LOG.info("Resetting Data");
-            SARFRunner.xoManager.createQuery(
+            DatabaseHelper.xoManager.createQuery(
                     "MATCH (sarf:SARF) DETACH DELETE sarf"
             ).execute();
-            SARFRunner.xoManager.createQuery(
+            DatabaseHelper.xoManager.createQuery(
                     "MATCH ()-[c:COUPLES]-() DELETE c"
             ).execute();
-            SARFRunner.xoManager.createQuery(
+            DatabaseHelper.xoManager.createQuery(
                     "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
             ).execute();
-            SARFRunner.xoManager.createQuery(
+            DatabaseHelper.xoManager.createQuery(
                     "MATCH (t:Type:Internal) REMOVE t:Internal"
             ).execute();
-            SARFRunner.xoManager.currentTransaction().commit();
-            SARFRunner.xoManager.currentTransaction().begin();
+            DatabaseHelper.xoManager.currentTransaction().commit();
+            DatabaseHelper.xoManager.currentTransaction().begin();
             LOG.info("Preparing Data Set");
-            SARFRunner.xoManager.getRepository(TypeRepository.class).markAllInternalTypes(
+            DatabaseHelper.xoManager.getRepository(TypeRepository.class).markAllInternalTypes(
                     this.activeClassificationConfiguration.getTypeName(),
                     this.activeClassificationConfiguration.getBasePackage(),
                     this.activeClassificationConfiguration.getArtifact());
-            SARFRunner.xoManager.currentTransaction().commit();
+            DatabaseHelper.xoManager.currentTransaction().commit();
             TypeCouplingEnricher.enrich();
         } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             LOG.error("Specified Configuration Iteration must be either 1 or " +
                     (classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1));
-            SARFRunner.xoManager.currentTransaction().commit();
+            DatabaseHelper.xoManager.currentTransaction().commit();
             System.exit(1);
         }
-        if (SARFRunner.xoManager.currentTransaction().isActive())
-            SARFRunner.xoManager.currentTransaction().commit();
+        if (DatabaseHelper.xoManager.currentTransaction().isActive())
+            DatabaseHelper.xoManager.currentTransaction().commit();
     }
 }

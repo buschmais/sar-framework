@@ -1,6 +1,6 @@
 package com.buschmais.sarf.classification.criterion.typenaming;
 
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.classification.criterion.RuleBasedCriterion;
 
 /**
@@ -10,6 +10,6 @@ public class TypeNamingCriterion extends RuleBasedCriterion<TypeNamingRule, Type
 
     @Override
     protected TypeNamingCriterionDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(TypeNamingCriterionDescriptor.class);
+        return DatabaseHelper.xoManager.create(TypeNamingCriterionDescriptor.class);
     }
 }

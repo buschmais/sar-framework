@@ -1,7 +1,7 @@
 package com.buschmais.sarf.classification.criterion;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.repository.TypeRepository;
 import com.google.common.collect.Sets;
@@ -46,16 +46,16 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
             }
             return res;
         });
-        SARFRunner.xoManager.currentTransaction().begin();
+        DatabaseHelper.xoManager.currentTransaction().begin();
         Map<String, Map<String, Set<String>>> mappedTypes = new HashMap<>();
         Long totalTypes = 0L;
-        Long internalTypes = SARFRunner.xoManager.getRepository(TypeRepository.class).countAllInternalTypes();
+        Long internalTypes = DatabaseHelper.xoManager.getRepository(TypeRepository.class).countAllInternalTypes();
         for (R r : this.rules) {
             ComponentDescriptor componentDescriptor = r.getOrCreateComponentOfCurrentIteration();
             @SuppressWarnings("unchecked")
             Set<TypeDescriptor> ts = (Set<TypeDescriptor>) r.getMatchingTypes();
             for (TypeDescriptor t : ts) {
-                ClassificationInfoDescriptor info = SARFRunner.xoManager.create(ClassificationInfoDescriptor.class);
+                ClassificationInfoDescriptor info = DatabaseHelper.xoManager.create(ClassificationInfoDescriptor.class);
                 info.setComponent(componentDescriptor);
                 info.setType(t);
                 info.setWeight(r.getWeight() / 100);
@@ -89,7 +89,7 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
                 }
             }
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         LOG.info("Executed " + this.rules.size() + " Rules");
         LOG.info("\tIdentified " + componentDescriptors.size() + " Components");
         LOG.info("\tCoverage = " + (mappedTypes.size() / (double) internalTypes));
@@ -99,12 +99,12 @@ public abstract class RuleBasedCriterion<R extends Rule, T extends RuleBasedCrit
 
     @Override
     public T materialize() {
-        SARFRunner.xoManager.currentTransaction().begin();
+        DatabaseHelper.xoManager.currentTransaction().begin();
         T descriptor = instantiateDescriptor();
         descriptor.getRules().addAll(
                 this.rules.stream().map(R::getDescriptor).collect(Collectors.toSet())
         );
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         this.classificationCriterionDescriptor = descriptor;
         return descriptor;
     }

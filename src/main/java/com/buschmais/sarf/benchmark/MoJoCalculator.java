@@ -1,7 +1,7 @@
 package com.buschmais.sarf.benchmark;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.metamodel.ComponentDescriptor;
 
 import java.io.BufferedReader;
@@ -25,7 +25,7 @@ public class MoJoCalculator {
         StringBuilder builder1 = new StringBuilder();
         for (Map.Entry<Long, Set<Long>> dec : decomposition.entrySet()) {
             for (Long id : dec.getValue()) {
-                TypeDescriptor typeDescriptor = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                TypeDescriptor typeDescriptor = DatabaseHelper.xoManager.findById(TypeDescriptor.class, id);
                 builder1.append("contain " + dec.getKey() + " " + typeDescriptor.getName() + "\n");
             }
         }

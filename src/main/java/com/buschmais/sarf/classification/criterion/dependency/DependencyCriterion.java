@@ -1,6 +1,6 @@
 package com.buschmais.sarf.classification.criterion.dependency;
 
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.classification.criterion.RuleBasedCriterion;
 
 /**
@@ -10,6 +10,6 @@ public class DependencyCriterion extends RuleBasedCriterion<DependencyRule, Depe
 
     @Override
     protected DependencyCriterionDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(DependencyCriterionDescriptor.class);
+        return DatabaseHelper.xoManager.create(DependencyCriterionDescriptor.class);
     }
 }

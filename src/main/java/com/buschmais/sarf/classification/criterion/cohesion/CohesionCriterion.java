@@ -1,7 +1,7 @@
 package com.buschmais.sarf.classification.criterion.cohesion;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.SARFRunner;
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buschmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.sarf.classification.criterion.cohesion.evolution.Partitioner;
@@ -36,11 +36,11 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
                                              boolean hierarchical, boolean similarityBased) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
-        SARFRunner.xoManager.currentTransaction().begin();
-        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        DatabaseHelper.xoManager.currentTransaction().begin();
+        TypeRepository typeRepository = DatabaseHelper.xoManager.getRepository(TypeRepository.class);
         Result<TypeDescriptor> types = typeRepository.getAllInternalTypes();
         for (TypeDescriptor type : types) {
-            typeIds.add(SARFRunner.xoManager.getId(type));
+            typeIds.add(DatabaseHelper.xoManager.getId(type));
         }
         types.close();
         long[] ids = typeIds.stream().mapToLong(l -> l).sorted().toArray();
@@ -52,41 +52,41 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         } else {
             initialPartitioning = inititialPartitioningFromPackageStructure(ids);
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
 
         int componentLevel = 0;
         do {
             LOG.info("Computing Level " + componentLevel + " Components");
             createProblem(ids, similarityBased);
-            SARFRunner.xoManager.currentTransaction().begin();
+            DatabaseHelper.xoManager.currentTransaction().begin();
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, generations, populationSize, similarityBased);
-            SARFRunner.xoManager.currentTransaction().commit();
+            DatabaseHelper.xoManager.currentTransaction().commit();
             Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel, !hierarchical);
             if (!hierarchical) {
-                SARFRunner.xoManager.currentTransaction().begin();
+                DatabaseHelper.xoManager.currentTransaction().begin();
                 Set<ComponentDescriptor> res = new HashSet<>();
                 for (Long id : identifiedGroups) {
-                    ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                    ComponentDescriptor cD = DatabaseHelper.xoManager.findById(ComponentDescriptor.class, id);
                     res.add(cD);
                 }
-                SARFRunner.xoManager.currentTransaction().commit();
+                DatabaseHelper.xoManager.currentTransaction().commit();
                 return res;
             }
             ids = identifiedGroups.stream().mapToLong(l -> l).sorted().toArray();
-            SARFRunner.xoManager.currentTransaction().begin();
-            ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+            DatabaseHelper.xoManager.currentTransaction().begin();
+            ComponentRepository componentRepository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
             componentRepository.computeCouplingBetweenComponents(ids);
             componentRepository.computeCouplingBetweenComponentsAndTypes(ids);
             componentRepository.computeCouplingBetweenTypesAndComponents(ids);
             componentRepository.computeSimilarityBetweenComponents(ids);
             componentRepository.computeSimilarityBetweenComponentsAndTypes(ids);
-            SARFRunner.xoManager.currentTransaction().commit();
+            DatabaseHelper.xoManager.currentTransaction().commit();
             initialPartitioning = partitioningFromGroups(identifiedGroups);
             componentLevel++;
         } while (ids.length > 1);
-        SARFRunner.xoManager.currentTransaction().begin();
-        ComponentDescriptor result = SARFRunner.xoManager.findById(ComponentDescriptor.class, ids[0]);
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().begin();
+        ComponentDescriptor result = DatabaseHelper.xoManager.findById(ComponentDescriptor.class, ids[0]);
+        DatabaseHelper.xoManager.currentTransaction().commit();
         LOG.info("Partitioning Finished");
         return Sets.newHashSet(result);
     }
@@ -97,7 +97,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
         LOG.info("Creating Problem");
         Query<CompositeRowObject> query;
         if (similarityBased) {
-            query = SARFRunner.xoManager.createQuery(
+            query = DatabaseHelper.xoManager.createQuery(
                     "MATCH\n" +
                             "  (t)-[s:IS_SIMILAR_TO]->(d) \n" +
                             "WHERE\n" +
@@ -105,7 +105,7 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
                             "RETURN\n" +
                             "  ID(t) AS t, ID(d) AS d, toFloat(s.similarity) AS r");
         } else {
-            query = SARFRunner.xoManager.createQuery(
+            query = DatabaseHelper.xoManager.createQuery(
                     "MATCH\n" +
                             "  (t)-[c:COUPLES]->(d) \n" +
                             "WHERE\n" +
@@ -121,27 +121,27 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
     }
 
     private Set<Long> materializeGroups(Map<Long, Set<Long>> partitioning, int iteration, int level, boolean typeWrapper) {
-        SARFRunner.xoManager.currentTransaction().begin();
+        DatabaseHelper.xoManager.currentTransaction().begin();
         Set<Long> identifiedGroups = new HashSet<>();
-        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        ComponentRepository componentRepository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
         for (Map.Entry<Long, Set<Long>> component : partitioning.entrySet()) {
             if (component.getValue().size() == 1 && !typeWrapper) {
                 identifiedGroups.add(component.getValue().iterator().next());
             } else {
-                ComponentDescriptor componentDescriptor = SARFRunner.xoManager.create(ComponentDescriptor.class);
+                ComponentDescriptor componentDescriptor = DatabaseHelper.xoManager.create(ComponentDescriptor.class);
                 componentDescriptor.setShape("Component");
                 componentDescriptor.setName("COH" + iteration + "L" + level + "#" + component.getKey());
                 for (Long id : component.getValue()) {
                     try {
-                        ComponentDescriptor cD = SARFRunner.xoManager.findById(ComponentDescriptor.class, id);
+                        ComponentDescriptor cD = DatabaseHelper.xoManager.findById(ComponentDescriptor.class, id);
                         componentDescriptor.getContainedComponents().add(cD);
                     } catch (ClassCastException e) {
-                        TypeDescriptor tD = SARFRunner.xoManager.findById(TypeDescriptor.class, id);
+                        TypeDescriptor tD = DatabaseHelper.xoManager.findById(TypeDescriptor.class, id);
                         componentDescriptor.getContainedTypes().add(tD);
                     }
                 }
-                identifiedGroups.add(SARFRunner.xoManager.getId(componentDescriptor));
-                Result<TypeDescriptor> typeDescriptors = componentRepository.getContainedTypesRecursively(SARFRunner.xoManager.getId(componentDescriptor));
+                identifiedGroups.add(DatabaseHelper.xoManager.getId(componentDescriptor));
+                Result<TypeDescriptor> typeDescriptors = componentRepository.getContainedTypesRecursively(DatabaseHelper.xoManager.getId(componentDescriptor));
                 Map<String, Long> wordCount = new HashMap<>();
                 for (TypeDescriptor typeDescriptor : typeDescriptors) {
                     String[] words = StringUtils.splitByCharacterTypeCamelCase(typeDescriptor.getName());
@@ -162,14 +162,14 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
                 componentDescriptor.setTopWords(sorted.entries().stream().limit(10).map(Map.Entry::getValue).toArray(String[]::new));
             }
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         return identifiedGroups;
     }
 
     private Map<Long, Set<Long>> inititialPartitioningFromPackageStructure(long[] ids) {
         // Package name to type ids
         Map<String, Set<Long>> packageComponents = new HashMap<>();
-        TypeRepository typeRepository = SARFRunner.xoManager.getRepository(TypeRepository.class);
+        TypeRepository typeRepository = DatabaseHelper.xoManager.getRepository(TypeRepository.class);
         for (Long id : ids) {
             String packageName = typeRepository.getPackageName(id);
             packageComponents.merge(
@@ -191,11 +191,11 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
 
     private Map<Long, Set<Long>> initialPartitioningFromComponents(Set<ComponentDescriptor> components, long[] ids) {
         Map<Long, Set<Long>> componentMappings = new HashMap<>();
-        ComponentRepository componentRepository = SARFRunner.xoManager.getRepository(ComponentRepository.class);
+        ComponentRepository componentRepository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
         for (Long id : ids) {
             long componentId = 0;
             for (ComponentDescriptor component : components) {
-                Long cId = SARFRunner.xoManager.getId(component);
+                Long cId = DatabaseHelper.xoManager.getId(component);
                 if (componentRepository.isCandidateType(cId, id) || componentRepository.isCandidateComponent(cId, id)) {
                     componentMappings.merge(
                             componentId,
@@ -225,14 +225,14 @@ public class CohesionCriterion extends ClassificationCriterion<CohesionCriterion
 
     @Override
     protected CohesionCriterionDescriptor instantiateDescriptor() {
-        return SARFRunner.xoManager.create(CohesionCriterionDescriptor.class);
+        return DatabaseHelper.xoManager.create(CohesionCriterionDescriptor.class);
     }
 
     @Override
     public ClassificationCriterionDescriptor materialize() {
-        SARFRunner.xoManager.currentTransaction().begin();
+        DatabaseHelper.xoManager.currentTransaction().begin();
         CohesionCriterionDescriptor descriptor = instantiateDescriptor();
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         this.classificationCriterionDescriptor = descriptor;
         return descriptor;
     }

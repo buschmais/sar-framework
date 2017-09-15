@@ -1,7 +1,7 @@
 package com.buschmais.sarf.classification.configuration;
 
+import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.Materializable;
-import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.classification.criterion.ClassificationCriterion;
 import com.buschmais.sarf.classification.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.sarf.metamodel.Component;
@@ -150,16 +150,16 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
         LOG.info("Materializing Configuration to Database");
         Set<ClassificationCriterionDescriptor> descriptors = this.classificationCriteria.stream().map(ClassificationCriterion::materialize).collect(Collectors.toSet());
         Set<ComponentDescriptor> componentDescriptors = this.model.stream().map(Component::materialize).collect(Collectors.toSet());
-        SARFRunner.xoManager.currentTransaction().begin();
+        DatabaseHelper.xoManager.currentTransaction().begin();
         if (this.classificationConfigurationDescriptor == null) {
-            this.classificationConfigurationDescriptor = SARFRunner.xoManager.create(ClassificationConfigurationDescriptor.class);
+            this.classificationConfigurationDescriptor = DatabaseHelper.xoManager.create(ClassificationConfigurationDescriptor.class);
             this.classificationConfigurationDescriptor.setIteration(this.iteration);
             this.classificationConfigurationDescriptor.setDecomposition(this.getDecomposition().toString());
             this.classificationConfigurationDescriptor.setOptimization(this.getOptimization().toString());
             this.classificationConfigurationDescriptor.getClassificationCriteria().addAll(descriptors);
             this.classificationConfigurationDescriptor.getDefinedComponents().addAll(componentDescriptors);
         }
-        SARFRunner.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().commit();
         return this.classificationConfigurationDescriptor;
     }
 
