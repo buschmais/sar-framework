@@ -4,6 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.5.7.RELEASE</version>
+    </parent>
+
     <groupId>com.buschmais.sarf</groupId>
     <artifactId>sar-framework</artifactId>
     <version>0.2.2</version>
@@ -50,6 +56,23 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
         <dependency>
             <!-- For using an embedded Neo4j instance -->
             <groupId>com.buschmais.xo</groupId>
@@ -79,12 +102,6 @@
         </dependency>
 
         <dependency>
-            <!-- An SLF4j binding -->
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <!-- Method Generator -->
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -98,11 +115,6 @@
         <dependency>
             <groupId>org.bitbucket.fwilhelm</groupId>
             <artifactId>org.jenetics</artifactId>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
         <dependency>
@@ -158,14 +170,6 @@
             </dependency>
 
             <dependency>
-                <!-- An SLF4j binding -->
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <scope>runtime</scope>
-                <version>1.7.21</version>
-            </dependency>
-
-            <dependency>
                 <!-- Method Generator -->
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -182,12 +186,6 @@
                 <groupId>org.bitbucket.fwilhelm</groupId>
                 <artifactId>org.jenetics</artifactId>
                 <version>3.6.0</version>
-            </dependency>
-            <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-                <version>2.8.2</version>
             </dependency>
             <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
             <dependency>
