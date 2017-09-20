@@ -9,7 +9,6 @@ import javafx.stage.Stage;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.net.MalformedURLException;
@@ -76,16 +75,14 @@ public class SARFRunner extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        //springContext = SpringApplication.run(SARFRunner.class);
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("SAR-Framework");
-        springContext = SpringApplication.run(SARFRunner.class);
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/root.fxml"));
-        fxmlLoader.setControllerFactory(springContext::getBean);
+        //fxmlLoader.setControllerFactory(springContext::getBean);
         this.rootLayout = fxmlLoader.load();
         Scene scene = new Scene(this.rootLayout);
         this.primaryStage.setScene(scene);
         this.primaryStage.show();
-        fxmlLoader = new FXMLLoader(getClass().getResource("/views/database_connection.fxml"));
-        this.rootLayout.setCenter(fxmlLoader.load());
     }
 }
