@@ -108,6 +108,19 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
 
     }
 
+    public void startNewIteration(Integer iteration, String artifact, String basePackage, String typeName,
+                                  Integer generations, Integer populationSize, boolean hierarchical, boolean similarityBase) {
+        this.activeClassificationConfiguration = new ActiveClassificationConfiguration(
+                iteration, artifact, basePackage, typeName, generations, populationSize,
+                hierarchical ? ClassificationConfiguration.Decomposition.DEEP : ClassificationConfiguration.Decomposition.FLAT,
+                similarityBase ? ClassificationConfiguration.Optimization.SIMILARITY : ClassificationConfiguration.Optimization.COUPLING);
+        this.activeClassificationConfiguration.addClassificationCriterion(new CohesionCriterion());
+        this.setUpData();
+        this.activeClassificationConfiguration.materialize();
+        this.activeClassificationConfiguration.execute();
+
+    }
+
     public void startNewIteration(URL configUrl) {
 
         if (configUrl != null) {

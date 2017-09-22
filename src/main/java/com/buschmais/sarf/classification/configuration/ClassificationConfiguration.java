@@ -86,6 +86,20 @@ public abstract class ClassificationConfiguration implements Materializable<Clas
         this.classificationCriteria = new TreeSet<>();
     }
 
+    ClassificationConfiguration(Integer iteration, String artifact, String basePackage, String typeName,
+                                Integer generations, Integer populationSize, Decomposition decomposition, Optimization optimization) {
+
+        this.iteration = iteration;
+        this.artifact = artifact;
+        this.basePackage = basePackage;
+        this.typeName = typeName;
+        this.generations = generations;
+        this.populationSize = populationSize;
+        this.decomposition = decomposition;
+        this.optimization = optimization;
+        this.classificationCriteria = new TreeSet<>();
+    }
+
     public boolean addClassificationCriterion(ClassificationCriterion classificationCriterion) {
         return this.classificationCriteria.add(classificationCriterion);
     }

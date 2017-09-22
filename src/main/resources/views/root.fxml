@@ -2,7 +2,8 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.BorderPane?>
-<BorderPane fx:id="pane" fx:controller="com.buschmais.sarf.controller.RootController" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" >
+<?import javafx.scene.layout.VBox?>
+<BorderPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.controller.RootController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
@@ -24,4 +25,12 @@
             </menus>
         </MenuBar>
     </top>
+   <center>
+      <VBox fillWidth="false" prefHeight="379.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+         <children>
+            <fx:include source="database_connection.fxml" />
+            <fx:include source="configuration_dialog.fxml" />
+         </children>
+      </VBox>
+   </center>
 </BorderPane>

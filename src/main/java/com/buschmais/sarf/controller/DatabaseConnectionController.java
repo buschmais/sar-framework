@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
+import org.springframework.stereotype.Controller;
 
 import java.io.File;
 import java.net.URI;
@@ -13,6 +14,7 @@ import java.net.URISyntaxException;
 /**
  * @author Stephan Pirnbaum
  */
+@Controller
 public class DatabaseConnectionController extends AbstractController {
 
     @FXML

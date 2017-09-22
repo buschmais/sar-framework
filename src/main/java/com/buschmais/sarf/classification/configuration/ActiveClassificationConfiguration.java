@@ -49,6 +49,12 @@ public class ActiveClassificationConfiguration extends ClassificationConfigurati
         super(iteration);
     }
 
+    public ActiveClassificationConfiguration(Integer iteration, String artifact, String basePackage, String typeName,
+                                             Integer generations, Integer populationSize, Decomposition decomposition,
+                                             Optimization optimization) {
+        super(iteration, artifact, basePackage, typeName, generations, populationSize, decomposition, optimization);
+    }
+
     public static ActiveClassificationConfiguration getInstance() {
         if (ActiveClassificationConfiguration.instance == null) {
             ActiveClassificationConfiguration.instance = new ActiveClassificationConfiguration(1);

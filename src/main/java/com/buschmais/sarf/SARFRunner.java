@@ -3,12 +3,14 @@ package com.buschmais.sarf;
 import com.buschmais.sarf.classification.ClassificationRunner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.net.MalformedURLException;
@@ -19,15 +21,14 @@ import java.net.URL;
 /**
  * Created by steph on 04.05.2017.
  */
+@SpringBootApplication
 public class SARFRunner extends Application{
 
     private static final Logger LOG = LogManager.getLogger(SARFRunner.class);
 
     private ConfigurableApplicationContext springContext;
 
-    private Stage primaryStage;
-
-    private BorderPane rootLayout;
+    private Parent rootNode;
 
     public static void main(String[] args) throws URISyntaxException {
         if (args.length == 0) {
@@ -74,15 +75,17 @@ public class SARFRunner extends Application{
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
-        //springContext = SpringApplication.run(SARFRunner.class);
-        this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("SAR-Framework");
+    public void init() throws Exception {
+        this.springContext = SpringApplication.run(SARFRunner.class);
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/root.fxml"));
-        //fxmlLoader.setControllerFactory(springContext::getBean);
-        this.rootLayout = fxmlLoader.load();
-        Scene scene = new Scene(this.rootLayout);
-        this.primaryStage.setScene(scene);
-        this.primaryStage.show();
+        fxmlLoader.setControllerFactory(this.springContext::getBean);
+        this.rootNode = fxmlLoader.load();
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        primaryStage.setTitle("SAR-Framework");
+        primaryStage.setScene(new Scene(this.rootNode));
+        primaryStage.show();
     }
 }

@@ -5,7 +5,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import org.springframework.stereotype.Controller;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -13,8 +12,7 @@ import java.io.StringWriter;
 /**
  * @author Stephan Pirnbaum
  */
-@Controller
-public class AbstractController {
+public abstract class AbstractController {
 
     void showExceptionDialog(String title, String header, String content, Throwable e) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

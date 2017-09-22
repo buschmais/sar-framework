@@ -53,6 +53,7 @@
     <properties>
         <com.buschmais.jqassistant_version>1.1.4</com.buschmais.jqassistant_version>
         <com.buschmais.xo_version>0.8.1</com.buschmais.xo_version>
+        <org.hibernate-validator_version>5.2.1.Final</org.hibernate-validator_version>
     </properties>
 
     <dependencies>
@@ -132,6 +133,21 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator-annotation-processor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>
@@ -208,6 +224,23 @@
                 <scope>test</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${org.hibernate-validator_version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-validator-annotation-processor</artifactId>
+                <version>${org.hibernate-validator_version}</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/javax.el/javax.el-api -->
+            <dependency>
+                <groupId>javax.el</groupId>
+                <artifactId>javax.el-api</artifactId>
+                <version>3.0.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.controller.ConfigurationDialogController">
+<AnchorPane fx:id="configPane" prefHeight="243.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.controller.ConfigurationDialogController">
     <children>
-        <VBox prefHeight="200.0" prefWidth="600.0" spacing="10.0">
+        <VBox prefHeight="283.0" prefWidth="600.0" spacing="10.0">
             <children>
                 <GridPane>
                     <columnConstraints>
@@ -19,8 +18,11 @@
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
                         <Label text="Iteration" />
@@ -30,14 +32,20 @@
                         <CheckBox fx:id="basePackageAsRegEx" mnemonicParsing="false" selected="true" text="Interpret as RegEx" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                         <Label text="Artifact" GridPane.rowIndex="1" />
                         <Label text="Type Name" GridPane.rowIndex="3" />
-                        <Label text="Decomposition" GridPane.rowIndex="4" />
-                        <Label text="Strategy" GridPane.rowIndex="5" />
+                        <Label text="Decomposition" GridPane.rowIndex="6" />
+                        <Label text="Strategy" GridPane.rowIndex="7" />
                         <TextField fx:id="artifact" text=".*" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                         <TextField fx:id="typeName" text=".*" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                         <CheckBox fx:id="artifactAsRegEx" mnemonicParsing="false" selected="true" text="Interpret as RegEx" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                         <CheckBox fx:id="typeNameAsRegEx" mnemonicParsing="false" selected="true" text="Interpret as RegEx" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                        <ChoiceBox fx:id="decomposition" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                        <ChoiceBox fx:id="strategy" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                        <ChoiceBox fx:id="decomposition" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                        <ChoiceBox fx:id="strategy" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                  <ProgressBar fx:id="progress" prefHeight="18.0" prefWidth="237.0" progress="0.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                  <Button fx:id="execute" mnemonicParsing="false" text="Execute" GridPane.rowIndex="8" />
+                  <Label text="Generations" GridPane.rowIndex="4" />
+                  <Label text="Population Size" GridPane.rowIndex="5" />
+                  <TextField fx:id="generations" text="300" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <TextField fx:id="populationSize" text="100" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                     </children>
                 </GridPane>
             </children>
