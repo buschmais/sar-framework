@@ -1,10 +1,13 @@
 package com.buschmais.sarf.framework.ui;
 
-import com.buschmais.sarf.DatabaseHelper;
+import com.buschmais.xo.api.XOManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 
 import java.io.File;
@@ -29,6 +32,12 @@ public class DatabaseConnectionController extends AbstractController {
     @FXML
     private TextField storePath;
 
+    @Autowired
+    private BeanFactory beanFactory;
+
+    @Autowired @Lazy
+    private XOManager xoManager;
+
     @FXML
     public void initialize() {
         this.connect.setOnAction(e -> this.connectToDatabase());
@@ -40,7 +49,7 @@ public class DatabaseConnectionController extends AbstractController {
     private void connectToDatabase() {
         boolean successful = false;
         try {
-            DatabaseHelper.setUpDB(new URI(this.storePath.getText()));
+            beanFactory.getBean(XOManager.class, new URI(this.storePath.getText()));
             successful = true;
         } catch (URISyntaxException e) {
             showExceptionDialog("Database Setup Error", "An error occurred during database setup", "Invalid URI entered", e);
@@ -56,7 +65,7 @@ public class DatabaseConnectionController extends AbstractController {
     private void disconnectFromDatabase() {
         boolean successful = false;
         try {
-            DatabaseHelper.stopDB();
+            xoManager.close();
             successful = true;
         } catch (Exception e) {
             showExceptionDialog("Database Shutdown error", "An error occurred during database shutdown", "", e);

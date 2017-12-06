@@ -2,8 +2,8 @@ package com.buschmais.sarf;
 
 import com.buschmais.sarf.framework.ClassificationRunner;
 import com.buschmais.sarf.framework.configuration.WeightConstants;
-import org.jenetics.*;
-import org.jenetics.engine.Engine;
+import org.jenetics.Genotype;
+import org.jenetics.LongGene;
 import org.jenetics.engine.EvolutionResult;
 
 import java.io.BufferedWriter;
@@ -11,10 +11,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.concurrent.Executors;
 
 /**
  * @author Stephan Pirnbaum
@@ -22,7 +20,7 @@ import java.util.concurrent.Executors;
 public class BenchmarkRunner {
 
     public static void main(String[] args) throws URISyntaxException {
-        DatabaseHelper.setUpDB(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"));
+        /*DatabaseHelper.setUpDB(new URI("file:///E:/Development/trainingszeitverwaltung-kraftraum/target/jqassistant/store"));
         LongChromosome chromosome = LongChromosome.of(0, 3, 13);
         Genotype<LongGene> genotype = Genotype.of(chromosome);
         Engine<LongGene, Double> engine = Engine
@@ -39,7 +37,7 @@ public class BenchmarkRunner {
                 .stream()
                 .limit(50)
                 .peek(BenchmarkRunner::peek)
-                .collect(EvolutionResult.toBestGenotype());
+                .collect(EvolutionResult.toBestGenotype());*/
     }
 
     private static Double computeFitnessValue(final Genotype<LongGene> prospect) {

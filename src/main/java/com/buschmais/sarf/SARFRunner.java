@@ -1,6 +1,7 @@
 package com.buschmais.sarf;
 
 import com.buschmais.sarf.framework.ClassificationRunner;
+import com.buschmais.xo.api.XOManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,9 +10,12 @@ import javafx.stage.Stage;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Lazy;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -25,6 +29,12 @@ import java.net.URL;
 public class SARFRunner extends Application{
 
     private static final Logger LOG = LogManager.getLogger(SARFRunner.class);
+
+    @Autowired
+    private BeanFactory beanFactory;
+
+    @Autowired @Lazy
+    private XOManager xoManager;
 
     private ConfigurableApplicationContext springContext;
 
@@ -60,9 +70,9 @@ public class SARFRunner extends Application{
                 URL configUrl = cmd.hasOption("c") ? new URL(cmd.getOptionValue("c")) : null;
                 Integer iteration = cmd.hasOption("l") ? Integer.valueOf(cmd.getOptionValue("l")) : null;
                 URL benchUrl = cmd.hasOption("b") ? new URL(cmd.getOptionValue("b")) : null;
-                DatabaseHelper.setUpDB(storeUri);
-                runner.run(configUrl, benchUrl, iteration);
-                DatabaseHelper.stopDB();
+                //DatabaseHelper.setUpDB(storeUri); todo fix
+                //runner.run(configUrl, benchUrl, iteration);
+                //DatabaseHelper.stopDB();
             } catch (ParseException e) {
                 LOG.error(e.getMessage());
                 formatter.printHelp("java -jar sarf.jar", options);
