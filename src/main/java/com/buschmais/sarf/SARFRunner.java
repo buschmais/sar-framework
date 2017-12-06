@@ -1,6 +1,6 @@
 package com.buschmais.sarf;
 
-import com.buschmais.sarf.classification.ClassificationRunner;
+import com.buschmais.sarf.framework.ClassificationRunner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

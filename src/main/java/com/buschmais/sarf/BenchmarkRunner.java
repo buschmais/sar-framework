@@ -1,7 +1,7 @@
 package com.buschmais.sarf;
 
-import com.buschmais.sarf.classification.ClassificationRunner;
-import com.buschmais.sarf.classification.configuration.WeightConstants;
+import com.buschmais.sarf.framework.ClassificationRunner;
+import com.buschmais.sarf.framework.configuration.WeightConstants;
 import org.jenetics.*;
 import org.jenetics.engine.Engine;
 import org.jenetics.engine.EvolutionResult;

@@ -2,7 +2,7 @@ package com.buschmais.sarf.benchmark;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.DatabaseHelper;
-import com.buschmais.sarf.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

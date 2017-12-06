@@ -1,7 +1,7 @@
 package com.buschmais.sarf.benchmark;
 
-import com.buschmais.sarf.classification.criterion.cohesion.evolution.Problem;
-import com.buschmais.sarf.classification.criterion.cohesion.evolution.similarity.SimilarityProblem;
+import com.buschmais.sarf.plugin.cohesion.evolution.Problem;
+import com.buschmais.sarf.plugin.cohesion.evolution.similarity.SimilarityProblem;
 
 import java.util.Map;
 import java.util.Objects;

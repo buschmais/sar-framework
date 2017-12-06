@@ -2,9 +2,9 @@ package com.buschmais.sarf.benchmark;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.DatabaseHelper;
-import com.buschmais.sarf.metamodel.ComponentDescriptor;
-import com.buschmais.sarf.repository.ComponentRepository;
-import com.buschmais.sarf.repository.TypeRepository;
+import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.framework.repository.ComponentRepository;
+import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
