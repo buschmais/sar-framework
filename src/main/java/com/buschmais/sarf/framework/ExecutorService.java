@@ -7,6 +7,6 @@ import java.lang.annotation.RetentionPolicy;
  * @author Stephan Pirnbaum
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Materializable {
-    Class<? extends SARFDescriptor> value() default SARFDescriptor.class;
+public @interface ExecutorService {
+    Class<? extends Executor> value();
 }

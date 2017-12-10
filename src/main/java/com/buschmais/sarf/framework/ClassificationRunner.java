@@ -2,13 +2,15 @@ package com.buschmais.sarf.framework;
 
 import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.SARFRunner;
-import com.buschmais.sarf.benchmark.MoJoCalculator;
 import com.buschmais.sarf.framework.configuration.*;
-import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.framework.repository.TypeRepository;
-import com.buschmais.sarf.plugin.cohesion.CohesionCriterion;
+import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
+import com.buschmais.xo.api.XOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -17,46 +19,42 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URL;
-import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
  */
+@Service
+@Lazy
 public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + BenchmarkRunner
 
-    private ActiveClassificationConfiguration activeClassificationConfiguration;
+    private final Logger LOG = LogManager.getLogger(ClassificationRunner.class);
 
-    private static final Logger LOG = LogManager.getLogger(ClassificationRunner.class);
+    private XOManager xOManager;
+    private ClassificationConfigurationMaterializer materializer;
+    private ClassificationConfigurationExecutor executor;
 
-    private static ClassificationRunner ourInstance = new ClassificationRunner();
-
-    public static ClassificationRunner getInstance() {
-        return ourInstance;
-    }
-
-    private ClassificationRunner() {
+    @Autowired
+    private ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer, ClassificationConfigurationExecutor executor) {
+        this.xOManager = xOManager;
+        this.materializer = materializer;
+        this.executor = executor;
     }
 
     public Double run(URL configUrl, URL benchmarkUrl, Integer iteration) {
-        //XOManagerFactory factory = setUpDB(storeUri);
-        if (iteration != null) {
-            loadIteration(iteration);
-        } else if (benchmarkUrl != null) {
+        if (benchmarkUrl != null) {
             return runBenchmark(benchmarkUrl);
         } else {
             startNewIteration(configUrl);
         }
-        //factory.close();
         return 0d;
     }
 
     public Double runBenchmark(URL benchmarkUrl) {
-        this.activeClassificationConfiguration = readConfiguration(benchmarkUrl);
+        LOG.error("Benchmark functionality currently not available");
+        return null;
+        /*
+        ClassificationConfigurationDescriptor classificationConfigurationDescriptor = readConfiguration(benchmarkUrl);
         this.setUpData();
         this.activeClassificationConfiguration.materialize();
         Set<ComponentDescriptor> reference = this.activeClassificationConfiguration.execute();
@@ -102,99 +100,91 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             e.printStackTrace();
             return Double.MIN_VALUE;
         }
-    }
-
-    public void startNewIteration() {
-
+*/
     }
 
     public void startNewIteration(Integer iteration, String artifact, String basePackage, String typeName,
                                   Integer generations, Integer populationSize, boolean hierarchical, boolean similarityBase) {
-        this.activeClassificationConfiguration = new ActiveClassificationConfiguration(
-                iteration, artifact, basePackage, typeName, generations, populationSize,
-                hierarchical ? ClassificationConfiguration.Decomposition.DEEP : ClassificationConfiguration.Decomposition.FLAT,
-                similarityBase ? ClassificationConfiguration.Optimization.SIMILARITY : ClassificationConfiguration.Optimization.COUPLING);
-        this.activeClassificationConfiguration.addClassificationCriterion(new CohesionCriterion());
-        this.setUpData();
-        this.activeClassificationConfiguration.materialize();
-        this.activeClassificationConfiguration.execute();
-
+        this.xOManager.currentTransaction().begin();
+        ClassificationConfigurationDescriptor descriptor = this.xOManager.create(ClassificationConfigurationDescriptor.class);
+        descriptor.setIteration(iteration);
+        descriptor.setArtifact(artifact);
+        descriptor.setBasePackage(basePackage);
+        descriptor.setTypeName(typeName);
+        descriptor.setGenerations(generations);
+        descriptor.setPopulationSize(populationSize);
+        descriptor.setDecomposition(hierarchical ? "deep" : "flat");
+        descriptor.setOptimization(similarityBase ? "similarity" : "coupling");
+        descriptor.getClassificationCriteria().add(this.xOManager.create(CohesionCriterionDescriptor.class));
+        this.xOManager.currentTransaction().commit();
+        this.setUpData(descriptor);
+        this.executor.execute(descriptor);
     }
 
     public void startNewIteration(URL configUrl) {
-
-        if (configUrl != null) {
-            this.activeClassificationConfiguration = readConfiguration(configUrl);
-        }
-        if (configUrl == null) {
-            this.activeClassificationConfiguration = new ActiveClassificationConfiguration(1);
-        }
-        this.activeClassificationConfiguration.addClassificationCriterion(new CohesionCriterion());
-        this.setUpData();
-        this.activeClassificationConfiguration.materialize();
-        this.activeClassificationConfiguration.execute();
+        ClassificationConfigurationDescriptor classificationConfigurationDescriptor = null;
+        classificationConfigurationDescriptor = readConfiguration(configUrl);
+        this.xOManager.currentTransaction().begin();
+        classificationConfigurationDescriptor.getClassificationCriteria().add(this.xOManager.create(CohesionCriterionDescriptor.class));
+        this.xOManager.currentTransaction().commit();
+        this.setUpData(classificationConfigurationDescriptor);
+        this.executor.execute(classificationConfigurationDescriptor);
     }
 
-    private ActiveClassificationConfiguration readConfiguration(URL configUrl) {
-        ActiveClassificationConfiguration activeClassificationConfiguration = null;
+    private ClassificationConfigurationDescriptor readConfiguration(URL configUrl) {
         LOG.info("Reading XML Configuration");
         try {
             URL schemaUrl = SARFRunner.class.getClassLoader().getResource("schema.xsd");
-            JAXBContext jaxbContext = JAXBContext.newInstance(ActiveClassificationConfiguration.class);
+            JAXBContext jaxbContext = JAXBContext.newInstance(ClassificationConfigurationXmlMapper.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = sf.newSchema(schemaUrl);
             jaxbUnmarshaller.setSchema(schema);
             LOG.info("Unmarshalling XML Configuration");
-            activeClassificationConfiguration = (ActiveClassificationConfiguration) jaxbUnmarshaller.unmarshal(configUrl);
+            ClassificationConfigurationXmlMapper mapper= (ClassificationConfigurationXmlMapper) jaxbUnmarshaller.unmarshal(configUrl);
+            ClassificationConfigurationDescriptor descriptor = this.materializer.materialize(mapper);
+            LOG.info("Unmarshalling XML Configuration Successful");
+            return descriptor;
         } catch (JAXBException | SAXException e) {
             LOG.error(e);
+            System.exit(1);
+            return null;
         }
-        LOG.info("Unmarshalling XML Configuration Successful");
-        return activeClassificationConfiguration;
     }
 
-    public ActiveClassificationConfiguration getCurrentIteration() {
-        return null;
-    }
-
-    public ClassificationConfiguration loadIteration(Integer iteration) {
-        return null;
-    }
-
-    private void setUpData() {
-        DatabaseHelper.xoManager.currentTransaction().begin();
+    private void setUpData(ClassificationConfigurationDescriptor descriptor) {
+        this.xOManager.currentTransaction().begin();
         ClassificationConfigurationRepository classificationConfigurationRepository = DatabaseHelper.xoManager.getRepository(ClassificationConfigurationRepository.class);
-        if (this.activeClassificationConfiguration.getIteration() == 1) {
+        if (descriptor.getIteration() == 1) {
             LOG.info("Resetting Data");
-            DatabaseHelper.xoManager.createQuery(
+            this.xOManager.createQuery(
                     "MATCH (sarf:SARF) DETACH DELETE sarf"
             ).execute();
-            DatabaseHelper.xoManager.createQuery(
+            this.xOManager.createQuery(
                     "MATCH ()-[c:COUPLES]-() DELETE c"
             ).execute();
-            DatabaseHelper.xoManager.createQuery(
+            this.xOManager.createQuery(
                     "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
             ).execute();
-            DatabaseHelper.xoManager.createQuery(
+            this.xOManager.createQuery(
                     "MATCH (t:Type:Internal) REMOVE t:Internal"
             ).execute();
-            DatabaseHelper.xoManager.currentTransaction().commit();
-            DatabaseHelper.xoManager.currentTransaction().begin();
+            this.xOManager.currentTransaction().commit();
+            this.xOManager.currentTransaction().begin();
             LOG.info("Preparing Data Set");
-            DatabaseHelper.xoManager.getRepository(TypeRepository.class).markAllInternalTypes(
-                    this.activeClassificationConfiguration.getTypeName(),
-                    this.activeClassificationConfiguration.getBasePackage(),
-                    this.activeClassificationConfiguration.getArtifact());
-            DatabaseHelper.xoManager.currentTransaction().commit();
+            this.xOManager.getRepository(TypeRepository.class).markAllInternalTypes(
+                    descriptor.getTypeName(),
+                    descriptor.getBasePackage(),
+                    descriptor.getArtifact());
+            this.xOManager.currentTransaction().commit();
             TypeCouplingEnricher.enrich();
-        } else if (this.activeClassificationConfiguration.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
+        } else if (descriptor.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             LOG.error("Specified Configuration Iteration must be either 1 or " +
                     (classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1));
-            DatabaseHelper.xoManager.currentTransaction().commit();
+            this.xOManager.currentTransaction().commit();
             System.exit(1);
         }
-        if (DatabaseHelper.xoManager.currentTransaction().isActive())
-            DatabaseHelper.xoManager.currentTransaction().commit();
+        if (this.xOManager.currentTransaction().isActive())
+            this.xOManager.currentTransaction().commit();
     }
 }

@@ -34,4 +34,26 @@ public interface ClassificationConfigurationDescriptor extends SARFDescriptor {
     void setOptimization(String optimization);
 
     String getOptimization();
+
+    void setGenerations(Integer generations);
+
+    Integer getGenerations();
+
+    void setPopulationSize(Integer populationSize);
+
+    Integer getPopulationSize();
+
+    void setTypeName(String typeName);
+
+    String getTypeName();
+
+    void setBasePackage(String basePackage);
+
+    String getBasePackage();
+
+    void setArtifact(String artifact);
+
+    String getArtifact();
+
+
 }

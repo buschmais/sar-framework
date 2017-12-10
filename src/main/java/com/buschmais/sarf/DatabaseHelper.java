@@ -66,7 +66,7 @@ public class DatabaseHelper {
             .type(ClassificationConfigurationRepository.class)
             .type(TypeNamingCriterionDescriptor.class)
             .type(DependencyCriterionDescriptor.class)
-            .type(DependencyDescriptor.class)
+            .type(DependencyRuleDescriptor.class)
             .type(MetricRepository.class)
             .type(RuleBasedCriterionDescriptor.class)
             .type(RuleDescriptor.class)
@@ -75,9 +75,9 @@ public class DatabaseHelper {
             .type(TypeNamingRepository.class)
             .type(PackageNamingRepository.class)
             .type(DependencyRepository.class)
-            .type(AnnotatedByDescriptor.class)
-            .type(ExtendsDescriptor.class)
-            .type(ImplementsDescriptor.class)
+            .type(AnnotatedByRuleDescriptor.class)
+            .type(ExtendsRuleDescriptor.class)
+            .type(ImplementsRuleDescriptor.class)
             .uri(storeUri)
             .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
