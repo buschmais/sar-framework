@@ -56,7 +56,9 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     @Override
     public Set<ComponentDescriptor> execute(ClassificationConfigurationDescriptor executableDescriptor) {
         LOG.info("Executing Classification");
+        this.xoManager.currentTransaction().begin();
         final int iteration = executableDescriptor.getIteration();
+        this.xoManager.currentTransaction().commit();
         Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
             int res = 0;
             if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
@@ -65,22 +67,22 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             return res;
         });
         CohesionCriterionDescriptor cohesionCriterionDescriptor = null;
-        for (ClassificationCriterionDescriptor cC : executableDescriptor.getClassificationCriteria()) {
+        this.xoManager.currentTransaction().begin();
+        Set<ClassificationCriterionDescriptor> classificationCriteria = executableDescriptor.getClassificationCriteria();
+        for (ClassificationCriterionDescriptor cC : classificationCriteria) {
             if (cC instanceof RuleBasedCriterionDescriptor) {
                 Class<? extends Executor> executorClass = cC.getClass().getAnnotation(ExecutedBy.class).value();
                 if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
                     @SuppressWarnings("unchecked")
                     ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
                         this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
-                    this.xoManager.currentTransaction().begin();
                     components.addAll(executor.execute(cC));
-                    this.xoManager.currentTransaction().begin();
                 }
             } else {
                 cohesionCriterionDescriptor = (CohesionCriterionDescriptor) cC;
             }
         }
-
+        this.xoManager.currentTransaction().commit();
         removeAmbiguities(components, iteration);
 
         //combine(components);

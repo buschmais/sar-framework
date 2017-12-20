@@ -90,6 +90,7 @@ public class ConfigurationDialogController extends AbstractController {
                     Integer.valueOf(this.generations.getText()), Integer.valueOf(this.populationSize.getText()), this.decomposition.getValue().equals("Hierarchical"), this.strategy.getValue().equals("Similarity")
             );
         } catch (Exception e) {
+            e.printStackTrace();
             showExceptionDialog("Execution Error", "An error occured during decomposing the system!", "", e);
         }
         this.execute.setDisable(false);

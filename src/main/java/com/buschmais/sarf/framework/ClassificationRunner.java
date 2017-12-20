@@ -108,6 +108,21 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     public void startNewIteration(Integer iteration, String artifact, String basePackage, String typeName,
                                   Integer generations, Integer populationSize, boolean hierarchical, boolean similarityBase) {
         this.xOManager.currentTransaction().begin();
+        if (iteration == 1) {
+            LOG.info("Resetting Data");
+            this.xOManager.createQuery(
+                "MATCH (sarf:SARF) DETACH DELETE sarf"
+            ).execute();
+            this.xOManager.createQuery(
+                "MATCH ()-[c:COUPLES]-() DELETE c"
+            ).execute();
+            this.xOManager.createQuery(
+                "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
+            ).execute();
+            this.xOManager.createQuery(
+                "MATCH (t:Type:Internal) REMOVE t:Internal"
+            ).execute();
+        }
         ClassificationConfigurationDescriptor descriptor = this.xOManager.create(ClassificationConfigurationDescriptor.class);
         descriptor.setIteration(iteration);
         descriptor.setArtifact(artifact);
@@ -158,21 +173,6 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
         this.xOManager.currentTransaction().begin();
         ClassificationConfigurationRepository classificationConfigurationRepository = this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         if (descriptor.getIteration() == 1) {
-            LOG.info("Resetting Data");
-            this.xOManager.createQuery(
-                    "MATCH (sarf:SARF) DETACH DELETE sarf"
-            ).execute();
-            this.xOManager.createQuery(
-                    "MATCH ()-[c:COUPLES]-() DELETE c"
-            ).execute();
-            this.xOManager.createQuery(
-                    "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
-            ).execute();
-            this.xOManager.createQuery(
-                    "MATCH (t:Type:Internal) REMOVE t:Internal"
-            ).execute();
-            this.xOManager.currentTransaction().commit();
-            this.xOManager.currentTransaction().begin();
             LOG.info("Preparing Data Set");
             this.xOManager.getRepository(TypeRepository.class).markAllInternalTypes(
                     descriptor.getTypeName(),

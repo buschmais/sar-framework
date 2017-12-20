@@ -14,5 +14,6 @@ import java.util.Set;
 public interface RuleBasedCriterionDescriptor<R extends RuleDescriptor> extends ClassificationCriterionDescriptor {
     @Relation("USES")
     @Relation.Outgoing
-    Set<R> getRules();
+    // todo use type parameter as soon this i supported by xo
+    Set<RuleDescriptor> getRules();
 }

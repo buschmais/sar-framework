@@ -53,13 +53,13 @@ public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R
             return res;
         });
         this.xoManager.currentTransaction().begin();
-        Set<R> rules = executableDescriptor.getRules();
+        Set<RuleDescriptor> rules = executableDescriptor.getRules();
         Map<String, Map<String, Set<String>>> mappedTypes = new HashMap<>();
         Long internalTypes = this.xoManager.getRepository(TypeRepository.class).countAllInternalTypes();
-        for (R r : rules) {
+        for (RuleDescriptor r : rules) {
             ExecutedBy executedBy = r.getClass().getAnnotation(ExecutedBy.class);
             @SuppressWarnings("unchecked")
-            RuleExecutor<R> ruleExecutor = (RuleExecutor<R>) this.beanFactory.getBean(executedBy.value());
+            RuleExecutor<RuleDescriptor> ruleExecutor = (RuleExecutor<RuleDescriptor>) this.beanFactory.getBean(executedBy.value());
             ComponentDescriptor componentDescriptor = getOrCreateComponentOfCurrentIteration(r);
             @SuppressWarnings("unchecked")
             Set<TypeDescriptor> ts = ruleExecutor.execute(r);
@@ -105,7 +105,7 @@ public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R
         return componentDescriptors;
     }
 
-    private ComponentDescriptor getOrCreateComponentOfCurrentIteration(R rule) {
+    private ComponentDescriptor getOrCreateComponentOfCurrentIteration(RuleDescriptor rule) {
         ComponentRepository repository = this.xoManager.getRepository(ComponentRepository.class);
         Result<ComponentDescriptor> result = repository.getComponentOfCurrentIteration(rule.getShape(), rule.getName());
         ComponentDescriptor componentDescriptor;
