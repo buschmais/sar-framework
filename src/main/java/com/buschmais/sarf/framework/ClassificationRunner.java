@@ -1,6 +1,5 @@
 package com.buschmais.sarf.framework;
 
-import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.framework.configuration.*;
 import com.buschmais.sarf.framework.repository.TypeRepository;
@@ -33,12 +32,15 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     private XOManager xOManager;
     private ClassificationConfigurationMaterializer materializer;
     private ClassificationConfigurationExecutor executor;
+    private TypeCouplingEnricher typeCouplingEnricher;
 
     @Autowired
-    public ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer, ClassificationConfigurationExecutor executor) {
+    public ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer,
+                                ClassificationConfigurationExecutor executor, TypeCouplingEnricher typeCouplingEnricher) {
         this.xOManager = xOManager;
         this.materializer = materializer;
         this.executor = executor;
+        this.typeCouplingEnricher = typeCouplingEnricher;
     }
 
     public Double run(URL configUrl, URL benchmarkUrl, Integer iteration) {
@@ -154,7 +156,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
 
     private void setUpData(ClassificationConfigurationDescriptor descriptor) {
         this.xOManager.currentTransaction().begin();
-        ClassificationConfigurationRepository classificationConfigurationRepository = DatabaseHelper.xoManager.getRepository(ClassificationConfigurationRepository.class);
+        ClassificationConfigurationRepository classificationConfigurationRepository = this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         if (descriptor.getIteration() == 1) {
             LOG.info("Resetting Data");
             this.xOManager.createQuery(
@@ -177,7 +179,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
                     descriptor.getBasePackage(),
                     descriptor.getArtifact());
             this.xOManager.currentTransaction().commit();
-            TypeCouplingEnricher.enrich();
+            this.typeCouplingEnricher.enrich();
         } else if (descriptor.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
             LOG.error("Specified Configuration Iteration must be either 1 or " +
                     (classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1));

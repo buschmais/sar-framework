@@ -42,8 +42,6 @@ public class DatabaseHelper {
 
     private static final Logger LOG = LogManager.getLogger(DatabaseHelper.class);
 
-    public static XOManager xoManager = null;
-
     @Bean
     @Lazy
     public XOManager xOManager(URI storeUri) {
@@ -82,8 +80,7 @@ public class DatabaseHelper {
             .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
         LOG.info("Setting up Database Successful");
-        DatabaseHelper.xoManager = factory.createXOManager();
-        return DatabaseHelper.xoManager;
+        return factory.createXOManager();
     }
 
 }

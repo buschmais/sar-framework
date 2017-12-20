@@ -1,4 +1,4 @@
-package com.buschmais.sarf;
+package com.buschmais.sarf.benchmark;
 
 import org.jenetics.Genotype;
 import org.jenetics.LongGene;

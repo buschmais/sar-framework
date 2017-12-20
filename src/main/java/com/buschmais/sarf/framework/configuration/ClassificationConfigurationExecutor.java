@@ -1,7 +1,6 @@
 package com.buschmais.sarf.framework.configuration;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
@@ -14,7 +13,7 @@ import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionExecutor;
 import com.buschmais.xo.api.CompositeObject;
-import com.buschmais.xo.api.Query;
+import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
@@ -100,32 +99,30 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
         //finalize(components);
 
-        DatabaseHelper.xoManager.currentTransaction().
+        this.xoManager.currentTransaction().
 
             begin();
         LOG.info("Pretty Printing the Result");
 
         exportResults(components);
-        DatabaseHelper.xoManager.currentTransaction().
-
-            commit();
+        this.xoManager.currentTransaction().commit();
         return components;
     }
 
     private void removeAmbiguities(Collection<ComponentDescriptor> components, Integer iteration) {
         LOG.info("Removing Ambiguities from Pre-Partitioning");
-        DatabaseHelper.xoManager.currentTransaction().begin();
-        TypeRepository typeRepository = DatabaseHelper.xoManager.getRepository(TypeRepository.class);
+        this.xoManager.currentTransaction().begin();
+        TypeRepository typeRepository = this.xoManager.getRepository(TypeRepository.class);
         int removed = 0;
         for (ComponentDescriptor component1 : components) {
-            Long id1 = DatabaseHelper.xoManager.getId(component1);
+            Long id1 = this.xoManager.getId(component1);
             for (ComponentDescriptor component2 : components) {
-                Long id2 = DatabaseHelper.xoManager.getId(component2);
+                Long id2 = this.xoManager.getId(component2);
                 if (component1.getShape().equals(component2.getShape()) && !component1.getName().equals(component2.getName())) {
-                    Query.Result<TypeDescriptor> types = typeRepository.getTypesPreAssignedTo(id1, id2, iteration);
+                    Result<TypeDescriptor> types = typeRepository.getTypesPreAssignedTo(id1, id2, iteration);
                     for (TypeDescriptor type : types) {
-                        Double weightC1 = typeRepository.getAssignmentWeight(DatabaseHelper.xoManager.getId(type), id1, iteration);
-                        Double weightC2 = typeRepository.getAssignmentWeight(DatabaseHelper.xoManager.getId(type), id2, iteration);
+                        Double weightC1 = typeRepository.getAssignmentWeight(this.xoManager.getId(type), id1, iteration);
+                        Double weightC2 = typeRepository.getAssignmentWeight(this.xoManager.getId(type), id2, iteration);
                         if (weightC1 - weightC2 < 1 || weightC2 - weightC1 > 1) { // TODO: 04.07.2017 change threshold for productive usage
                             LOG.info("\tDetected Ambiguity:");
                             LOG.info("\t\tFQN: " + type.getFullQualifiedName());
@@ -135,9 +132,9 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                                 : component2.getShape() + " - " + component2.getName()));
                         }
                         if (weightC1 < weightC2) {
-                            typeRepository.removeAssignment(DatabaseHelper.xoManager.getId(type), id1, iteration);
+                            typeRepository.removeAssignment(this.xoManager.getId(type), id1, iteration);
                         } else {
-                            typeRepository.removeAssignment(DatabaseHelper.xoManager.getId(type), id2, iteration);
+                            typeRepository.removeAssignment(this.xoManager.getId(type), id2, iteration);
                         }
                         removed++;
                     }
@@ -145,7 +142,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                 }
             }
         }
-        DatabaseHelper.xoManager.currentTransaction().commit();
+        this.xoManager.currentTransaction().commit();
         LOG.info("\tRemoved " + removed + " Assignments");
     }
 
@@ -203,21 +200,21 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
 
     private ArrayListMultimap<Collection<Long>, Long> intersectComponents(Collection<ComponentDescriptor> components) {
         LOG.info("Creating Intersecting Components");
-        DatabaseHelper.xoManager.currentTransaction().begin();
-        ComponentRepository componentRepository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
+        this.xoManager.currentTransaction().begin();
+        ComponentRepository componentRepository = this.xoManager.getRepository(ComponentRepository.class);
         // Type ID -> Component IDs
         Map<Long, Collection<Long>> typeToComponents = new HashMap<>();
         Set<String> shapes = components.stream().map(ComponentDescriptor::getShape).collect(Collectors.toSet());
         List<TypeDescriptor> types = new ArrayList<>();
-        try (Query.Result<TypeDescriptor> descriptors = DatabaseHelper.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
+        try (Result<TypeDescriptor> descriptors = this.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
             for (TypeDescriptor t : descriptors) {
                 types.add(t);
             }
         }
-        long[] ids = types.stream().mapToLong(t -> DatabaseHelper.xoManager.getId(t)).sorted().toArray();
+        long[] ids = types.stream().mapToLong(t -> this.xoManager.getId(t)).sorted().toArray();
         for (Long typeId : ids) {
             for (String shape : shapes) {
-                Long bestCId = componentRepository.getBestComponentForShape(components.stream().mapToLong(c -> DatabaseHelper.xoManager.getId(c)).toArray(),
+                Long bestCId = componentRepository.getBestComponentForShape(components.stream().mapToLong(c -> this.xoManager.getId(c)).toArray(),
                     shape, typeId);
                 if (bestCId != null) {
                     typeToComponents.merge(
@@ -233,7 +230,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
         // Create Intersecting Components and assign the types to them
         ArrayListMultimap<Collection<Long>, Long> inverse = Multimaps.invertFrom(Multimaps.forMap(typeToComponents), ArrayListMultimap.create());
-        DatabaseHelper.xoManager.currentTransaction().commit();
+        this.xoManager.currentTransaction().commit();
         return inverse;
     }
 
@@ -262,9 +259,9 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             zipOutputStream.write(formatted.toString().getBytes());
             // write json
             entry = new ZipEntry("sarf.json");
-            ComponentRepository repository = DatabaseHelper.xoManager.getRepository(ComponentRepository.class);
-            Query.Result<Map> result
-                = repository.getDecomposition(components.stream().mapToLong(c -> DatabaseHelper.xoManager.getId(c)).toArray());
+            ComponentRepository repository = this.xoManager.getRepository(ComponentRepository.class);
+            Result<Map> result
+                = repository.getDecomposition(components.stream().mapToLong(c -> this.xoManager.getId(c)).toArray());
             zipOutputStream.putNextEntry(entry);
             formatted = new StringBuilder();
             zipOutputStream.write(("[\n").getBytes());
@@ -284,13 +281,13 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
     }
 
-    public static void prettyPrint(Collection<ComponentDescriptor> components, String indentation, StringBuilder builder) throws IOException {
+    public void prettyPrint(Collection<ComponentDescriptor> components, String indentation, StringBuilder builder) throws IOException {
         for (ComponentDescriptor component : components) {
             builder.append(indentation + " " + component.getName() + " " + Arrays.toString(component.getTopWords()) + "\n");
-            Query.Result<Query.Result.CompositeRowObject> res = DatabaseHelper.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + DatabaseHelper.xoManager.getId(component) + " " +
+            Result<Result.CompositeRowObject> res = this.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + this.xoManager.getId(component) + " " +
                 "OPTIONAL MATCH (c)-[:CONTAINS]->(e) RETURN e").execute(); // TODO: 05.07.2017 Improve !!!
             Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
-            for (Query.Result.CompositeRowObject r : res) {
+            for (Result.CompositeRowObject r : res) {
                 try {
                     ComponentDescriptor c = r.get("e", ComponentDescriptor.class);
                     if (c != null) {
@@ -335,7 +332,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         } else {
             TypeDescriptor t = (TypeDescriptor) m.get("c1");
             formatted.append("\t\t\t{\n");
-            formatted.append("\t\t\t\t\"id\": \"" + DatabaseHelper.xoManager.getId(t) + "\",\n");
+            formatted.append("\t\t\t\t\"id\": \"" + this.xoManager.getId(t) + "\",\n");
             formatted.append("\t\t\t\t\"fqn\": \"" + t.getFullQualifiedName() + "\",\n");
             formatted.append("\t\t\t\t\"name\": \"" + t.getName() + "\"\n");
             formatted.append("\t\t\t}\n");
