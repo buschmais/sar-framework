@@ -1,6 +1,7 @@
-package com.buschmais.sarf.plugin.api;
+package com.buschmais.sarf.plugin.api.criterion;
 
 import com.buschmais.sarf.framework.metamodel.ComponentXmlMapper;
+import com.buschmais.sarf.plugin.api.XmlMapper;
 import lombok.*;
 
 import javax.xml.bind.Unmarshaller;
@@ -12,7 +13,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 @AllArgsConstructor
 @EqualsAndHashCode
-public abstract class RuleXmlMapper<T extends RuleDescriptor> implements Comparable<RuleXmlMapper> {
+public abstract class RuleXmlMapper implements XmlMapper, Comparable<RuleXmlMapper> {
 
     @Getter
     @Setter

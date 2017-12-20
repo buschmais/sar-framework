@@ -1,8 +1,10 @@
 package com.buschmais.sarf.plugin.api;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.framework.SARFDescriptor;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionCreatedDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Outgoing;

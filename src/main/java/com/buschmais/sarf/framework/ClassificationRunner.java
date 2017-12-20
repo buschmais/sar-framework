@@ -35,7 +35,7 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     private ClassificationConfigurationExecutor executor;
 
     @Autowired
-    private ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer, ClassificationConfigurationExecutor executor) {
+    public ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer, ClassificationConfigurationExecutor executor) {
         this.xOManager = xOManager;
         this.materializer = materializer;
         this.executor = executor;

@@ -1,7 +1,8 @@
 package com.buschmais.sarf.framework.metamodel;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.framework.SARFDescriptor;
+import com.buschmais.sarf.plugin.api.SARFDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.xo.neo4j.api.annotation.Label;
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 import com.buschmais.xo.neo4j.api.annotation.Relation.Incoming;
@@ -22,6 +23,10 @@ public interface ComponentDescriptor extends SARFDescriptor {
 
     @Incoming
     Set<ComponentDependsOn> getDependentComponents();
+
+    @Relation("IDENTIFIED_BY")
+    @Outgoing
+    Set<RuleDescriptor> getIdentifyingRules();
 
     /**
      * Get the name of the component

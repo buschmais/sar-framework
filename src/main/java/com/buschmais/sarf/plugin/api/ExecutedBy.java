@@ -1,12 +1,11 @@
-package com.buschmais.sarf.framework;
+package com.buschmais.sarf.plugin.api;
 
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-/**
- * @author Stephan Pirnbaum
- */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ExecutorService {
+@Inherited
+public @interface ExecutedBy {
     Class<? extends Executor> value();
 }

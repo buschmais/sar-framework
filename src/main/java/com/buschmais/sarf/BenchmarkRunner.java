@@ -1,7 +1,5 @@
 package com.buschmais.sarf;
 
-import com.buschmais.sarf.framework.ClassificationRunner;
-import com.buschmais.sarf.framework.configuration.WeightConstants;
 import org.jenetics.Genotype;
 import org.jenetics.LongGene;
 import org.jenetics.engine.EvolutionResult;
@@ -10,9 +8,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * @author Stephan Pirnbaum
@@ -41,7 +37,7 @@ public class BenchmarkRunner {
     }
 
     private static Double computeFitnessValue(final Genotype<LongGene> prospect) {
-        WeightConstants.DEPENDS_ON_WEIGHT = prospect.get(0, 0).doubleValue();
+        /*WeightConstants.DEPENDS_ON_WEIGHT = prospect.get(0, 0).doubleValue();
         WeightConstants.INVOKES_WEIGHT = prospect.get(0, 1).doubleValue();
         WeightConstants.READS_WEIGHT = prospect.get(0, 2).doubleValue();
         WeightConstants.WRITES_WEIGHT = prospect.get(0, 3).doubleValue();
@@ -60,7 +56,7 @@ public class BenchmarkRunner {
                     new URL("file:///E:/Development/sar-framework/src/main/resources/benchmark3.xml"), null);
         } catch (MalformedURLException e) {
             e.printStackTrace();
-        }
+        }*/
         return Double.MIN_VALUE;
     }
 

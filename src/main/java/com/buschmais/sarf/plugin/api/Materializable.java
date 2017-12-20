@@ -1,4 +1,4 @@
-package com.buschmais.sarf.framework;
+package com.buschmais.sarf.plugin.api;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

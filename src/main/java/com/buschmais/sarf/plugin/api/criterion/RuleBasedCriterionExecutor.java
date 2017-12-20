@@ -1,12 +1,21 @@
-package com.buschmais.sarf.plugin.api;
+package com.buschmais.sarf.plugin.api.criterion;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
+import com.buschmais.sarf.plugin.api.ClassificationInfoDescriptor;
+import com.buschmais.sarf.plugin.api.ExecutedBy;
+import com.buschmais.sarf.plugin.api.Executor;
+import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,22 +25,25 @@ import java.util.TreeSet;
 /**
  * @author Stephan Pirnbaum
  */
-public abstract class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R>, R extends RuleDescriptor, E extends RuleExecutor<R>> {
+@Service
+@Lazy
+public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R>, R extends RuleDescriptor> implements Executor<C, ComponentDescriptor> {
 
     private static final Logger LOG = LogManager.getLogger(RuleBasedCriterionExecutor.class);
 
     private XOManager xoManager;
 
-    private E ruleExecutor;
+    @Autowired
+    BeanFactory beanFactory;
 
-    public RuleBasedCriterionExecutor(XOManager xoManager, E ruleExecutor) {
+    @Autowired
+    @Lazy
+    public RuleBasedCriterionExecutor(XOManager xoManager) {
         this.xoManager = xoManager;
-        this.ruleExecutor = ruleExecutor;
     }
 
-//    @Override todo interface
-    // todo remove iteration parameter
-    public Set<ComponentDescriptor> execute(C criterion, int iteration) {
+    @Override
+    public Set<ComponentDescriptor> execute(C executableDescriptor) {
         LOG.info("Executing " + this.getClass().getSimpleName());
         Set<ComponentDescriptor> componentDescriptors = new TreeSet<>((c1, c2) -> {
             int res = 0;
@@ -41,22 +53,24 @@ public abstract class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDes
             return res;
         });
         this.xoManager.currentTransaction().begin();
-        Set<R> rules = criterion.getRules();
+        Set<R> rules = executableDescriptor.getRules();
         Map<String, Map<String, Set<String>>> mappedTypes = new HashMap<>();
-        Long totalTypes = 0L;
         Long internalTypes = this.xoManager.getRepository(TypeRepository.class).countAllInternalTypes();
         for (R r : rules) {
-            ComponentDescriptor componentDescriptor = this.ruleExecutor.getOrCreateComponentOfCurrentIteration(r);
+            ExecutedBy executedBy = r.getClass().getAnnotation(ExecutedBy.class);
             @SuppressWarnings("unchecked")
-            Set<TypeDescriptor> ts = this.ruleExecutor.getMatchingTypes(r);
+            RuleExecutor<R> ruleExecutor = (RuleExecutor<R>) this.beanFactory.getBean(executedBy.value());
+            ComponentDescriptor componentDescriptor = getOrCreateComponentOfCurrentIteration(r);
+            @SuppressWarnings("unchecked")
+            Set<TypeDescriptor> ts = ruleExecutor.execute(r);
             for (TypeDescriptor t : ts) {
                 ClassificationInfoDescriptor info = this.xoManager.create(ClassificationInfoDescriptor.class);
                 info.setComponent(componentDescriptor);
                 info.setType(t);
                 info.setWeight(r.getWeight() / 100);
                 info.setRule(r);
-                info.setIteration(iteration);
-                criterion.getClassifications().add(info);
+                info.setIteration(executableDescriptor.getIteration());
+                executableDescriptor.getClassifications().add(info);
                 if (mappedTypes.containsKey(t.getFullQualifiedName())) {
                     mappedTypes.get(t.getFullQualifiedName()).merge(
                         componentDescriptor.getShape(),
@@ -71,7 +85,6 @@ public abstract class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDes
                     start.put(componentDescriptor.getShape(), Sets.newHashSet(componentDescriptor.getName()));
                     mappedTypes.put(t.getFullQualifiedName(), start);
                 }
-                totalTypes++;
             }
             componentDescriptors.add(componentDescriptor);
         }
@@ -90,5 +103,19 @@ public abstract class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDes
         LOG.info("\tCoverage = " + (mappedTypes.size() / (double) internalTypes));
         LOG.info("\tQuality = " + (1 - multipleMatched / (double) mappedTypes.size()));
         return componentDescriptors;
+    }
+
+    private ComponentDescriptor getOrCreateComponentOfCurrentIteration(R rule) {
+        ComponentRepository repository = this.xoManager.getRepository(ComponentRepository.class);
+        Result<ComponentDescriptor> result = repository.getComponentOfCurrentIteration(rule.getShape(), rule.getName());
+        ComponentDescriptor componentDescriptor;
+        if (result.hasResult()) {
+            componentDescriptor = result.getSingleResult();
+        } else {
+            componentDescriptor = this.xoManager.create(ComponentDescriptor.class);
+            componentDescriptor.setShape(rule.getShape());
+            componentDescriptor.setName(rule.getName());
+        }
+        return componentDescriptor;
     }
 }

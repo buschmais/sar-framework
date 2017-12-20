@@ -1,7 +1,8 @@
 package com.buschmais.sarf.framework.metamodel;
 
-import com.buschmais.sarf.framework.Materializable;
-import com.buschmais.sarf.plugin.api.RuleXmlMapper;
+import com.buschmais.sarf.plugin.api.Materializable;
+import com.buschmais.sarf.plugin.api.XmlMapper;
+import com.buschmais.sarf.plugin.api.criterion.RuleXmlMapper;
 import com.buschmais.sarf.plugin.dependency.AnnotatedByRuleXmlMapper;
 import com.buschmais.sarf.plugin.dependency.DependencyRuleXmlMapper;
 import com.buschmais.sarf.plugin.dependency.ExtendsRuleXmlMapper;
@@ -17,7 +18,7 @@ import java.util.Set;
  * @author Stephan Pirnbaum
  */
 @Materializable(ComponentDescriptor.class)
-public class ComponentXmlMapper {
+public class ComponentXmlMapper implements XmlMapper {
 
     @Getter
     @XmlID
@@ -46,6 +47,5 @@ public class ComponentXmlMapper {
             }
     )
     Set<RuleXmlMapper> identifyingRules;
-
 
 }

@@ -1,12 +1,10 @@
 package com.buschmais.sarf.framework.configuration;
 
-import com.buschmais.sarf.framework.Materializable;
-import com.buschmais.sarf.framework.SARFDescriptor;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
-import com.buschmais.sarf.plugin.api.RuleBasedCriterionDescriptor;
-import com.buschmais.sarf.plugin.api.RuleXmlMapper;
+import com.buschmais.sarf.plugin.api.*;
+import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.xo.api.XOManager;
-import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +12,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.el.MethodNotFoundException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Stephan Pirnbaum
@@ -42,14 +40,47 @@ public class ClassificationConfigurationMaterializer {
         this.xoManager.currentTransaction().begin();
         ClassificationConfigurationDescriptor classificationConfigurationDescriptor =
             this.xoManager.create(ClassificationConfigurationDescriptor.class);
+        // materialize all simple fields
         for (Field f : mapper.getClass().getDeclaredFields()) {
-
+            f.setAccessible(true);
+            if (!f.getName().equals("definedComponents")) {
+                char[] setterName = ("set" + f.getName()).toCharArray();
+                setterName[2] = Character.toUpperCase(setterName[2]);
+                try {
+                    Method setter = classificationConfigurationDescriptor.getClass().getMethod(new String(setterName), f.getType());
+                    setter.setAccessible(true);
+                    setter.invoke(classificationConfigurationDescriptor, f.get(mapper));
+                    setter.setAccessible(false);
+                } catch (NoSuchMethodException e) {
+                    throw new MethodNotFoundException(classificationConfigurationDescriptor.getClass().getName() +
+                        "has no setter for field " + f.getName() + "(" + new String(setterName) + "(" + f.getType().getName() + "))");
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }
+            f.setAccessible(false);
         }
+        // materialize components
+        Set<ComponentDescriptor> componentDescriptors = mapper.getDefinedComponents().stream()
+            .map(m -> (ComponentDescriptor) genericMaterialize(m))
+            .collect(Collectors.toSet());
+        classificationConfigurationDescriptor.getDefinedComponents().addAll(componentDescriptors);
+        // create criteria for all rules
+        Map<Class<? extends RuleBasedCriterionDescriptor>, Set<RuleDescriptor>> aggregatedRules = new HashMap<>();
+        for (RuleDescriptor ruleDescriptor : flattenRules(componentDescriptors)) {
+            ContainedIn containedIn = ruleDescriptor.getClass().getAnnotation(ContainedIn.class);
+            aggregatedRules.putIfAbsent(containedIn.value(), new HashSet<>());
+            aggregatedRules.get(containedIn.value()).add(ruleDescriptor);
+        }
+        aggregatedRules.forEach((k, v) -> {
+            RuleBasedCriterionDescriptor<RuleDescriptor> classificationCriterion = this.xoManager.create(k);
+            classificationCriterion.getRules().addAll(v);
+        });
         this.xoManager.currentTransaction().commit();
         return classificationConfigurationDescriptor;
     }
 
-    private void genericMaterialize(ClassificationConfigurationXmlMapper mapper) {
+    private SARFDescriptor genericMaterialize(XmlMapper mapper) {
         if (mapper.getClass().isAnnotationPresent(Materializable.class)) {
             Class<? extends SARFDescriptor> descriptorClass = mapper.getClass().getAnnotation(Materializable.class).value();
             SARFDescriptor descriptor = this.xoManager.create(descriptorClass);
@@ -82,9 +113,10 @@ public class ClassificationConfigurationMaterializer {
                             getter.setAccessible(true);
                             f.setAccessible(true);
                             @SuppressWarnings("unchecked")
-                            Collection<? extends SARFDescriptor> items = (Collection<? extends SARFDescriptor>) getter.invoke(descriptor);
-                            items.stream().map(d -> )
-                            items.addAll(((Collection) f.get(mapper)).stream;);
+                            Collection<? extends XmlMapper> items = (Collection<? extends XmlMapper>) f.get(mapper);
+                            @SuppressWarnings("unchecked")
+                            Collection<SARFDescriptor> col = (Collection<SARFDescriptor>) getter.invoke(descriptor);
+                            items.forEach(i -> col.add(genericMaterialize(i)));
                             f.setAccessible(false);
                             getter.setAccessible(false);
                         } catch (NoSuchMethodException e) {
@@ -95,42 +127,38 @@ public class ClassificationConfigurationMaterializer {
                             e.printStackTrace();
                         }
                     } else {
-
+                        char[] setterName = ("set" + f.getName()).toCharArray();
+                        setterName[2] = Character.toUpperCase(setterName[2]);
+                        try {
+                            Method setter = descriptorClass.getDeclaredMethod(new String(setterName));
+                            setter.setAccessible(true);
+                            f.setAccessible(true);
+                            XmlMapper childMapper = (XmlMapper) f.get(mapper);
+                            setter.invoke(descriptor, genericMaterialize(childMapper));
+                            f.setAccessible(false);
+                            setter.setAccessible(false);
+                        } catch (NoSuchMethodException e) {
+                            throw new MethodNotFoundException(descriptorClass.getName() + "has no setter for field " + f.getName() +
+                                "(" + new String(setterName) + "(" + f.getType().getName() + "))");
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            e.printStackTrace();
+                        } catch (ClassCastException e) {
+                            throw new ClassCastException(f.getName() + " does not implement interface " + XmlMapper.class);
+                        }
                     }
                 }
             }
-
+            return descriptor;
         } else {
             throw new NotMaterializableException(mapper.getClass().getName() + "is not materializable");
         }
     }
 
-    public void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
-        Set<RuleXmlMapper> rules = flatten(this.model);
-        Map<Class<? extends RuleBasedCriterionDescriptor>, RuleBasedCriterionDescriptor> criteriaMapping = new HashMap<>();
-        for (RuleXmlMapper<?> r : rules) {
-            Materializable materializable = r.getClass().getAnnotation(Materializable.class);
-            try {
-                criteriaMapping.merge(r.getAssociateCriterion(), r.getAssociateCriterion().newInstance().addRule(r), (c1, c2) -> {
-                    c1.addRule(r);
-                    return c1;
-                });
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        this.classificationCriteria = Sets.newTreeSet(criteriaMapping.values());
-    }
-
-    private Set<RuleXmlMapper> flatten(Set<ComponentDescriptor> components) {
-        Set<RuleXmlMapper> rules = new TreeSet<>();
+    private Set<RuleDescriptor> flattenRules(Set<ComponentDescriptor> components) {
+        Set<RuleDescriptor> rules = new TreeSet<>();
         for (ComponentDescriptor component : components) {
-            if (component.getIdentifyingRules() != null) {
-                rules.addAll(component.getIdentifyingRules());
-            }
-            if (component.getContainedComponents() != null) {
-                rules.addAll(flatten(component.getContainedComponents()));
-            }
+            rules.addAll(component.getIdentifyingRules());
+            rules.addAll(flattenRules(component.getContainedComponents()));
         }
         return rules;
     }

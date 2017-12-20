@@ -3,14 +3,14 @@ package com.buschmais.sarf.framework.configuration;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.SARFRunner;
-import com.buschmais.sarf.framework.Executor;
-import com.buschmais.sarf.framework.ExecutorService;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
-import com.buschmais.sarf.plugin.api.ClassificationCriterionDescriptor;
-import com.buschmais.sarf.plugin.api.ClassificationCriterionExecutor;
-import com.buschmais.sarf.plugin.api.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.ExecutedBy;
+import com.buschmais.sarf.plugin.api.Executor;
+import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionExecutor;
+import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionExecutor;
 import com.buschmais.xo.api.CompositeObject;
@@ -21,7 +21,6 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -56,32 +55,27 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     }
 
     @Override
-    public Collection<ComponentDescriptor> execute(ClassificationConfigurationDescriptor descriptor) {
+    public Set<ComponentDescriptor> execute(ClassificationConfigurationDescriptor executableDescriptor) {
         LOG.info("Executing Classification");
-        final int iteration = descriptor.getIteration();
-        Collection<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
+        final int iteration = executableDescriptor.getIteration();
+        Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
             int res = 0;
             if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
                 res = c1.getName().compareTo(c2.getName());
             }
             return res;
         });
-        CohesionCriterionDescriptor cohesionCriterionDescriptor  = null;
-        for (ClassificationCriterionDescriptor cC : descriptor.getClassificationCriteria()) {
-            if (cC instanceof RuleBasedCriterionDescriptor ) {
-                ExecutorService executorService = cC.getClass().getAnnotation(ExecutorService.class);
-                try {
-                    Class<? extends Executor> executorClass = executorService.value();
-                    if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
-                        @SuppressWarnings("unchecked")
-                        ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
-                            this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
-                        this.xoManager.currentTransaction().begin();
-                        components.addAll(executor.execute(cC));
-                        this.xoManager.currentTransaction().begin();
-                    }
-                } catch (BeansException e) {
-                    LOG.error("No executor found for: " + cC.getClass().getName(), e);
+        CohesionCriterionDescriptor cohesionCriterionDescriptor = null;
+        for (ClassificationCriterionDescriptor cC : executableDescriptor.getClassificationCriteria()) {
+            if (cC instanceof RuleBasedCriterionDescriptor) {
+                Class<? extends Executor> executorClass = cC.getClass().getAnnotation(ExecutedBy.class).value();
+                if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
+                    @SuppressWarnings("unchecked")
+                    ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
+                        this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
+                    this.xoManager.currentTransaction().begin();
+                    components.addAll(executor.execute(cC));
+                    this.xoManager.currentTransaction().begin();
                 }
             } else {
                 cohesionCriterionDescriptor = (CohesionCriterionDescriptor) cC;
@@ -89,22 +83,32 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
 
         removeAmbiguities(components, iteration);
+
         //combine(components);
-        Collection<ComponentDescriptor> cohesionResult = null;
-        if (cohesionCriterionDescriptor != null) {
+        Set<ComponentDescriptor> cohesionResult = null;
+        if (cohesionCriterionDescriptor != null)
+
+        {
             CohesionCriterionExecutor cohesionCriterionExecutor = this.beanFactory.getBean(CohesionCriterionExecutor.class);
             cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
             // match with manual classification
             components = cohesionResult;
-        } else {
+        } else
+
+        {
             components = createIntersectingComponents(components);
         }
         //finalize(components);
 
-        DatabaseHelper.xoManager.currentTransaction().begin();
+        DatabaseHelper.xoManager.currentTransaction().
+
+            begin();
         LOG.info("Pretty Printing the Result");
+
         exportResults(components);
-        DatabaseHelper.xoManager.currentTransaction().commit();
+        DatabaseHelper.xoManager.currentTransaction().
+
+            commit();
         return components;
     }
 
@@ -167,7 +171,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                 for (Long typeId : inverse.get(componentIds)) {
                     componentDescriptor.getContainedTypes().add(this.xoManager.findById(TypeDescriptor.class, typeId));
                 }
-            } else if (componentIds.size() == 1){
+            } else if (componentIds.size() == 1) {
                 Long id = componentIds.iterator().next();
                 ComponentDescriptor singleComponent = this.xoManager.findById(ComponentDescriptor.class, id);
                 ids.add(id);
@@ -183,7 +187,6 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     }
 
     /**
-     *
      * @param components
      * @return Mapping from component id (ranges from 0 to the number of identified components) to type ids (actual ids from the graph database)
      */
@@ -281,10 +284,10 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
     }
 
-    public static void prettyPrint(Collection<ComponentDescriptor> components, String indentation , StringBuilder builder) throws IOException {
+    public static void prettyPrint(Collection<ComponentDescriptor> components, String indentation, StringBuilder builder) throws IOException {
         for (ComponentDescriptor component : components) {
             builder.append(indentation + " " + component.getName() + " " + Arrays.toString(component.getTopWords()) + "\n");
-            Query.Result<Query.Result.CompositeRowObject > res = DatabaseHelper.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + DatabaseHelper.xoManager.getId(component) + " " +
+            Query.Result<Query.Result.CompositeRowObject> res = DatabaseHelper.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + DatabaseHelper.xoManager.getId(component) + " " +
                 "OPTIONAL MATCH (c)-[:CONTAINS]->(e) RETURN e").execute(); // TODO: 05.07.2017 Improve !!!
             Set<ComponentDescriptor> componentDescriptors = new HashSet<>();
             for (Query.Result.CompositeRowObject r : res) {
@@ -305,7 +308,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
     }
 
-    public String formatEntry (Map m) {
+    public String formatEntry(Map m) {
         StringBuilder formatted = new StringBuilder();
         formatted.append("\t{\n");
         formatted.append("\t\t\"entry\" : [\n");

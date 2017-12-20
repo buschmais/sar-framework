@@ -1,4 +1,4 @@
-package com.buschmais.sarf.plugin.api;
+package com.buschmais.sarf.plugin.api.criterion;
 
 import com.buschmais.xo.neo4j.api.annotation.Relation;
 

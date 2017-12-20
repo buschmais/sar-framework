@@ -1,17 +1,12 @@
 package com.buschmais.sarf.plugin.dependency;
 
-import com.buschmais.jqassistant.core.store.api.model.FullQualifiedNameDescriptor;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.plugin.api.RuleExecutor;
-import com.buschmais.xo.api.Query;
+import com.buschmais.sarf.plugin.api.criterion.RuleExecutor;
+import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
-import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * @author Stephan Pirnbaum
@@ -26,18 +21,8 @@ public class DependencyRuleExecutor<R extends DependencyRuleDescriptor> extends 
     }
 
     @Override
-    public Set<TypeDescriptor> getMatchingTypes(R rule) {
-        Set<TypeDescriptor> types = new TreeSet<>(Comparator.comparing(FullQualifiedNameDescriptor::getFullQualifiedName));
+    protected Result<TypeDescriptor> getMatchingTypes(R executableDescriptor) {
         DependencyRepository repository = this.xoManager.getRepository(DependencyRepository.class);
-        Query.Result<TypeDescriptor> result = getMatchingTypes(repository, rule);
-        for (TypeDescriptor t : result) {
-            types.add(t);
-            // FIXME: 07.07.2017 Cannot create an instance of a single abstract type [interface com.buschmais.xo.api.CompositeObject] types.addAll(t.getDeclaredInnerClasses());
-        }
-        return types;
-    }
-
-    Query.Result<TypeDescriptor> getMatchingTypes(DependencyRepository repository, R rule) {
-        return repository.getAllInternalTypesDependingOn(rule.getRule());
+        return repository.getAllInternalTypesDependingOn(executableDescriptor.getRule());
     }
 }

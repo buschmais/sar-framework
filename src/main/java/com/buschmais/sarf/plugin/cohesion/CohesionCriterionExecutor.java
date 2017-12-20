@@ -6,7 +6,7 @@ import com.buschmais.sarf.framework.configuration.ClassificationConfigurationRep
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
-import com.buschmais.sarf.plugin.api.ClassificationCriterionExecutor;
+import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionExecutor;
 import com.buschmais.sarf.plugin.cohesion.evolution.Partitioner;
 import com.buschmais.sarf.plugin.cohesion.evolution.Problem;
 import com.buschmais.xo.api.Query;
@@ -26,7 +26,7 @@ import java.util.*;
  */
 @Service
 @Lazy
-public class CohesionCriterionExecutor extends ClassificationCriterionExecutor<CohesionCriterionDescriptor> {
+public final class CohesionCriterionExecutor implements ClassificationCriterionExecutor<CohesionCriterionDescriptor> {
 
     private static final Logger LOG = LogManager.getLogger(CohesionCriterionExecutor.class);
 
@@ -38,7 +38,7 @@ public class CohesionCriterionExecutor extends ClassificationCriterionExecutor<C
     }
 
     @Override
-    public Collection<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor) {
+    public Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
         this.xOManager.currentTransaction().begin();
