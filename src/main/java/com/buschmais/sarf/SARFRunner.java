@@ -1,13 +1,11 @@
 package com.buschmais.sarf;
 
-import com.buschmais.sarf.framework.ClassificationRunner;
 import com.buschmais.xo.api.XOManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
@@ -17,10 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Lazy;
 
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * Created by steph on 04.05.2017.
@@ -43,7 +38,7 @@ public class SARFRunner extends Application{
     public static void main(String[] args) throws URISyntaxException {
         if (args.length == 0) {
             launch(SARFRunner.class, args);
-        } else {
+        } else {/*
             Options options = new Options();
             Option store = new Option("s", "store", true, "Neo4J Graph Store Path");
             store.setRequired(true);
@@ -80,7 +75,7 @@ public class SARFRunner extends Application{
             } catch (MalformedURLException e) {
                 LOG.error("Configuration file not found");
                 System.exit(1);
-            }
+            }*/
         }
     }
 

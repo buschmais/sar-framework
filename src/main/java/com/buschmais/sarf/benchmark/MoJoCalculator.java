@@ -1,7 +1,6 @@
 package com.buschmais.sarf.benchmark;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.DatabaseHelper;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 
 import java.io.BufferedReader;
@@ -22,7 +21,7 @@ public class MoJoCalculator {
     }
 
     public MoJoCalculator(Map<Long, Set<Long>> decomposition, boolean isFrom) {
-        StringBuilder builder1 = new StringBuilder();
+        /*StringBuilder builder1 = new StringBuilder();
         for (Map.Entry<Long, Set<Long>> dec : decomposition.entrySet()) {
             for (Long id : dec.getValue()) {
                 TypeDescriptor typeDescriptor = DatabaseHelper.xoManager.findById(TypeDescriptor.class, id);
@@ -41,7 +40,7 @@ public class MoJoCalculator {
         } else {
             this.br_s = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder2.toString().getBytes())));
             this.br_t = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(builder1.toString().getBytes())));
-        }
+        }*/
     }
 
     public MoJoCalculator(Set<ComponentDescriptor> from, Set<ComponentDescriptor> to) {
@@ -187,7 +186,7 @@ public class MoJoCalculator {
     }
 
     private void maxbipartiteMatching() {
-        
+
         /* Create the graph and add all the edges */
         BipartiteGraph bgraph = new BipartiteGraph(l + m, l, m);
 
@@ -201,7 +200,7 @@ public class MoJoCalculator {
 
         /* Use maximum bipartite matching to calculate the groups */
         bgraph.matching();
-        
+
         /*
          * Assign group after matching, for each Ai in matching, assign the
          * corresponding group, for other cluster in A, just leave them alone
