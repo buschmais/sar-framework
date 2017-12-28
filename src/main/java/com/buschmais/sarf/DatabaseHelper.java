@@ -12,6 +12,7 @@ import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.api.ClassificationInfoDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
+import com.buschmais.sarf.plugin.chorddiagram.DiagramRepository;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.dependency.*;
 import com.buschmais.sarf.plugin.packagenaming.PackageNamingCriterionDescriptor;
@@ -76,6 +77,7 @@ public class DatabaseHelper {
             .type(AnnotatedByRuleDescriptor.class)
             .type(ExtendsRuleDescriptor.class)
             .type(ImplementsRuleDescriptor.class)
+            .type(DiagramRepository.class)
             .uri(storeUri)
             .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);

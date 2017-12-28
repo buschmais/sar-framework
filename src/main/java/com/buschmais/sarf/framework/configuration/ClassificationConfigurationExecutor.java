@@ -10,6 +10,7 @@ import com.buschmais.sarf.plugin.api.Executor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionExecutor;
 import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.plugin.chorddiagram.ChordDiagramExporter;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionExecutor;
 import com.buschmais.xo.api.CompositeObject;
@@ -46,11 +47,13 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
 
     private XOManager xoManager;
     private BeanFactory beanFactory;
+    private ChordDiagramExporter chordDiagramExporter;
 
     @Autowired
-    public ClassificationConfigurationExecutor(XOManager xoManager, BeanFactory beanFactory) {
+    public ClassificationConfigurationExecutor(XOManager xoManager, BeanFactory beanFactory, ChordDiagramExporter chordDiagramExporter) {
         this.xoManager = xoManager;
         this.beanFactory = beanFactory;
+        this.chordDiagramExporter = chordDiagramExporter;
     }
 
     @Override
@@ -236,12 +239,12 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         return inverse;
     }
 
-    public void exportResults(Collection<ComponentDescriptor> components) {
+    public void exportResults(Set<ComponentDescriptor> components) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream("Result_" + System.currentTimeMillis() + ".zip");
             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
             // add resource files
-            List<String> resources = Arrays.asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js");
+            List<String> resources = Arrays.asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js", "chord-diagram.html", "chord-jsonMapper.js", "chord-jsonScript.js", "chord-style.css");
             for (String resource : resources) {
                 ZipEntry entry = new ZipEntry(resource);
                 InputStream in = SARFRunner.class.getClassLoader().getResourceAsStream(resource);
@@ -273,9 +276,12 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             zipOutputStream.write(entries.getBytes());
             zipOutputStream.write(("\n]").getBytes());
             zipOutputStream.write(formatted.toString().getBytes());
+            // write chord
+            entry = new ZipEntry("chord-data.json");
+            zipOutputStream.putNextEntry(entry);
+            zipOutputStream.write(this.chordDiagramExporter.export(components).getBytes());
             zipOutputStream.close();
             fileOutputStream.close();
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -324,13 +330,11 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             formatted.append("\t\t\tnull\n");
         } else if (m.get("c1") instanceof ComponentDescriptor) {
             c = (ComponentDescriptor) m.get("c1");
-            formatted.append("\t\t\t{\n");
-            formatted.append("\t\t\t\t\"shape\": \"" + c.getShape() + "\",\n");
-            formatted.append("\t\t\t\t\"name\": \"" + c.getName() + "\",\n");
-            formatted.append("\t\t\t\t\"topWords\": [" +
-                Arrays.stream(c.getTopWords()).map(s -> "\"" + s + "\"").reduce((s1, s2) -> s1 + ", " + s2).get() + "]\n"
-            );
-            formatted.append("\t\t\t}\n");
+            formatted.append("\t\t\t{\n")
+                .append("\t\t\t\t\"shape\": \"").append(c.getShape()).append("\",\n")
+                .append("\t\t\t\t\"name\": \"").append(c.getName()).append("\",\n")
+                .append("\t\t\t\t\"topWords\": [").append(Arrays.stream(c.getTopWords()).map(s -> "\"" + s + "\"").reduce((s1, s2) -> s1 + ", " + s2).get()).append("]\n")
+                .append("\t\t\t}\n");
         } else {
             TypeDescriptor t = (TypeDescriptor) m.get("c1");
             formatted.append("\t\t\t{\n");
