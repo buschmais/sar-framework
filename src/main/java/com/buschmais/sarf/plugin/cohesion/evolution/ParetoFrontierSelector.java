@@ -1,6 +1,6 @@
 package com.buschmais.sarf.plugin.cohesion.evolution;
 
-import org.jenetics.*;
+import io.jenetics.*;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -6,9 +6,9 @@ import com.buschmais.sarf.plugin.cohesion.evolution.similarity.LongObjectiveSimi
 import com.buschmais.sarf.plugin.cohesion.evolution.similarity.SimilarityDrivenMutator;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-import org.jenetics.*;
-import org.jenetics.engine.Engine;
-import org.jenetics.engine.EvolutionResult;
+import io.jenetics.*;
+import io.jenetics.engine.Engine;
+import io.jenetics.engine.EvolutionResult;
 
 import java.util.*;
 import java.util.concurrent.Executors;

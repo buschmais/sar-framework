@@ -3,9 +3,9 @@ package com.buschmais.sarf.plugin.cohesion.evolution;
 import com.buschmais.sarf.benchmark.MoJoCalculator;
 import com.buschmais.sarf.benchmark.ModularizationQualityCalculator;
 import com.google.common.collect.Sets;
-import org.jenetics.LongChromosome;
-import org.jenetics.LongGene;
-import org.jenetics.util.ISeq;
+import io.jenetics.LongChromosome;
+import io.jenetics.LongGene;
+import io.jenetics.util.ISeq;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

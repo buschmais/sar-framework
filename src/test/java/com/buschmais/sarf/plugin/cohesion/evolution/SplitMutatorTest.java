@@ -1,8 +1,8 @@
 package com.buschmais.sarf.plugin.cohesion.evolution;
 
-import org.jenetics.LongChromosome;
-import org.jenetics.LongGene;
-import org.jenetics.util.MSeq;
+import io.jenetics.LongChromosome;
+import io.jenetics.LongGene;
+import io.jenetics.util.MSeq;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -42,6 +42,7 @@
         <com.buschmais.jqassistant_version>1.1.4</com.buschmais.jqassistant_version>
         <com.buschmais.xo_version>0.8.1</com.buschmais.xo_version>
         <org.hibernate-validator_version>5.2.1.Final</org.hibernate-validator_version>
+        <jenetics.version>4.1.0-SNAPSHOT</jenetics.version>
     </properties>
 
     <dependencies>
@@ -100,10 +101,13 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.bitbucket.fwilhelm/org.jenetics -->
         <dependency>
-            <groupId>org.bitbucket.fwilhelm</groupId>
-            <artifactId>org.jenetics</artifactId>
+            <groupId>io.jenetics</groupId>
+            <artifactId>jenetics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jenetics</groupId>
+            <artifactId>jenetics.ext</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
         <dependency>
@@ -185,11 +189,15 @@
                 <artifactId>guava</artifactId>
                 <version>22.0</version>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/org.bitbucket.fwilhelm/org.jenetics -->
             <dependency>
-                <groupId>org.bitbucket.fwilhelm</groupId>
-                <artifactId>org.jenetics</artifactId>
-                <version>3.6.0</version>
+                <groupId>io.jenetics</groupId>
+                <artifactId>jenetics</artifactId>
+                <version>${jenetics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jenetics</groupId>
+                <artifactId>jenetics.ext</artifactId>
+                <version>${jenetics.version}</version>
             </dependency>
             <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
             <dependency>
@@ -232,5 +240,5 @@
         </dependencies>
     </dependencyManagement>
 
-    
+
 </project>

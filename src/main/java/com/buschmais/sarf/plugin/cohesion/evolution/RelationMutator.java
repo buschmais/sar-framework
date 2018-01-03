@@ -2,10 +2,10 @@ package com.buschmais.sarf.plugin.cohesion.evolution;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import org.jenetics.LongGene;
-import org.jenetics.Mutator;
-import org.jenetics.util.MSeq;
-import org.jenetics.util.RandomRegistry;
+import io.jenetics.LongGene;
+import io.jenetics.Mutator;
+import io.jenetics.util.MSeq;
+import io.jenetics.util.RandomRegistry;
 
 import java.util.Objects;
 
