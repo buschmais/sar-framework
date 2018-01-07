@@ -1,16 +1,8 @@
 package com.buschmais.sarf.benchmark;
 
-<<<<<<< HEAD:src/main/java/com/buschmais/sarf/BenchmarkRunner.java
-import com.buschmais.sarf.framework.ClassificationRunner;
-import com.buschmais.sarf.framework.configuration.WeightConstants;
 import io.jenetics.Genotype;
 import io.jenetics.LongGene;
 import io.jenetics.engine.EvolutionResult;
-=======
-import org.jenetics.Genotype;
-import org.jenetics.LongGene;
-import org.jenetics.engine.EvolutionResult;
->>>>>>> 3a7c4ab0a0a477f42b3e7cbfb91ecf271c4317a5:src/main/java/com/buschmais/sarf/benchmark/BenchmarkRunner.java
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
