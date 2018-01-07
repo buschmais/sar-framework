@@ -1,33 +1,41 @@
 package com.buschmais.sarf.plugin.cohesion.evolution;
 
+import com.buschmais.sarf.plugin.cohesion.evolution.coupling.LongObjectiveCouplingChromosome;
+import com.buschmais.sarf.plugin.cohesion.evolution.similarity.LongObjectiveSimilarityChromosome;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import org.jenetics.LongGene;
-import org.jenetics.Mutator;
-import org.jenetics.util.MSeq;
+import io.jenetics.Genotype;
+import io.jenetics.LongGene;
+import io.jenetics.Mutator;
+import io.jenetics.MutatorResult;
+import io.jenetics.ext.moea.Vec;
+import io.jenetics.util.MSeq;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @author Stephan Pirnbaum
  */
-public class SplitMutator extends Mutator<LongGene, Double> {
+public class SplitMutator extends Mutator<LongGene, Vec<double[]>> {
 
     public SplitMutator(double probability) {
         super(probability);
     }
 
     @Override
-    protected int mutate(MSeq<LongGene> genes, double p) {
+    protected MutatorResult<Genotype<LongGene>> mutate(Genotype<LongGene> genotype, double p, Random random) {
         int mutated = 0;
+        LongObjectiveChromosome chromosome = (LongObjectiveChromosome) genotype.getChromosome();
+        MSeq<LongGene> seq = chromosome.toSeq().asMSeq();
         Multimap<Long, Long> componentToTypes = HashMultimap.create();
-        for (int i = 0; i < genes.length(); i++) {
-            componentToTypes.put(genes.get(i).getAllele(), Partitioner.ids[i]);
+        for (int i = 0; i < seq.length(); i++) {
+            componentToTypes.put(seq.get(i).getAllele(), Partitioner.ids[i]);
         }
         List<Long> unusedComponentIds = new ArrayList<>();
-        for (long i = 0; i < genes.get(0).getMax(); i++) {
+        for (long i = 0; i < seq.get(0).getMax(); i++) {
             if (!componentToTypes.keySet().contains(i)) {
                 unusedComponentIds.add(i);
             }
@@ -41,7 +49,7 @@ public class SplitMutator extends Mutator<LongGene, Double> {
                     if (unusedComponentIds.size() == 0) break outer;
                     for (int i = 0; i < Partitioner.ids.length; i++) {
                         if (types.contains(Partitioner.ids[i])) {
-                            genes.set(i, genes.get(i).newInstance(first ? component : unusedComponentIds.get(0)));
+                            seq.set(i, seq.get(i).newInstance(first ? component : unusedComponentIds.get(0)));
                             mutated++;
                         }
                     }
@@ -50,6 +58,10 @@ public class SplitMutator extends Mutator<LongGene, Double> {
                 }
             }
         }
-        return mutated;
+        LongObjectiveChromosome newChromosome =
+            chromosome instanceof LongObjectiveCouplingChromosome ?
+                LongObjectiveCouplingChromosome.of(seq.toArray(new LongGene[seq.length()])) :
+                LongObjectiveSimilarityChromosome.of(seq.toArray(new LongGene[seq.length()]));
+        return MutatorResult.of(Genotype.of(newChromosome), mutated);
     }
 }

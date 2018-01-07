@@ -2,9 +2,9 @@ package com.buschmais.sarf;
 
 import com.buschmais.sarf.framework.ClassificationRunner;
 import com.buschmais.sarf.framework.configuration.WeightConstants;
-import org.jenetics.Genotype;
-import org.jenetics.LongGene;
-import org.jenetics.engine.EvolutionResult;
+import io.jenetics.Genotype;
+import io.jenetics.LongGene;
+import io.jenetics.engine.EvolutionResult;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

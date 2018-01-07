@@ -1,8 +1,10 @@
 package com.buschmais.sarf.plugin.cohesion.evolution;
 
-import org.jenetics.LongChromosome;
-import org.jenetics.LongGene;
-import org.jenetics.util.MSeq;
+import com.buschmais.sarf.plugin.cohesion.evolution.coupling.LongObjectiveCouplingChromosome;
+import io.jenetics.Chromosome;
+import io.jenetics.Genotype;
+import io.jenetics.LongGene;
+import io.jenetics.MutatorResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,12 +17,12 @@ public class SplitMutatorTest {
 
     private SplitMutator splitMutator;
 
-    private LongChromosome chromosome;
+    private LongObjectiveChromosome chromosome;
 
     @Before
     public void setUp() {
         this.splitMutator = new SplitMutator(1);
-        this.chromosome = LongChromosome.of(
+        this.chromosome = LongObjectiveCouplingChromosome.of(
                 LongGene.of(0, 0, 11),
                 LongGene.of(0, 0, 11),
                 LongGene.of(0, 0, 11),
@@ -51,20 +53,21 @@ public class SplitMutatorTest {
 
     @Test
     public void testSplit() {
-        MSeq<LongGene> seq = MSeq.of(this.chromosome.toSeq());
-        this.splitMutator.mutate(seq, 1);
-        assertEquals((long) seq.get(0).getAllele(), 0);
-        assertEquals((long) seq.get(1).getAllele(), 0);
-        assertEquals((long) seq.get(2).getAllele(), 0);
-        assertEquals((long) seq.get(3).getAllele(), 0);
-        assertEquals((long) seq.get(4).getAllele(), 2);
-        assertEquals((long) seq.get(5).getAllele(), 2);
-        assertEquals((long) seq.get(6).getAllele(), 3);
-        assertEquals((long) seq.get(7).getAllele(), 3);
-        assertEquals((long) seq.get(8).getAllele(), 3);
-        assertEquals((long) seq.get(9).getAllele(), 3);
-        assertEquals((long) seq.get(10).getAllele(), 1);
-        assertEquals((long) seq.get(11).getAllele(), 1);
+        Genotype.of(this.chromosome);
+        MutatorResult<Genotype<LongGene>> res = this.splitMutator.mutate(Genotype.of(this.chromosome), 1, null);
+        Chromosome<LongGene> chrom = res.getResult().getChromosome();
+        assertEquals((long) chrom.getGene(0).getAllele(), 0);
+        assertEquals((long) chrom.getGene(1).getAllele(), 0);
+        assertEquals((long) chrom.getGene(2).getAllele(), 0);
+        assertEquals((long) chrom.getGene(3).getAllele(), 0);
+        assertEquals((long) chrom.getGene(4).getAllele(), 2);
+        assertEquals((long) chrom.getGene(5).getAllele(), 2);
+        assertEquals((long) chrom.getGene(6).getAllele(), 3);
+        assertEquals((long) chrom.getGene(7).getAllele(), 3);
+        assertEquals((long) chrom.getGene(8).getAllele(), 3);
+        assertEquals((long) chrom.getGene(9).getAllele(), 3);
+        assertEquals((long) chrom.getGene(10).getAllele(), 1);
+        assertEquals((long) chrom.getGene(11).getAllele(), 1);
 
 
     }

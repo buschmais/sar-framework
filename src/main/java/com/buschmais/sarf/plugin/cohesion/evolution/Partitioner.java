@@ -6,21 +6,21 @@ import com.buschmais.sarf.plugin.cohesion.evolution.similarity.LongObjectiveSimi
 import com.buschmais.sarf.plugin.cohesion.evolution.similarity.SimilarityDrivenMutator;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
-import org.jenetics.*;
-import org.jenetics.engine.Engine;
-import org.jenetics.engine.EvolutionResult;
+import io.jenetics.*;
+import io.jenetics.engine.Engine;
+import io.jenetics.engine.EvolutionResult;
+import io.jenetics.ext.moea.MOEA;
+import io.jenetics.ext.moea.NSGA2Selector;
+import io.jenetics.ext.moea.Vec;
+import io.jenetics.util.ISeq;
 
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 /**
  * @author Stephan Pirnbaum
  */
 public class Partitioner {
-
-    static Genotype<LongGene> best;
-    static Double bestFitness;
 
     static long[] ids;
 
@@ -28,19 +28,23 @@ public class Partitioner {
 
     static long lastGeneration = 0;
 
-    private static long bestGeneration;
-
     public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations, int populationSize, boolean similarityBased) {
-        Partitioner.best = null;
-        Partitioner.bestFitness = Double.MIN_VALUE;
         Partitioner.ids = ids;
         Partitioner.generations = generations;
         Genotype<LongGene> genotype = createGenotype(initialPartitioning, similarityBased);
-        final Engine<LongGene, Double> engine = Engine
-                .builder(Partitioner::computeFitnessValue, genotype)
-                .offspringFraction(0.5)
-                .survivorsSelector(new ParetoFrontierSelector())
-                .offspringSelector(new ParetoFrontierSelector())
+        final Engine<LongGene, Vec<double[]>> engine = Engine
+                .builder(i -> {
+                    LongObjectiveChromosome chromosome = (LongObjectiveChromosome) i.getChromosome();
+                    return Vec.of(
+                        chromosome.getCohesionObjective(),
+                        chromosome.getCouplingObjective(),
+                        chromosome.getCohesiveComponentObjective(),
+                        chromosome.getComponentRangeObjective(),
+                        chromosome.getComponentSizeObjective()
+                    );
+                }, genotype)
+                .survivorsSelector(NSGA2Selector.vec())
+                .offspringSelector(new TournamentSelector<>(3))
                 .populationSize(populationSize)
                 .alterers(
                         new SinglePointCrossover<>(1),
@@ -50,18 +54,21 @@ public class Partitioner {
                                 new CouplingDrivenMutator(1),
                         new SplitMutator(1))
                 .executor(Executors.newCachedThreadPool())
+                .maximizing()
                 .build();
         List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
-        List<EvolutionResult> r = engine
+        ISeq<Phenotype<LongGene, Vec<double[]>>> r = engine
                 .stream(genotypes)
-                //.limit(limit.byFitnessThreshold(1d))
                 .limit(generations)
                 .peek(Partitioner::update)
-                .collect(Collectors.toList());
+                .collect(MOEA.toParetoSet());
+        Phenotype<LongGene, Vec<double[]>> best = r.stream()
+            .max(Comparator.comparingDouble(p -> sumFitness(p.getFitness()))).orElse(null);
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
-        for (int i = 0; i < best.getChromosome().length(); i++) {
+        assert best != null;
+        for (int i = 0; i < best.getGenotype().getChromosome().length(); i++) {
             identifiedComponents.merge(
-                    best.getChromosome().getGene(i).getAllele(),
+                    best.getGenotype().getChromosome().getGene(i).getAllele(),
                     Sets.newHashSet(ids[i]),
                     (s1, s2) -> {
                         s1.addAll(s2);
@@ -95,26 +102,13 @@ public class Partitioner {
         return Genotype.of(chromosome);
     }
 
-    static Double computeFitnessValue(final Genotype<LongGene> prospect) {
-        LongObjectiveChromosome chromosome = (LongObjectiveChromosome) prospect.getChromosome();
-        Double res = chromosome.getCohesionObjective() + chromosome.getCouplingObjective() + chromosome.getComponentSizeObjective() + chromosome.getComponentRangeObjective() + chromosome.getCohesiveComponentObjective();
-        return res;
-    }
-
-    private static void update(final EvolutionResult<LongGene, Double> result) {
+    private static void update(final EvolutionResult<LongGene, Vec<double[]>> result) {
         int percentage = (int) (1.0 * result.getGeneration() / generations * 100);
         int left = 100 - percentage;
-        if (best == null || result.getBestFitness() > bestFitness) {
-            bestFitness = result.getBestFitness();
-            bestGeneration = result.getGeneration();
-            best = result.getBestPhenotype().getGenotype();
-        }
-        lastGeneration = result.getGeneration();
-        Long components = best.getChromosome().stream().mapToLong(l -> l.getAllele()).distinct().count();
         System.out.print("\rProgress: " + Strings.repeat("=", percentage) + Strings.repeat(" ", left) + "| ");
-        System.out.print("Best Genotype at Generation: " + bestGeneration + " with Fitness: " + bestFitness + " with Components: " + components);
-        if (result.getGeneration() == generations) {
-            System.out.println("");
-        }
+    }
+
+    private static double sumFitness(Vec<double[]> vec) {
+        return vec.data()[0] + vec.data()[1] + vec.data()[2] + vec.data()[3] + vec.data()[4];
     }
 }

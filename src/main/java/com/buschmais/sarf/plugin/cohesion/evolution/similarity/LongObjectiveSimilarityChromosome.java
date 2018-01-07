@@ -2,9 +2,9 @@ package com.buschmais.sarf.plugin.cohesion.evolution.similarity;
 
 import com.buschmais.sarf.plugin.cohesion.evolution.LongObjectiveChromosome;
 import com.buschmais.sarf.plugin.cohesion.evolution.Problem;
-import org.jenetics.LongGene;
-import org.jenetics.util.ISeq;
-import org.jenetics.util.LongRange;
+import io.jenetics.LongGene;
+import io.jenetics.util.ISeq;
+import io.jenetics.util.LongRange;
 
 import java.util.Collection;
 
