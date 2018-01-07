@@ -3,6 +3,8 @@ package com.buschmais.sarf.framework.ui;
 import com.buschmais.sarf.framework.ClassificationRunner;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 
 /**
@@ -50,6 +52,10 @@ public class ConfigurationDialogController extends AbstractController {
     @FXML
     private TextField populationSize;
 
+    @Autowired
+    @Lazy
+    ClassificationRunner classificationRunner;
+
     @FXML
     public void initialize() {
         this.iteration.getItems().add(1);
@@ -78,13 +84,13 @@ public class ConfigurationDialogController extends AbstractController {
 
     private void execute() {
         this.execute.setDisable(true);
-        ClassificationRunner runner = ClassificationRunner.getInstance();
         try {
-            runner.startNewIteration(
+            this.classificationRunner.startNewIteration(
                     iteration.getValue(), this.artifact.getText(), this.basePackage.getText(), this.typeName.getText(),
                     Integer.valueOf(this.generations.getText()), Integer.valueOf(this.populationSize.getText()), this.decomposition.getValue().equals("Hierarchical"), this.strategy.getValue().equals("Similarity")
             );
         } catch (Exception e) {
+            e.printStackTrace();
             showExceptionDialog("Execution Error", "An error occured during decomposing the system!", "", e);
         }
         this.execute.setDisable(false);

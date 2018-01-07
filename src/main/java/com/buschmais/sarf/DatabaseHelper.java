@@ -10,8 +10,9 @@ import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.MetricRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.api.ClassificationInfoDescriptor;
-import com.buschmais.sarf.plugin.api.RuleBasedCriterionDescriptor;
-import com.buschmais.sarf.plugin.api.RuleDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
+import com.buschmais.sarf.plugin.chorddiagram.DiagramRepository;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.dependency.*;
 import com.buschmais.sarf.plugin.packagenaming.PackageNamingCriterionDescriptor;
@@ -42,8 +43,6 @@ public class DatabaseHelper {
 
     private static final Logger LOG = LogManager.getLogger(DatabaseHelper.class);
 
-    public static XOManager xoManager = null;
-
     @Bean
     @Lazy
     public XOManager xOManager(URI storeUri) {
@@ -66,7 +65,7 @@ public class DatabaseHelper {
             .type(ClassificationConfigurationRepository.class)
             .type(TypeNamingCriterionDescriptor.class)
             .type(DependencyCriterionDescriptor.class)
-            .type(DependencyDescriptor.class)
+            .type(DependencyRuleDescriptor.class)
             .type(MetricRepository.class)
             .type(RuleBasedCriterionDescriptor.class)
             .type(RuleDescriptor.class)
@@ -75,15 +74,15 @@ public class DatabaseHelper {
             .type(TypeNamingRepository.class)
             .type(PackageNamingRepository.class)
             .type(DependencyRepository.class)
-            .type(AnnotatedByDescriptor.class)
-            .type(ExtendsDescriptor.class)
-            .type(ImplementsDescriptor.class)
+            .type(AnnotatedByRuleDescriptor.class)
+            .type(ExtendsRuleDescriptor.class)
+            .type(ImplementsRuleDescriptor.class)
+            .type(DiagramRepository.class)
             .uri(storeUri)
             .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
         LOG.info("Setting up Database Successful");
-        DatabaseHelper.xoManager = factory.createXOManager();
-        return DatabaseHelper.xoManager;
+        return factory.createXOManager();
     }
 
 }
