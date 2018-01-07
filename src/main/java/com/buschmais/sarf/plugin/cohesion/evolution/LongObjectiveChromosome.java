@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import io.jenetics.LongChromosome;
 import io.jenetics.LongGene;
 import io.jenetics.util.ISeq;
+import io.jenetics.util.IntRange;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -31,7 +32,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     private Double cohesiveComponentObjective = 0d;
 
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
-        super(genes);
+        super(genes, IntRange.of(genes.length()));
     }
 
     public LongObjectiveChromosome(Long min, Long max, int length) {
