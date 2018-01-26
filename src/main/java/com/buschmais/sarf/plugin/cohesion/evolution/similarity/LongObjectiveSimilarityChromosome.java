@@ -38,6 +38,7 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
 
     @Override
     protected Double normalizeCoupling(Double coupling, int components) {
+        if (components == 1) return coupling;
         return 2 * coupling / (components * (components - 1));
     }
 
