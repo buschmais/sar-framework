@@ -48,12 +48,12 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < this.length(); i++) {
             identifiedComponents.merge(
-                    this.getGene(i).getAllele(),
-                    Sets.newHashSet(Partitioner.ids[i]),
-                    (s1, s2) -> {
-                        s1.addAll(s2);
-                        return s1;
-                    });
+                this.getGene(i).getAllele(),
+                Sets.newHashSet(Partitioner.ids[i]),
+                (s1, s2) -> {
+                    s1.addAll(s2);
+                    return s1;
+                });
         }
         int uncohesiveComponents = 0;
         int subComponents = 0;
@@ -77,7 +77,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         this.cohesionObjective /= identifiedComponents.size();
         // minimize the difference between min and max component size
         this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
-                identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / (Partitioner.ids.length - 1);
+            identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / (Partitioner.ids.length - 1);
         // punish one-type only components
         //punish un-cohesive components
         this.cohesiveComponentObjective = uncohesiveComponents == 0 ? 1 : (totalSubComponents > identifiedComponents.size() ? 0 : (1 - ((double) totalSubComponents) / identifiedComponents.size()));
@@ -183,7 +183,7 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         Long mojoPlusRefComp = moJoPlusCalculator2.mojoplus();
         Long mojoPlus = Math.min(mojoPlusCompRef, mojoPlusRefComp);
         Double fitness = this.cohesionObjective + this.couplingObjective + this.componentRangeObjective
-                + this.componentSizeObjective + this.cohesiveComponentObjective;
+            + this.componentSizeObjective + this.cohesiveComponentObjective;
         Double mQ = ModularizationQualityCalculator.computeMQ(identifiedComponents);
         try (FileWriter fw = new FileWriter("benchmark.csv", true);
              BufferedWriter bw = new BufferedWriter(fw);

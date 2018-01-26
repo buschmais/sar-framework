@@ -105,7 +105,7 @@ public class Partitioner {
     private static void update(final EvolutionResult<LongGene, Vec<double[]>> result) {
         int percentage = (int) (1.0 * result.getGeneration() / generations * 100);
         int left = 100 - percentage;
-        System.out.print("\rProgress: " + Strings.repeat("=", percentage) + Strings.repeat(" ", left) + "| ");
+        System.out.print("\rProgress: " + Strings.repeat("=", percentage) + Strings.repeat(" ", left) + "| " + result.getPopulation().size());
     }
 
     private static double sumFitness(Vec<double[]> vec) {
