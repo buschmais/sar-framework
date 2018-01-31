@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
-<BorderPane fx:id="pane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.framework.ui.RootController">
+<BorderPane fx:id="pane" maxHeight="-Infinity" maxWidth="430.0" minHeight="-Infinity" minWidth="430.0" prefHeight="400.0" prefWidth="430.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.framework.ui.RootController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
@@ -26,11 +27,14 @@
         </MenuBar>
     </top>
    <center>
-      <VBox fillWidth="false" prefHeight="379.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+      <VBox fillWidth="false" prefHeight="382.0" prefWidth="600.0" BorderPane.alignment="TOP_CENTER">
          <children>
             <fx:include source="database_connection.fxml" />
             <fx:include source="configuration_dialog.fxml" />
          </children>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
       </VBox>
    </center>
 </BorderPane>
