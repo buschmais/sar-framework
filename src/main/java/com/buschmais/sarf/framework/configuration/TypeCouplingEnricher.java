@@ -23,26 +23,33 @@ public class TypeCouplingEnricher {
     private XOManager xoManager;
     private TypeSimilarityEnricher typeSimilarityEnricher;
 
+    private MetricRepository mR;
+    private TypeRepository tR;
+
     @Autowired
     public TypeCouplingEnricher(XOManager xoManager, TypeSimilarityEnricher typeSimilarityEnricher){
         this.xoManager = xoManager;
         this.typeSimilarityEnricher = typeSimilarityEnricher;
+        this.mR = this.xoManager.getRepository(MetricRepository.class);
+        this.tR = this.xoManager.getRepository(TypeRepository.class);
     }
 
     public void enrich() {
         LOG.info("Computing Coupling between Types");
         this.xoManager.currentTransaction().begin();
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
-        try (Result<TypeDescriptor> descriptors = this.xoManager.getRepository(TypeRepository.class).getAllInternalTypes())
+        try (Result<TypeDescriptor> descriptors = this.tR.getAllInternalTypes())
         {
+            int i = 0;
             for (TypeDescriptor t1 : descriptors) {
+                if (i % 100 == 0) System.out.println(i);
+                i++;
                 final Long id1 = this.xoManager.getId(t1);
-                try (Result<TypeDescriptor> dependencies = this.xoManager.getRepository(TypeRepository.class).getInternalDependencies(id1)) {
+                try (Result<TypeDescriptor> dependencies = this.tR.getInternalDependencies(id1)) {
                     for (TypeDescriptor t2 : dependencies) {
                         final Long id2 = this.xoManager.getId(t2);
                         Double coupling = computeCoupling(id1, id2);
                         if (coupling > 0) {
-                            mR.setCoupling(id1, id2, coupling);
+                            this.mR.setCoupling(id1, id2, coupling);
                         }
                     }
                 }
@@ -91,25 +98,21 @@ public class TypeCouplingEnricher {
     }
 
     private Double computeCouplingInvokesAbstract(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         Double res = (double) mR.countInvokesAbstract(id1, id2) / mR.countAllInvokesExternalAbstract(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingInvokes(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         Double res = (double) mR.countInvokes(id1, id2) / mR.countAllInvokesExternal(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingInvokesStatic(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         Double res = (double) mR.countInvokesStatic(id1, id2) / mR.countAllInvokesExternalStatic(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingExtends(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         return mR.typeExtends(id1, id2) ? 1d : 0d;
     }
 
@@ -119,59 +122,50 @@ public class TypeCouplingEnricher {
     }
 
     private Double computeCouplingReturns(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         // todo generics
         Double res = (double) mR.countReturns(id1, id2) / mR.countMethods(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingParameterized(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         // todo generics
         Double res = (double) mR.countParameterized(id1, id2) / mR.countMethods(id1);
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingReads(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         final Long readsT1T2 = mR.countReads(id1, id2);
         Double res = ((double) readsT1T2 * readsT1T2) / (mR.countReadsExternal(id1) * mR.countReadByExternal(id2)); // TODO: 07.07.2017 correct?
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingReadsStatic(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         final Long readsT1T2 = mR.countReadsStatic(id1, id2);
         Double res = ((double) readsT1T2 * readsT1T2) / (mR.countReadsStaticExternal(id1) * mR.countReadByExternalStatic(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingWrites(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         final Long writesT1T2 = mR.countWrites(id1, id2);
         Double res = ((double) writesT1T2 * writesT1T2) / (mR.countWritesExternal(id1) * mR.countWrittenByExternal(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingWritesStatic(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         final Long writesT1T2 = mR.countWritesStatic(id1, id2);
         Double res = ((double) writesT1T2 * writesT1T2) / (mR.countWritesStaticExternal(id1) * mR.countWrittenByExternalStatic(id2));
         return Double.isNaN(res) ? 0 : res;
     }
 
     private Double computeCouplingComposes(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         return (mR.typeComposes(id1, id2) ? 1d : 0d);
     }
 
     private Double computeCouplingDeclaresInnerClass(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         return mR.declaresInnerClass(id1, id2) ? 1d : 0d;
     }
 
     private Double computeSimpleDependsOn(Long id1, Long id2) {
-        MetricRepository mR = this.xoManager.getRepository(MetricRepository.class);
         return mR.dependsOn(id1, id2) ? 1d : 0d;
     }
 }

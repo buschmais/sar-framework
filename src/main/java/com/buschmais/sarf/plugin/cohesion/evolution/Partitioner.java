@@ -37,10 +37,10 @@ public class Partitioner {
                     LongObjectiveChromosome chromosome = (LongObjectiveChromosome) i.getChromosome();
                     return Vec.of(
                         chromosome.getCohesionObjective(),
-                        chromosome.getCouplingObjective(),
-                        chromosome.getCohesiveComponentObjective(),
-                        chromosome.getComponentRangeObjective(),
-                        chromosome.getComponentSizeObjective()
+                        chromosome.getCouplingObjective()
+                        //chromosome.getCohesiveComponentObjective(),
+                        //chromosome.getComponentRangeObjective(),
+                        //chromosome.getComponentSizeObjective()
                     );
                 }, genotype)
                 .survivorsSelector(NSGA2Selector.vec())
@@ -109,6 +109,6 @@ public class Partitioner {
     }
 
     private static double sumFitness(Vec<double[]> vec) {
-        return vec.data()[0] + vec.data()[1] + vec.data()[2] + vec.data()[3] + vec.data()[4];
+        return vec.data()[0] + vec.data()[1];// + vec.data()[2] + vec.data()[3] + vec.data()[4];
     }
 }
