@@ -2,7 +2,10 @@ package com.buschmais.sarf.framework.ui;
 
 import com.buschmais.sarf.framework.ClassificationRunner;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
@@ -12,9 +15,6 @@ import org.springframework.stereotype.Controller;
  */
 @Controller
 public class ConfigurationDialogController extends AbstractController {
-
-    @FXML
-    private ChoiceBox<Integer> iteration;
 
     @FXML
     private TextField basePackage;
@@ -35,12 +35,6 @@ public class ConfigurationDialogController extends AbstractController {
     private CheckBox typeNameAsRegEx;
 
     @FXML
-    private ChoiceBox<String> decomposition;
-
-    @FXML
-    private ChoiceBox<String> strategy;
-
-    @FXML
     private Button execute;
 
     @FXML
@@ -58,13 +52,6 @@ public class ConfigurationDialogController extends AbstractController {
 
     @FXML
     public void initialize() {
-        this.iteration.getItems().add(1);
-        this.decomposition.getItems().add("Flat");
-        this.decomposition.getItems().add("Hierarchical");
-        this.decomposition.setValue("Hierarchical");
-        this.strategy.getItems().add("Coupling");
-        this.strategy.getItems().add("Similarity");
-        this.strategy.setValue("Coupling");
         this.execute.setOnAction(e -> this.execute());
         this.artifactAsRegEx.setDisable(true);
         this.basePackageAsRegEx.setDisable(true);
@@ -86,8 +73,8 @@ public class ConfigurationDialogController extends AbstractController {
         this.execute.setDisable(true);
         try {
             this.classificationRunner.startNewIteration(
-                    iteration.getValue(), this.artifact.getText(), this.basePackage.getText(), this.typeName.getText(),
-                    Integer.valueOf(this.generations.getText()), Integer.valueOf(this.populationSize.getText()), this.decomposition.getValue().equals("Hierarchical"), this.strategy.getValue().equals("Similarity")
+                    1, this.artifact.getText(), this.basePackage.getText(), this.typeName.getText(),
+                    Integer.valueOf(this.generations.getText()), Integer.valueOf(this.populationSize.getText()), true, false
             );
         } catch (Exception e) {
             e.printStackTrace();
