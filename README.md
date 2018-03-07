@@ -20,7 +20,7 @@ The `Artifact` setting reduces the analyzed classes to those being part of the s
 
 The `Base Package` setting reduces the analyzed classes to those residing inside the specified package. We will use `org\.dukecon.*` to select only those classes that are actually part of the dukecon-server application.
 
-The `Type Name` setting reduces the analyzed classes to those whose name matches the specification. Since the dukecon-server artifact will contain generated classes and thus such classes will not help during the application restructuring process, we want to exclude those classes. Generated classes contain `$_`, so following regular expression will exclude them: `^((?!\_$).)*`
+The `Type Name` setting reduces the analyzed classes to those whose name matches the specification. Since the dukecon-server artifact will contain generated classes and thus such classes will not help during the application restructuring process, we want to exclude those classes. Generated classes contain `$_`, so following regular expression will exclude them: `^((?!\\$_).)*`
 
 Note: The three settings work in conjunction to each other meaning that all three settings have to match.
 
