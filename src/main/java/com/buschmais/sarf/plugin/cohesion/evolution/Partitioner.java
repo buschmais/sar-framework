@@ -37,10 +37,10 @@ public class Partitioner {
                     LongObjectiveChromosome chromosome = (LongObjectiveChromosome) i.getChromosome();
                     return Vec.of(
                         chromosome.getCohesionObjective(),
-                        chromosome.getCouplingObjective()
-                        //chromosome.getCohesiveComponentObjective(),
-                        //chromosome.getComponentRangeObjective(),
-                        //chromosome.getComponentSizeObjective()
+                        chromosome.getCouplingObjective()/*,
+                        chromosome.getCohesiveComponentObjective(),
+                        chromosome.getComponentRangeObjective(),
+                        chromosome.getComponentSizeObjective()*/
                     );
                 }, genotype)
                 .survivorsSelector(NSGA2Selector.vec())

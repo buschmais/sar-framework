@@ -14,7 +14,7 @@ public class SimilarityProblem extends Problem {
     }
 
     @Override
-    public Double computeCouplingTo(Long from, Collection<Long> to) {
+    public Double computeCouplingTo(long from, Collection<Long> to) {
         return to.stream().mapToDouble(id -> this.relations.get(from, id) + this.relations.get(id, from)).sum();
     }
 

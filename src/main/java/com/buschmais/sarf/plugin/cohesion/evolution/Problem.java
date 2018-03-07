@@ -40,7 +40,7 @@ public abstract class Problem {
         this.relations.set(from, to, coupling);
     }
 
-    public abstract Double computeCouplingTo(Long from, Collection<Long> to);
+    public abstract Double computeCouplingTo(long from, Collection<Long> to);
 
     public abstract Double computeCohesionInComponent(Collection<Long> ids);
 

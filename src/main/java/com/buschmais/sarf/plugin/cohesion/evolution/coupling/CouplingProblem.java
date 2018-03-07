@@ -14,20 +14,34 @@ public class CouplingProblem extends Problem {
     }
 
     @Override
-    public Double computeCouplingTo(Long from, Collection<Long> to) {
-        return to.stream().mapToDouble(id -> this.relations.get(from, id) + this.relations.get(id, from)).sum();
+    public Double computeCouplingTo(long from, Collection<Long> to) {
+        double coupling = 0;
+        for (long id : to) {
+            coupling += this.relations.get(from, id);
+            coupling += this.relations.get(id, from);
+        }
+        return coupling;
     }
 
     @Override
     public Double computeCohesionInComponent(Collection<Long> ids) {
-        return ids.stream().mapToDouble(id -> computeCouplingTo(id, ids)).sum();
+        double coupling = 0;
+        for (long id : ids) {
+            coupling += computeCouplingTo(id, ids);
+        }
+        return coupling;
     }
 
     @Override
     public Double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2) {
-        Double res = ids1.stream().mapToDouble(id -> computeCouplingTo(id, ids2)).sum();
-        res += ids2.stream().mapToDouble(id -> computeCouplingTo(id, ids1)).sum();
-        return res;
+        double coupling = 0;
+        for (long id1 : ids1) {
+            coupling += computeCouplingTo(id1, ids2);
+        }
+        for (long id2 : ids2) {
+            coupling += computeCouplingTo(id2, ids1);
+        }
+        return coupling;
     }
 
     public static Problem newInstance(int rows, int columns) {

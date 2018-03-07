@@ -26,18 +26,18 @@ public class LongObjectiveSimilarityChromosome extends LongObjectiveChromosome {
     }
 
     @Override
-    protected Double computeCohesion(Collection<Long> ids) {
+    protected double computeCohesion(Collection<Long> ids) {
         int denominator = ids.size() == 1 ? 1 : ((ids.size() * (ids.size() - 1)) / 2);
         return Problem.getInstance().computeCohesionInComponent(ids) / denominator;
     }
 
     @Override
-    protected Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2) {
+    protected double computeCoupling(Collection<Long> ids1, Collection<Long> ids2) {
         return Problem.getInstance().computeCouplingBetweenComponents(ids1, ids2) / (ids1.size() * ids2.size());
     }
 
     @Override
-    protected Double normalizeCoupling(Double coupling, int components) {
+    protected double normalizeCoupling(Double coupling, int components) {
         if (components == 1) return coupling;
         return 2 * coupling / (components * (components - 1));
     }

@@ -21,15 +21,15 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private boolean evaluated = false;
 
-    private Double cohesionObjective = 0d;
+    private double cohesionObjective = 0d;
 
-    private Double couplingObjective = 0d;
+    private double couplingObjective = 0d;
 
-    private Double componentSizeObjective = 0d;
+    private double componentSizeObjective = 0d;
 
-    private Double componentRangeObjective = 0d;
+    private double componentRangeObjective = 0d;
 
-    private Double cohesiveComponentObjective = 0d;
+    private double cohesiveComponentObjective = 0d;
 
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes, IntRange.of(genes.length()));
@@ -89,84 +89,35 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     }
 
-    protected abstract Double computeCohesion(Collection<Long> ids);
+    protected abstract double computeCohesion(Collection<Long> ids);
 
-    protected abstract Double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
+    protected abstract double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
 
-    protected abstract Double normalizeCoupling(Double coupling, int components);
+    protected abstract double normalizeCoupling(Double coupling, int components);
 
-    protected Double getCohesionObjective() {
+    protected double getCohesionObjective() {
         if (!this.evaluated) evaluate();
         return this.cohesionObjective;
     }
 
-    protected Double getCouplingObjective() {
+    protected double getCouplingObjective() {
         if (!this.evaluated) evaluate();
         return this.couplingObjective;
     }
 
-    protected Double getComponentSizeObjective() {
+    protected double getComponentSizeObjective() {
         if (!this.evaluated) evaluate();
         return this.componentSizeObjective;
     }
 
-    protected Double getComponentRangeObjective() {
+    protected double getComponentRangeObjective() {
         if (!this.evaluated) evaluate();
         return this.componentRangeObjective;
     }
 
-    protected Double getCohesiveComponentObjective() {
+    protected double getCohesiveComponentObjective() {
         if (!this.evaluated) evaluate();
         return this.cohesiveComponentObjective;
-    }
-
-    /**
-     * @param chromosome
-     * @return True if this dominates, false otherwise (including non-pareto comparable
-     */
-    protected boolean dominates(LongObjectiveChromosome chromosome) {
-        if (!evaluated) this.evaluate();
-        int better = 0;
-        int equal = 0;
-        int worse = 0;
-        if (this.cohesionObjective < chromosome.cohesionObjective) {
-            worse++;
-        } else if (Objects.equals(this.cohesionObjective, chromosome.cohesionObjective)) {
-            equal++;
-        } else {
-            better++;
-        }
-        if (this.couplingObjective < chromosome.couplingObjective) {
-            worse++;
-        } else if (Objects.equals(this.couplingObjective, chromosome.couplingObjective)) {
-            equal++;
-        } else {
-            better++;
-        }
-        if (this.componentSizeObjective < chromosome.componentSizeObjective) {
-            worse++;
-        } else if (Objects.equals(this.componentSizeObjective, chromosome.componentSizeObjective)) {
-            equal++;
-        } else {
-            better++;
-        }
-        if (this.componentRangeObjective < chromosome.componentRangeObjective) {
-            worse++;
-        } else if (Objects.equals(this.componentRangeObjective, chromosome.componentRangeObjective)) {
-            equal++;
-        } else {
-            better++;
-        }
-        if (this.cohesiveComponentObjective < chromosome.cohesiveComponentObjective) {
-            worse++;
-        } else if (Objects.equals(this.cohesiveComponentObjective, chromosome.cohesiveComponentObjective)) {
-            equal++;
-        } else {
-            better++;
-        }
-        if (better > 0 && worse == 0) return true;
-        return false;
-
     }
 
     private void writeBenchmarkLine(Map<Long, Set<Long>> identifiedComponents) {
