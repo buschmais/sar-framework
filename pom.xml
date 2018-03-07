@@ -42,7 +42,7 @@
         <com.buschmais.jqassistant_version>1.1.4</com.buschmais.jqassistant_version>
         <com.buschmais.xo_version>0.8.1</com.buschmais.xo_version>
         <org.hibernate-validator_version>5.2.1.Final</org.hibernate-validator_version>
-        <jenetics.version>4.1.0-SNAPSHOT</jenetics.version>
+        <jenetics.version>4.1.0</jenetics.version>
     </properties>
 
     <dependencies>
