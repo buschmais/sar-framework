@@ -43,7 +43,7 @@ public class Partitioner {
                         chromosome.getComponentSizeObjective()*/
                     );
                 }, genotype)
-                .survivorsSelector(NSGA2Selector.vec())
+                .survivorsSelector(NSGA2Selector.ofVec())
                 .offspringSelector(new TournamentSelector<>(3))
                 .populationSize(populationSize)
                 .alterers(
