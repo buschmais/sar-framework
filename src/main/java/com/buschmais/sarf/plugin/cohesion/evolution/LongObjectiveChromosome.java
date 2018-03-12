@@ -2,6 +2,9 @@ package com.buschmais.sarf.plugin.cohesion.evolution;
 
 import com.buschmais.sarf.benchmark.MoJoCalculator;
 import com.buschmais.sarf.benchmark.ModularizationQualityCalculator;
+import com.buschmais.sarf.plugin.cohesion.ElementCoupling;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import io.jenetics.LongChromosome;
 import io.jenetics.LongGene;
@@ -12,7 +15,10 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
@@ -31,6 +37,10 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private double cohesiveComponentObjective = 0d;
 
+    private Map<ElementCoupling, ElementCoupling> components = new HashMap<>();
+
+    private Map<Long, ElementCoupling> highestCoupling = new HashMap<>();
+
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes, IntRange.of(genes.length()));
     }
@@ -43,7 +53,40 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
         super(min, max);
     }
 
+    private void init() {
+        final Map<Long, Long> elementToComponent = new HashMap<>();
+        final Multimap<Long, Long> componentToElements = HashMultimap.create();
+        for (int i = 0; i < this.length(); i++) {
+            long componentId = this.getGene(i).getAllele();
+            long containedId = Partitioner.ids[i];
+            elementToComponent.put(containedId, componentId);
+            componentToElements.put(componentId, containedId);
+        }
+        Map<ElementCoupling, ElementCoupling> couplings = Problem.getInstance().couplings;
+        // for each coupling
+        for (Map.Entry<ElementCoupling, ElementCoupling> coupling : couplings.entrySet()) {
+            // if elements are in different components
+            long sourceComponent = elementToComponent.get(coupling.getValue().getSource());
+            long targetComponent = elementToComponent.get(coupling.getValue().getTarget());
+            if (sourceComponent != targetComponent) {
+                // add coupling between components
+                ElementCoupling elementCoupling = new ElementCoupling(sourceComponent, targetComponent);
+                components.putIfAbsent(elementCoupling, elementCoupling);
+                components.get(elementCoupling).addCoupling(coupling.getValue().getCoupling());
+            }
+        }
+        // normalize coupling based on component sizes
+        for (ElementCoupling componentCoupling : this.components.values()) {
+            int sourceComponentSize = componentToElements.get(componentCoupling.getSource()).size();
+            int targetComponentSize = componentToElements.get(componentCoupling.getTarget()).size();
+            int denominator = sourceComponentSize * targetComponentSize;
+            componentCoupling.normalizeCoupling(denominator);
+
+        }
+    }
+
     private void evaluate() {
+        init();
         // mapping from component id to a set of type ids
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < this.length(); i++) {
@@ -65,13 +108,9 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
                 uncohesiveComponents++;
                 totalSubComponents += subComponents;
             }
-            // compute fitness for inter-edge coupling (coupling of components)
-            // is compared twice -> punishing inter-edges todo similarity?
-            for (Map.Entry<Long, Set<Long>> component2 : identifiedComponents.entrySet()) {
-                if (!Objects.equals(component1.getKey(), component2.getKey())) {
-                    this.couplingObjective -= computeCoupling(component1.getValue(), component2.getValue());
-                }
-            }
+        }
+        for (Map.Entry<ElementCoupling, ElementCoupling> elementCoupling : this.components.entrySet()) {
+            this.couplingObjective -= elementCoupling.getValue().getCoupling();
         }
         this.couplingObjective = normalizeCoupling(this.couplingObjective, identifiedComponents.size());
         this.cohesionObjective /= identifiedComponents.size();
@@ -90,8 +129,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     }
 
     protected abstract double computeCohesion(Collection<Long> ids);
-
-    protected abstract double computeCoupling(Collection<Long> ids1, Collection<Long> ids2);
 
     protected abstract double normalizeCoupling(Double coupling, int components);
 
