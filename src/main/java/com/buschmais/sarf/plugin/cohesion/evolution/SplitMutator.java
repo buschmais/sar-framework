@@ -41,10 +41,10 @@ public class SplitMutator extends Mutator<LongGene, Vec<double[]>> {
             }
         }
         outer: for (Long component : componentToTypes.keySet()) {
-            Multimap<Integer, Long> connectedComponents = Problem.getInstance().connectedComponents(componentToTypes.get(component));
+            Multimap<Long, Long> connectedComponents = Problem.getInstance().connectedComponents(componentToTypes.get(component));
             if (connectedComponents.keySet().size() > 1) {
                 boolean first = true;
-                for (Integer c : connectedComponents.keySet()) {
+                for (long c : connectedComponents.keySet()) {
                     Collection<Long> types = connectedComponents.get(c);
                     if (unusedComponentIds.size() == 0) break outer;
                     for (int i = 0; i < Partitioner.ids.length; i++) {
