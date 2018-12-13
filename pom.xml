@@ -12,7 +12,7 @@
 
     <groupId>com.buschmais.sarf</groupId>
     <artifactId>sar-framework</artifactId>
-    <version>0.3.0</version>
+    <version>0.4.0-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -39,8 +39,8 @@
     </build>
 
     <properties>
-        <com.buschmais.jqassistant_version>1.1.4</com.buschmais.jqassistant_version>
-        <com.buschmais.xo_version>0.8.1</com.buschmais.xo_version>
+        <com.buschmais.jqassistant_version>1.6.0</com.buschmais.jqassistant_version>
+        <com.buschmais.xo_version>0.11.0</com.buschmais.xo_version>
         <org.hibernate-validator_version>5.2.1.Final</org.hibernate-validator_version>
         <jenetics.version>4.1.0</jenetics.version>
     </properties>
@@ -81,14 +81,19 @@
         </dependency>
 
         <dependency>
-            <!-- The jQA Core Plugin -->
+            <!-- jQAssistant reports  -->
             <groupId>com.buschmais.jqassistant.core</groupId>
-            <artifactId>jqassistant.core.plugin</artifactId>
+            <artifactId>report</artifactId>
         </dependency>
         <dependency>
-            <!-- The jQA Plugins -->
+            <!-- jQAssistant store connection  -->
+            <groupId>com.buschmais.jqassistant.core</groupId>
+            <artifactId>store</artifactId>
+        </dependency>
+        <dependency>
+            <!-- jQAssistant Java plugin  -->
             <groupId>com.buschmais.jqassistant.plugin</groupId>
-            <artifactId>jqassistant.plugin.all</artifactId>
+            <artifactId>java</artifactId>
         </dependency>
 
         <dependency>
@@ -165,15 +170,21 @@
             </dependency>
 
             <dependency>
-                <!-- The jQA Core Plugin -->
+                <!-- jQAssistant reports  -->
                 <groupId>com.buschmais.jqassistant.core</groupId>
-                <artifactId>jqassistant.core.plugin</artifactId>
+                <artifactId>report</artifactId>
                 <version>${com.buschmais.jqassistant_version}</version>
             </dependency>
             <dependency>
-                <!-- The jQA Plugins -->
+                <!-- jQAssistant store connection  -->
+                <groupId>com.buschmais.jqassistant.core</groupId>
+                <artifactId>store</artifactId>
+                <version>${com.buschmais.jqassistant_version}</version>
+            </dependency>
+            <dependency>
+                <!-- jQAssistant Java plugin  -->
                 <groupId>com.buschmais.jqassistant.plugin</groupId>
-                <artifactId>jqassistant.plugin.all</artifactId>
+                <artifactId>java</artifactId>
                 <version>${com.buschmais.jqassistant_version}</version>
             </dependency>
 
