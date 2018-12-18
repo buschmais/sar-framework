@@ -2,17 +2,21 @@ package com.buschmais.sarf.plugin.api.criterion;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.framework.repository.AnnotationResolver;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.api.ClassificationInfoDescriptor;
 import com.buschmais.sarf.plugin.api.ExecutedBy;
 import com.buschmais.sarf.plugin.api.Executor;
+import com.buschmais.sarf.plugin.packagenaming.PackageNamingRuleDescriptor;
+import com.buschmais.sarf.plugin.packagenaming.PackageNamingRuleExecutor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.Sets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -27,7 +31,7 @@ import java.util.TreeSet;
  */
 @Service
 @Lazy
-public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R>, R extends RuleDescriptor> implements Executor<C, ComponentDescriptor> {
+public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor> implements Executor<C, ComponentDescriptor> {
 
     private static final Logger LOG = LogManager.getLogger(RuleBasedCriterionExecutor.class);
 
@@ -52,16 +56,14 @@ public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R
             }
             return res;
         });
-        this.xoManager.currentTransaction().begin();
+//        this.xoManager.currentTransaction().begin();
         Set<RuleDescriptor> rules = executableDescriptor.getRules();
         Map<String, Map<String, Set<String>>> mappedTypes = new HashMap<>();
         Long internalTypes = this.xoManager.getRepository(TypeRepository.class).countAllInternalTypes();
         for (RuleDescriptor r : rules) {
-            ExecutedBy executedBy = r.getClass().getAnnotation(ExecutedBy.class);
-            @SuppressWarnings("unchecked")
+            ExecutedBy executedBy = AnnotationResolver.resolveAnnotation(r.getClass(), ExecutedBy.class);
             RuleExecutor<RuleDescriptor> ruleExecutor = (RuleExecutor<RuleDescriptor>) this.beanFactory.getBean(executedBy.value());
             ComponentDescriptor componentDescriptor = getOrCreateComponentOfCurrentIteration(r);
-            @SuppressWarnings("unchecked")
             Set<TypeDescriptor> ts = ruleExecutor.execute(r);
             for (TypeDescriptor t : ts) {
                 ClassificationInfoDescriptor info = this.xoManager.create(ClassificationInfoDescriptor.class);
@@ -97,7 +99,7 @@ public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor<R
                 }
             }
         }
-        this.xoManager.currentTransaction().commit();
+ //       this.xoManager.currentTransaction().commit();
         LOG.info("Executed " + rules.size() + " Rules");
         LOG.info("\tIdentified " + componentDescriptors.size() + " Components");
         LOG.info("\tCoverage = " + (mappedTypes.size() / (double) internalTypes));
