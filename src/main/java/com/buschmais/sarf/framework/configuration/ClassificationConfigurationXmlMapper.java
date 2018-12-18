@@ -16,51 +16,33 @@ import java.util.Set;
 @Materializable(ClassificationConfigurationDescriptor.class)
 public class ClassificationConfigurationXmlMapper implements XmlMapper{
 
-    @XmlType
-    @XmlEnum
-    public enum Decomposition {
-        @XmlEnumValue("flat")
-        FLAT,
-        @XmlEnumValue("deep")
-        DEEP;
-    }
-
-    @XmlType
-    @XmlEnum
-    public enum Optimization {
-        @XmlEnumValue("similarity")
-        SIMILARITY,
-        @XmlEnumValue("coupling")
-        COUPLING
-    }
-
     @XmlAttribute(name = "iteration")
-    Integer iteration;
+    public Integer iteration;
 
     @Getter
     @XmlAttribute(name = "basePackage")
-    String basePackage;
+    public String basePackage;
 
     @XmlAttribute(name = "typeName")
-    String typeName;
+    public String typeName;
 
     @XmlAttribute(name = "artifact")
-    String artifact;
+    public String artifact;
 
     @XmlAttribute(name = "generations")
-    Integer generations;
+    public Integer generations;
 
     @XmlAttribute(name = "populationSize")
-    Integer populationSize;
+    public Integer populationSize;
 
     @XmlAttribute(name = "decomposition")
-    private Decomposition decomposition;
+    public Decomposition decomposition;
 
     @XmlAttribute(name = "optimization")
-    private Optimization optimization;
+    public Optimization optimization;
 
     @Getter
     @XmlElement(name = "Component")
-    Set<ComponentXmlMapper> definedComponents = new HashSet<>();
+    public Set<ComponentXmlMapper> definedComponents = new HashSet<>();
 
 }

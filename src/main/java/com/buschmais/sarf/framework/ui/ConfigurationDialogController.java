@@ -1,6 +1,9 @@
 package com.buschmais.sarf.framework.ui;
 
 import com.buschmais.sarf.framework.ClassificationRunner;
+import com.buschmais.sarf.framework.configuration.ClassificationConfigurationXmlMapper;
+import com.buschmais.sarf.framework.configuration.Decomposition;
+import com.buschmais.sarf.framework.configuration.Optimization;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -72,16 +75,23 @@ public class ConfigurationDialogController extends AbstractController {
     private void execute() {
         this.execute.setDisable(true);
         try {
-            this.classificationRunner.startNewIteration(
-                    1, this.artifact.getText(), this.basePackage.getText(), this.typeName.getText(),
-                    Integer.valueOf(this.generations.getText()), Integer.valueOf(this.populationSize.getText()), true, false
-            );
+            ClassificationConfigurationXmlMapper classificationConfiguration =
+                new ClassificationConfigurationXmlMapper();
+            classificationConfiguration.iteration = 1;
+            classificationConfiguration.artifact = this.artifact.getText();
+            classificationConfiguration.basePackage = this.basePackage.getText();
+            classificationConfiguration.typeName = this.typeName.getText();
+            classificationConfiguration.generations = Integer.valueOf(this.generations.getText());
+            classificationConfiguration.populationSize = Integer.valueOf(this.populationSize.getText());
+            classificationConfiguration.decomposition = Decomposition.DEEP;
+            classificationConfiguration.optimization = Optimization.COUPLING;
+
+            this.classificationRunner.startNewIteration(classificationConfiguration);
         } catch (Exception e) {
             e.printStackTrace();
             showExceptionDialog("Execution Error", "An error occured during decomposing the system!", "", e);
         }
         this.execute.setDisable(false);
     }
-
 
 }
