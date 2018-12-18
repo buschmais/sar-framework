@@ -27,13 +27,13 @@ public interface ClassificationConfigurationDescriptor extends SARFDescriptor {
 
     Integer getIteration();
 
-    void setDecomposition(String decomposition);
+    void setDecomposition(Decomposition decomposition);
 
-    String getDecomposition();
+    Decomposition getDecomposition();
 
-    void setOptimization(String optimization);
+    void setOptimization(Optimization optimization);
 
-    String getOptimization();
+    Optimization getOptimization();
 
     void setGenerations(Integer generations);
 
