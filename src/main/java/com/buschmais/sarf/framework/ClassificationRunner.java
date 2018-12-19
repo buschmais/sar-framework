@@ -30,13 +30,16 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     private final Logger LOG = LogManager.getLogger(ClassificationRunner.class);
 
     private XOManager xOManager;
+
     private ClassificationConfigurationMaterializer materializer;
+
     private ClassificationConfigurationExecutor executor;
+
     private TypeCouplingEnricher typeCouplingEnricher;
 
     @Autowired
     public ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer,
-                                ClassificationConfigurationExecutor executor, TypeCouplingEnricher typeCouplingEnricher) {
+        ClassificationConfigurationExecutor executor, TypeCouplingEnricher typeCouplingEnricher) {
         this.xOManager = xOManager;
         this.materializer = materializer;
         this.executor = executor;
@@ -105,33 +108,16 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
 */
     }
 
-    public void startNewIteration(Integer iteration, String artifact, String basePackage, String typeName,
-                                  Integer generations, Integer populationSize, boolean hierarchical, boolean similarityBase) {
+    public void startNewIteration(ClassificationConfigurationXmlMapper configuration) {
         this.xOManager.currentTransaction().begin();
-        if (iteration == 1) {
+        if (configuration.iteration == 1) {
             LOG.info("Resetting Data");
-            this.xOManager.createQuery(
-                "MATCH (sarf:SARF) DETACH DELETE sarf"
-            ).execute();
-            this.xOManager.createQuery(
-                "MATCH ()-[c:COUPLES]-() DELETE c"
-            ).execute();
-            this.xOManager.createQuery(
-                "MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s"
-            ).execute();
-            this.xOManager.createQuery(
-                "MATCH (t:Type:Internal) REMOVE t:Internal"
-            ).execute();
+            this.xOManager.createQuery("MATCH (sarf:SARF) DETACH DELETE sarf").execute();
+            this.xOManager.createQuery("MATCH ()-[c:COUPLES]-() DELETE c").execute();
+            this.xOManager.createQuery("MATCH ()-[s:IS_SIMILAR_TO]-() DELETE s").execute();
+            this.xOManager.createQuery("MATCH (t:Type:Internal) REMOVE t:Internal").execute();
         }
-        ClassificationConfigurationDescriptor descriptor = this.xOManager.create(ClassificationConfigurationDescriptor.class);
-        descriptor.setIteration(iteration);
-        descriptor.setArtifact(artifact);
-        descriptor.setBasePackage(basePackage);
-        descriptor.setTypeName(typeName);
-        descriptor.setGenerations(generations);
-        descriptor.setPopulationSize(populationSize);
-        descriptor.setDecomposition(hierarchical ? "deep" : "flat");
-        descriptor.setOptimization(similarityBase ? "similarity" : "coupling");
+        ClassificationConfigurationDescriptor descriptor = materializer.materialize(configuration);
         descriptor.getClassificationCriteria().add(this.xOManager.create(CohesionCriterionDescriptor.class));
         this.xOManager.currentTransaction().commit();
         this.setUpData(descriptor);
@@ -139,16 +125,10 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
     }
 
     public void startNewIteration(URL configUrl) {
-        ClassificationConfigurationDescriptor classificationConfigurationDescriptor = null;
-        classificationConfigurationDescriptor = readConfiguration(configUrl);
-        this.xOManager.currentTransaction().begin();
-        classificationConfigurationDescriptor.getClassificationCriteria().add(this.xOManager.create(CohesionCriterionDescriptor.class));
-        this.xOManager.currentTransaction().commit();
-        this.setUpData(classificationConfigurationDescriptor);
-        this.executor.execute(classificationConfigurationDescriptor);
+        startNewIteration(readConfiguration(configUrl));
     }
 
-    private ClassificationConfigurationDescriptor readConfiguration(URL configUrl) {
+    private ClassificationConfigurationXmlMapper readConfiguration(URL configUrl) {
         LOG.info("Reading XML Configuration");
         try {
             URL schemaUrl = SARFRunner.class.getClassLoader().getResource("schema.xsd");
@@ -158,10 +138,10 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
             Schema schema = sf.newSchema(schemaUrl);
             jaxbUnmarshaller.setSchema(schema);
             LOG.info("Unmarshalling XML Configuration");
-            ClassificationConfigurationXmlMapper mapper= (ClassificationConfigurationXmlMapper) jaxbUnmarshaller.unmarshal(configUrl);
-            ClassificationConfigurationDescriptor descriptor = this.materializer.materialize(mapper);
+            ClassificationConfigurationXmlMapper mapper =
+                (ClassificationConfigurationXmlMapper) jaxbUnmarshaller.unmarshal(configUrl);
             LOG.info("Unmarshalling XML Configuration Successful");
-            return descriptor;
+            return mapper;
         } catch (JAXBException | SAXException e) {
             LOG.error(e);
             System.exit(1);
@@ -171,22 +151,24 @@ public class ClassificationRunner { // TODO: 18.07.2017 AbstractRunner + Benchma
 
     private void setUpData(ClassificationConfigurationDescriptor descriptor) {
         this.xOManager.currentTransaction().begin();
-        ClassificationConfigurationRepository classificationConfigurationRepository = this.xOManager.getRepository(ClassificationConfigurationRepository.class);
+        ClassificationConfigurationRepository classificationConfigurationRepository =
+            this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         if (descriptor.getIteration() == 1) {
             LOG.info("Preparing Data Set");
-            this.xOManager.getRepository(TypeRepository.class).markAllInternalTypes(
-                    descriptor.getTypeName(),
-                    descriptor.getBasePackage(),
+            this.xOManager.getRepository(TypeRepository.class)
+                .markAllInternalTypes(descriptor.getTypeName(), descriptor.getBasePackage(),
                     descriptor.getArtifact());
             this.xOManager.currentTransaction().commit();
             this.typeCouplingEnricher.enrich();
-        } else if (descriptor.getIteration() <= classificationConfigurationRepository.getCurrentConfiguration().getIteration()) {
-            LOG.error("Specified Configuration Iteration must be either 1 or " +
-                    (classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1));
+        } else if (descriptor.getIteration() <= classificationConfigurationRepository
+            .getCurrentConfiguration().getIteration()) {
+            LOG.error("Specified Configuration Iteration must be either 1 or " + (
+                classificationConfigurationRepository.getCurrentConfiguration().getIteration() + 1));
             this.xOManager.currentTransaction().commit();
             System.exit(1);
         }
-        if (this.xOManager.currentTransaction().isActive())
+        if (this.xOManager.currentTransaction().isActive()) {
             this.xOManager.currentTransaction().commit();
+        }
     }
 }

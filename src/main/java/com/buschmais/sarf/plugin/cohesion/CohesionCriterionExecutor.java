@@ -3,6 +3,8 @@ package com.buschmais.sarf.plugin.cohesion;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.framework.configuration.ClassificationConfigurationDescriptor;
 import com.buschmais.sarf.framework.configuration.ClassificationConfigurationRepository;
+import com.buschmais.sarf.framework.configuration.Decomposition;
+import com.buschmais.sarf.framework.configuration.Optimization;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
@@ -46,8 +48,8 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
             this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         ClassificationConfigurationDescriptor currentConfiguration = classificationConfigurationRepository.getCurrentConfiguration();
         Integer iteration = currentConfiguration.getIteration();
-        boolean similarityBased = currentConfiguration.getOptimization().equals("similarity");
-        boolean hierarchical = currentConfiguration.getDecomposition().equals("deep");
+        boolean similarityBased = currentConfiguration.getOptimization() == Optimization.SIMILARITY;
+        boolean hierarchical = currentConfiguration.getDecomposition() == Decomposition.DEEP;
         Integer generations = currentConfiguration.getGenerations();
         Integer populationSize = currentConfiguration.getPopulationSize();
         Map<Long, Set<Long>> components = null; // todo get from database

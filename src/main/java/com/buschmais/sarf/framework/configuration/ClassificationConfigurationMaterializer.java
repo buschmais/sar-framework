@@ -37,29 +37,18 @@ public class ClassificationConfigurationMaterializer {
     }
 
     public ClassificationConfigurationDescriptor materialize(ClassificationConfigurationXmlMapper mapper) {
-        this.xoManager.currentTransaction().begin();
         ClassificationConfigurationDescriptor classificationConfigurationDescriptor =
             this.xoManager.create(ClassificationConfigurationDescriptor.class);
         // materialize all simple fields
-        for (Field f : mapper.getClass().getDeclaredFields()) {
-            f.setAccessible(true);
-            if (!f.getName().equals("definedComponents")) {
-                char[] setterName = ("set" + f.getName()).toCharArray();
-                setterName[2] = Character.toUpperCase(setterName[2]);
-                try {
-                    Method setter = classificationConfigurationDescriptor.getClass().getMethod(new String(setterName), f.getType());
-                    setter.setAccessible(true);
-                    setter.invoke(classificationConfigurationDescriptor, f.get(mapper));
-                    setter.setAccessible(false);
-                } catch (NoSuchMethodException e) {
-                    throw new MethodNotFoundException(classificationConfigurationDescriptor.getClass().getName() +
-                        "has no setter for field " + f.getName() + "(" + new String(setterName) + "(" + f.getType().getName() + "))");
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            }
-            f.setAccessible(false);
-        }
+        classificationConfigurationDescriptor.setIteration(mapper.iteration);
+        classificationConfigurationDescriptor.setBasePackage(mapper.basePackage);
+        classificationConfigurationDescriptor.setTypeName(mapper.typeName);
+        classificationConfigurationDescriptor.setArtifact(mapper.artifact);
+        classificationConfigurationDescriptor.setGenerations(mapper.generations);
+        classificationConfigurationDescriptor.setPopulationSize(mapper.populationSize);
+        classificationConfigurationDescriptor.setDecomposition(mapper.decomposition);
+        classificationConfigurationDescriptor.setOptimization(mapper.optimization);
+
         // materialize components
         Set<ComponentDescriptor> componentDescriptors = mapper.getDefinedComponents().stream()
             .map(m -> (ComponentDescriptor) genericMaterialize(m))
@@ -76,7 +65,6 @@ public class ClassificationConfigurationMaterializer {
             RuleBasedCriterionDescriptor<RuleDescriptor> classificationCriterion = this.xoManager.create(k);
             classificationCriterion.getRules().addAll(v);
         });
-        this.xoManager.currentTransaction().commit();
         return classificationConfigurationDescriptor;
     }
 

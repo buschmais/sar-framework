@@ -75,6 +75,7 @@ public class Partitioner {
                         return s1;
                     });
         }
+        System.out.print("\n");
         return identifiedComponents;
 
     }
