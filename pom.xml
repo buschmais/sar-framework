@@ -42,6 +42,7 @@
         <com.buschmais.jqassistant_version>1.6.0</com.buschmais.jqassistant_version>
         <com.buschmais.xo_version>0.11.0</com.buschmais.xo_version>
         <org.hibernate-validator_version>5.2.1.Final</org.hibernate-validator_version>
+        <com.fasterxml.jackson.version>2.9.7</com.fasterxml.jackson.version>
         <jenetics.version>4.1.0</jenetics.version>
     </properties>
 
@@ -96,6 +97,11 @@
             <artifactId>java</artifactId>
         </dependency>
 
+        <dependency>
+            <!-- JSON and XML object mapper -->
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
         <dependency>
             <!-- Method Generator -->
             <groupId>org.projectlombok</groupId>
@@ -186,6 +192,23 @@
                 <groupId>com.buschmais.jqassistant.plugin</groupId>
                 <artifactId>java</artifactId>
                 <version>${com.buschmais.jqassistant_version}</version>
+            </dependency>
+
+            <!-- JSON and XML object mapper -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${com.fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${com.fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${com.fasterxml.jackson.version}</version>
             </dependency>
 
             <dependency>
