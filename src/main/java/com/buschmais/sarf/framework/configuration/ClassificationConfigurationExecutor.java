@@ -251,7 +251,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                 .asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js", "chord-diagram.html",
                     "chord-jsonMapper.js", "chord-jsonScript.js", "chord-style.css",
                     "dendrogram-interactive.html", "dendrogram-interactive.js",
-                    "dendrogram-radial.html", "dendrogram-radial.js");
+                    "dendrogram-radial.html", "dendrogram-radial.js", "index.html");
             for (String resource : resources) {
                 ZipEntry entry = new ZipEntry(resource);
                 InputStream in = SARFRunner.class.getClassLoader().getResourceAsStream(resource);
