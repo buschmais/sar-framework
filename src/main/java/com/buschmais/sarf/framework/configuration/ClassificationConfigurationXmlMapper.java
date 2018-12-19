@@ -1,13 +1,14 @@
 package com.buschmais.sarf.framework.configuration;
 
+import java.util.HashSet;
+import java.util.Set;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.buschmais.sarf.framework.metamodel.ComponentXmlMapper;
 import com.buschmais.sarf.plugin.api.Materializable;
 import com.buschmais.sarf.plugin.api.XmlMapper;
-import lombok.Getter;
-
-import javax.xml.bind.annotation.*;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
@@ -19,7 +20,6 @@ public class ClassificationConfigurationXmlMapper implements XmlMapper{
     @XmlAttribute(name = "iteration")
     public Integer iteration;
 
-    @Getter
     @XmlAttribute(name = "basePackage")
     public String basePackage;
 
@@ -41,7 +41,6 @@ public class ClassificationConfigurationXmlMapper implements XmlMapper{
     @XmlAttribute(name = "optimization")
     public Optimization optimization;
 
-    @Getter
     @XmlElement(name = "Component")
     public Set<ComponentXmlMapper> definedComponents = new HashSet<>();
 
