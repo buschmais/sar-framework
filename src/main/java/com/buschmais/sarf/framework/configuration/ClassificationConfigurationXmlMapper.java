@@ -1,13 +1,14 @@
 package com.buschmais.sarf.framework.configuration;
 
+import java.util.HashSet;
+import java.util.Set;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.buschmais.sarf.framework.metamodel.ComponentXmlMapper;
 import com.buschmais.sarf.plugin.api.Materializable;
 import com.buschmais.sarf.plugin.api.XmlMapper;
-import lombok.Getter;
-
-import javax.xml.bind.annotation.*;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
@@ -16,51 +17,31 @@ import java.util.Set;
 @Materializable(ClassificationConfigurationDescriptor.class)
 public class ClassificationConfigurationXmlMapper implements XmlMapper{
 
-    @XmlType
-    @XmlEnum
-    public enum Decomposition {
-        @XmlEnumValue("flat")
-        FLAT,
-        @XmlEnumValue("deep")
-        DEEP;
-    }
-
-    @XmlType
-    @XmlEnum
-    public enum Optimization {
-        @XmlEnumValue("similarity")
-        SIMILARITY,
-        @XmlEnumValue("coupling")
-        COUPLING
-    }
-
     @XmlAttribute(name = "iteration")
-    Integer iteration;
+    public Integer iteration;
 
-    @Getter
     @XmlAttribute(name = "basePackage")
-    String basePackage;
+    public String basePackage;
 
     @XmlAttribute(name = "typeName")
-    String typeName;
+    public String typeName;
 
     @XmlAttribute(name = "artifact")
-    String artifact;
+    public String artifact;
 
     @XmlAttribute(name = "generations")
-    Integer generations;
+    public Integer generations;
 
     @XmlAttribute(name = "populationSize")
-    Integer populationSize;
+    public Integer populationSize;
 
     @XmlAttribute(name = "decomposition")
-    private Decomposition decomposition;
+    public Decomposition decomposition;
 
     @XmlAttribute(name = "optimization")
-    private Optimization optimization;
+    public Optimization optimization;
 
-    @Getter
     @XmlElement(name = "Component")
-    Set<ComponentXmlMapper> definedComponents = new HashSet<>();
+    public Set<ComponentXmlMapper> definedComponents = new HashSet<>();
 
 }
