@@ -41,6 +41,11 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
 
     @Override
     public Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor) {
+        Map<Long, Set<Long>> initialPartitioning = initialPartitioningFromPackageStructure()
+    }
+
+    @Override
+    public Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor, Set<ComponentDescriptor> initialPartitioning) {
         LOG.info("Partitioning the System");
         List<Long> typeIds = new ArrayList<>();
         this.xOManager.currentTransaction().begin();
@@ -63,10 +68,10 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         // create initial partitioning
         Map<Long, Set<Long>> initialPartitioning;
         if (components != null && components.size() > 0) {
-            //initialPartitioning = initialPartitioningFromComponents(components, ids);
+            initialPartitioning = initialPartitioningFromComponents(components, ids);
             initialPartitioning = components;
         } else {
-            initialPartitioning = inititialPartitioningFromPackageStructure(ids);
+            initialPartitioning = initialPartitioningFromPackageStructure(ids);
         }
         this.xOManager.currentTransaction().commit();
 
@@ -182,11 +187,18 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         return identifiedGroups;
     }
 
-    private Map<Long, Set<Long>> inititialPartitioningFromPackageStructure(long[] ids) {
+    /**
+     * Create the initial partitioning which is used as an input for the evolutionary algorithm based on the bottom-most packages for the specified types.
+     *
+     * @param typeIds The ids of the types to assign to package-based components.
+     *
+     * @return The mapping from component id (starting at 0) to type ids.
+     */
+    private Map<Long, Set<Long>> initialPartitioningFromPackageStructure(long[] typeIds) {
         // Package name to type ids
         Map<String, Set<Long>> packageComponents = new HashMap<>();
         TypeRepository typeRepository = this.xOManager.getRepository(TypeRepository.class);
-        for (Long id : ids) {
+        for (Long id : typeIds) {
             String packageName = typeRepository.getPackageName(id);
             packageComponents.merge(
                 packageName,
@@ -205,12 +217,20 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         return components;
     }
 
-    private Map<Long, Set<Long>> initialPartitioningFromComponents(Set<ComponentDescriptor> components, long[] ids) {
+    /**
+     * Create the initial partitioning which is used as an input for the evolutionary algorithm based on the defined candidate components for the defined type ids.
+     *
+     * @param candidateComponents The previously identified components.
+     * @param ids The ids of the types to assign to candidate component-based components.
+     *
+     * @return The mapping from component id to type ids.
+     */
+    private Map<Long, Set<Long>> initialPartitioningFromComponents(Set<ComponentDescriptor> candidateComponents, long[] ids) {
         Map<Long, Set<Long>> componentMappings = new HashMap<>();
         ComponentRepository componentRepository = this.xOManager.getRepository(ComponentRepository.class);
         for (Long id : ids) {
             long componentId = 0;
-            for (ComponentDescriptor component : components) {
+            for (ComponentDescriptor component : candidateComponents) {
                 Long cId = this.xOManager.getId(component);
                 if (componentRepository.isCandidateType(cId, id) || componentRepository.isCandidateComponent(cId, id)) {
                     componentMappings.merge(
@@ -229,10 +249,17 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         return componentMappings;
     }
 
-    private Map<Long, Set<Long>> partitioningFromGroups(Set<Long> elements) {
+    /**
+     * Create the initial partitioning for hierarchical clustering, i.e. grouping of components (groups) by assigning each group to an own component.
+     *
+     * @param groupIds The group ids to assign to components.
+     *
+     * @return The mapping from component ids and group ids.
+     */
+    private Map<Long, Set<Long>> partitioningFromGroups(Set<Long> groupIds) {
         Map<Long, Set<Long>> partitioning = new HashMap<>();
         Long cId = 0L;
-        for (Long group : elements) {
+        for (Long group : groupIds) {
             partitioning.put(cId, Sets.newHashSet(group));
             cId++;
         }
