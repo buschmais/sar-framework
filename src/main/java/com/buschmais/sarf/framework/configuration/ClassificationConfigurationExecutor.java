@@ -20,6 +20,7 @@ import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
@@ -37,6 +38,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
+ * Executor implementation for the ClassificationConfigurationDescriptor.
+ *
  * @author Stephan Pirnbaum
  */
 @Service
@@ -59,6 +62,23 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         this.dendrogramExporter = dendrogramExporter;
     }
 
+    /**
+     * Executes the given {@link ClassificationConfigurationDescriptor} by executing following steps:
+     *
+     * <ul>
+     *     <li>Executing all {@link RuleBasedCriterionDescriptor}s that were specified by the user</li>
+     *     <li>Removing ambiguously assignments of types to components, i.e. types which were assigned to more than one conflicting component will be only assigned to the one with the highest probability</li>
+     *     <li>Executing the {@link CohesionCriterionDescriptor} based on the results of the pre-assignment</li>
+     *     <li>Intersecting the components identified by the evolutionary algorithms with those manually defined for better identification by name</li>
+     * </ul>
+     *
+     * @param executableDescriptor The {@link ClassificationConfigurationDescriptor} to execute.
+     *
+     * @return The identified {@link ComponentDescriptor}s.
+     *
+     * @see ClassificationConfigurationExecutor#removeAmbiguities(Collection, Integer)
+     * @see ClassificationConfigurationExecutor#intersectComponents(Collection)
+     */
     @Override
     public Set<ComponentDescriptor> execute(ClassificationConfigurationDescriptor executableDescriptor) {
         LOG.info("Executing Classification");
@@ -97,7 +117,11 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
 
         {
             CohesionCriterionExecutor cohesionCriterionExecutor = this.beanFactory.getBean(CohesionCriterionExecutor.class);
-            cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
+            if (CollectionUtils.isNotEmpty(components)) {
+                cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor, components);
+            } else {
+                cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
+            }
             // match with manual classification
             components = cohesionResult;
         } else
