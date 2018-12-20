@@ -50,7 +50,7 @@ public class ClassificationConfigurationMaterializer {
         classificationConfigurationDescriptor.setOptimization(mapper.optimization);
 
         // materialize components
-        Set<ComponentDescriptor> componentDescriptors = mapper.getDefinedComponents().stream()
+        Set<ComponentDescriptor> componentDescriptors = mapper.definedComponents.stream()
             .map(m -> (ComponentDescriptor) genericMaterialize(m))
             .collect(Collectors.toSet());
         classificationConfigurationDescriptor.getDefinedComponents().addAll(componentDescriptors);
