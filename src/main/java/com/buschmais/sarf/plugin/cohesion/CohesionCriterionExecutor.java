@@ -41,14 +41,21 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
 
     @Override
     public Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor) {
-        Map<Long, Set<Long>> initialPartitioning = initialPartitioningFromPackageStructure()
+        this.xOManager.currentTransaction().begin();
+        List<Long> typeIds = getTypeIds();
+        Map<Long, Set<Long>> initialPartitioning = initialPartitioningFromPackageStructure(typeIds);
+        return execute(descriptor, initialPartitioning);
     }
 
-    @Override
-    public Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor, Set<ComponentDescriptor> initialPartitioning) {
-        LOG.info("Partitioning the System");
-        List<Long> typeIds = new ArrayList<>();
+    public Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor, Set<ComponentDescriptor> candidateComponents) {
         this.xOManager.currentTransaction().begin();
+        List<Long> typeIds = getTypeIds();
+        Map<Long, Set<Long>> initialPartitioning = initialPartitioningFromComponents(candidateComponents, typeIds);
+        return execute(descriptor, initialPartitioning);
+    }
+
+    private Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor, Map<Long, Set<Long>> initialPartitioning) {
+        LOG.info("Partitioning the System");
         ClassificationConfigurationRepository classificationConfigurationRepository =
             this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         ClassificationConfigurationDescriptor currentConfiguration = classificationConfigurationRepository.getCurrentConfiguration();
@@ -57,22 +64,11 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         boolean hierarchical = currentConfiguration.getDecomposition() == Decomposition.DEEP;
         Integer generations = currentConfiguration.getGenerations();
         Integer populationSize = currentConfiguration.getPopulationSize();
-        Map<Long, Set<Long>> components = null; // todo get from database
-        TypeRepository typeRepository = this.xOManager.getRepository(TypeRepository.class);
-        Query.Result<TypeDescriptor> types = typeRepository.getAllInternalTypes();
-        for (TypeDescriptor type : types) {
-            typeIds.add(this.xOManager.getId(type));
-        }
-        types.close();
-        long[] ids = typeIds.stream().mapToLong(l -> l).sorted().toArray();
+
+        List<Long> tIds = getTypeIds();
+        long[] ids = tIds.stream().mapToLong(l -> l).toArray();
         // create initial partitioning
-        Map<Long, Set<Long>> initialPartitioning;
-        if (components != null && components.size() > 0) {
-            initialPartitioning = initialPartitioningFromComponents(components, ids);
-            initialPartitioning = components;
-        } else {
-            initialPartitioning = initialPartitioningFromPackageStructure(ids);
-        }
+
         this.xOManager.currentTransaction().commit();
 
         int componentLevel = 0;
@@ -187,6 +183,17 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         return identifiedGroups;
     }
 
+    private List<Long> getTypeIds() {
+        List<Long> typeIds = new ArrayList<>();
+        TypeRepository typeRepository = this.xOManager.getRepository(TypeRepository.class);
+        try (Query.Result<TypeDescriptor> types = typeRepository.getAllInternalTypes()) {
+            for (TypeDescriptor type : types) {
+                typeIds.add(this.xOManager.getId(type));
+            }
+        }
+        return typeIds;
+    }
+
     /**
      * Create the initial partitioning which is used as an input for the evolutionary algorithm based on the bottom-most packages for the specified types.
      *
@@ -194,7 +201,7 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
      *
      * @return The mapping from component id (starting at 0) to type ids.
      */
-    private Map<Long, Set<Long>> initialPartitioningFromPackageStructure(long[] typeIds) {
+    private Map<Long, Set<Long>> initialPartitioningFromPackageStructure(List<Long> typeIds) {
         // Package name to type ids
         Map<String, Set<Long>> packageComponents = new HashMap<>();
         TypeRepository typeRepository = this.xOManager.getRepository(TypeRepository.class);
@@ -221,14 +228,14 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
      * Create the initial partitioning which is used as an input for the evolutionary algorithm based on the defined candidate components for the defined type ids.
      *
      * @param candidateComponents The previously identified components.
-     * @param ids The ids of the types to assign to candidate component-based components.
+     * @param typeIds The ids of the types to assign to candidate component-based components.
      *
      * @return The mapping from component id to type ids.
      */
-    private Map<Long, Set<Long>> initialPartitioningFromComponents(Set<ComponentDescriptor> candidateComponents, long[] ids) {
+    private Map<Long, Set<Long>> initialPartitioningFromComponents(Set<ComponentDescriptor> candidateComponents, List<Long> typeIds) {
         Map<Long, Set<Long>> componentMappings = new HashMap<>();
         ComponentRepository componentRepository = this.xOManager.getRepository(ComponentRepository.class);
-        for (Long id : ids) {
+        for (Long id : typeIds) {
             long componentId = 0;
             for (ComponentDescriptor component : candidateComponents) {
                 Long cId = this.xOManager.getId(component);

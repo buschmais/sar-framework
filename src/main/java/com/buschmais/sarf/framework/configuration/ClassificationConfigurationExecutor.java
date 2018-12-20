@@ -19,6 +19,7 @@ import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
@@ -113,7 +114,11 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
 
         {
             CohesionCriterionExecutor cohesionCriterionExecutor = this.beanFactory.getBean(CohesionCriterionExecutor.class);
-            cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
+            if (CollectionUtils.isNotEmpty(components)) {
+                cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor, components);
+            } else {
+                cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
+            }
             // match with manual classification
             components = cohesionResult;
         } else
