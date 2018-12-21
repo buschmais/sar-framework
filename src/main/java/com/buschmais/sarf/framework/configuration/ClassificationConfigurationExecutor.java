@@ -82,37 +82,28 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         this.xoManager.currentTransaction().begin();
         final int iteration = executableDescriptor.getIteration();
         this.xoManager.currentTransaction().commit();
-        Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
-            int res = 0;
-            if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
-                res = c1.getName().compareTo(c2.getName());
-            }
-            return res;
-        });
-        CohesionCriterionDescriptor cohesionCriterionDescriptor = null;
         this.xoManager.currentTransaction().begin();
+
+        Set<RuleBasedCriterionDescriptor> ruleBasedCriteria = new HashSet<>();
+        CohesionCriterionDescriptor cohesionCriterionDescriptor = null;
+
         Set<ClassificationCriterionDescriptor> classificationCriteria = executableDescriptor.getClassificationCriteria();
         for (ClassificationCriterionDescriptor cC : classificationCriteria) {
             if (cC instanceof RuleBasedCriterionDescriptor) {
-                Class<? extends Executor> executorClass = cC.getClass().getAnnotation(ExecutedBy.class).value();
-                if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
-                    @SuppressWarnings("unchecked")
-                    ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
-                        this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
-                    components.addAll(executor.execute(cC));
-                }
+                ruleBasedCriteria.add((RuleBasedCriterionDescriptor) cC);
             } else {
                 cohesionCriterionDescriptor = (CohesionCriterionDescriptor) cC;
             }
         }
-        this.xoManager.currentTransaction().commit();
+
+        Set<ComponentDescriptor> components = executeRuleBaseCriteria(ruleBasedCriteria);
+
         removeAmbiguities(components, iteration);
 
-        //combine(components);
-        Set<ComponentDescriptor> cohesionResult = null;
-        if (cohesionCriterionDescriptor != null)
+        createIntersectingComponents(components);
 
-        {
+        Set<ComponentDescriptor> cohesionResult = null;
+        if (cohesionCriterionDescriptor != null) {
             CohesionCriterionExecutor cohesionCriterionExecutor = this.beanFactory.getBean(CohesionCriterionExecutor.class);
             if (CollectionUtils.isNotEmpty(components)) {
                 cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor, components);
@@ -120,11 +111,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                 cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
             }
             // match with manual classification
-            components = cohesionResult;
-        } else
-
-        {
-            components = createIntersectingComponents(components);
+            components = mergeComponents(cohesionResult, components, iteration);
         }
         //finalize(components);
 
@@ -138,6 +125,47 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         return components;
     }
 
+    /**
+     * Method executing all user specified {@link RuleBasedCriterionDescriptor}s.
+     *
+     * @param ruleBasedCriteria The {@link RuleBasedCriterionDescriptor}s to execute.
+     *
+     * @return The created {@link ComponentDescriptor}s.
+     */
+    private Set<ComponentDescriptor> executeRuleBaseCriteria(Set<RuleBasedCriterionDescriptor> ruleBasedCriteria) {
+        Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
+            int res = 0;
+            if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
+                res = c1.getName().compareTo(c2.getName());
+            }
+            return res;
+        });
+
+        for (RuleBasedCriterionDescriptor ruleBasedCriterion : ruleBasedCriteria) {
+            Class<? extends Executor> executorClass = ruleBasedCriteria.getClass().getAnnotation(ExecutedBy.class).value();
+            if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
+                @SuppressWarnings("unchecked")
+                ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
+                    this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
+                components.addAll(executor.execute(ruleBasedCriterion));
+            }
+        }
+
+        this.xoManager.currentTransaction().commit();
+
+        return components;
+    }
+
+    /**
+     * Method identifying ambiguously assignments from {@link TypeDescriptor}s to {@link ComponentDescriptor}s. An assignment is
+     * ambiguous if there is at least another assignment of the same {@link TypeDescriptor} to a {@link ComponentDescriptor} of the
+     * same {@link ComponentDescriptor#getShape()}.
+     *
+     * The assignment with the higher probability is kept, all others are removed.
+     *
+     * @param components The {@link ComponentDescriptor}s to check for ambiguities.
+     * @param iteration The current iteration.
+     */
     private void removeAmbiguities(Collection<ComponentDescriptor> components, Integer iteration) {
         LOG.info("Removing Ambiguities from Pre-Partitioning");
         this.xoManager.currentTransaction().begin();
@@ -152,7 +180,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                     for (TypeDescriptor type : types) {
                         Double weightC1 = typeRepository.getAssignmentWeight(this.xoManager.getId(type), id1, iteration);
                         Double weightC2 = typeRepository.getAssignmentWeight(this.xoManager.getId(type), id2, iteration);
-                        if (weightC1 - weightC2 < 1 || weightC2 - weightC1 > 1) { // TODO: 04.07.2017 change threshold for productive usage
+                        if (weightC1 < weightC2 || weightC2 < weightC1) {
                             LOG.info("\tDetected Ambiguity:");
                             LOG.info("\t\tFQN: " + type.getFullQualifiedName());
                             LOG.info("\t\tComponent 1: " + component1.getShape() + " - " + component1.getName() + " Weight: " + weightC1);
@@ -175,6 +203,16 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         LOG.info("\tRemoved " + removed + " Assignments");
     }
 
+    /**
+     * Intersect the {@link ComponentDescriptor}s which resulted from the execution of the user rules. Intersecting components is done
+     * by taking the {@link ComponentDescriptor#getShape()} and the contained {@link TypeDescriptor}s into account. If one
+     * {@link TypeDescriptor} is part of multiple {@link ComponentDescriptor}s, then these {@link ComponentDescriptor}s
+     * will be intersected.
+     *
+     * @param components The {@link ComponentDescriptor}s to intersect.
+     *
+     * @return The intersected {@link ComponentDescriptor}s.
+     */
     private Set<ComponentDescriptor> createIntersectingComponents(Collection<ComponentDescriptor> components) {
         ArrayListMultimap<Collection<Long>, Long> inverse = intersectComponents(components);
         Set<ComponentDescriptor> result = new HashSet<>();
@@ -212,21 +250,6 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         return result;
     }
 
-    /**
-     * @param components
-     * @return Mapping from component id (ranges from 0 to the number of identified components) to type ids (actual ids from the graph database)
-     */
-    private Map<Long, Collection<Long>> identifyIntersectingComponents(Collection<ComponentDescriptor> components) {
-        Map<Long, Collection<Long>> componentMappings = new HashMap<>();
-        Long componentId = 0L;
-        ArrayListMultimap<Collection<Long>, Long> inverse = intersectComponents(components);
-        for (Collection<Long> componentIds : inverse.keys().elementSet()) {
-            componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
-            componentId++;
-        }
-        return componentMappings;
-    }
-
     private ArrayListMultimap<Collection<Long>, Long> intersectComponents(Collection<ComponentDescriptor> components) {
         LOG.info("Creating Intersecting Components");
         this.xoManager.currentTransaction().begin();
@@ -261,6 +284,47 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         ArrayListMultimap<Collection<Long>, Long> inverse = Multimaps.invertFrom(Multimaps.forMap(typeToComponents), ArrayListMultimap.create());
         this.xoManager.currentTransaction().commit();
         return inverse;
+    }
+
+    private Set<ComponentDescriptor> mergeComponents(Set<ComponentDescriptor> cohesionResult, Set<ComponentDescriptor> userResult, Integer iteration) {
+        //so we have several solutions, time to make one out of them :)
+        // 2 types of identified components exist:
+        // -user-defined ones
+        // -self-created ones (start with a hash # sign)
+        //
+        ComponentRepository componentRepository = this.xoManager.getRepository(ComponentRepository.class);
+        for (ComponentDescriptor cohesionComponent : cohesionResult) {
+            for (ComponentDescriptor userComponent : userResult) {
+                this.xoManager.currentTransaction().begin();
+                System.out.println(cohesionComponent.getShape() + " " + cohesionComponent.getName() + " With: " + userComponent.getShape() + " " + userComponent.getName());
+                double jaccard = componentRepository.computeJaccardSimilarity(
+                    cohesionComponent.getShape(), cohesionComponent.getName(),
+                    userComponent.getShape(), userComponent.getName(),
+                    iteration);
+                Long intersection = componentRepository.computeComponentIntersectionCardinality(
+                    cohesionComponent.getShape(), cohesionComponent.getName(),
+                    userComponent.getShape(), userComponent.getName(),
+                    iteration);
+                Long cardinality1 = componentRepository.computeComponentCardinality(cohesionComponent.getShape(), cohesionComponent.getName(), iteration);
+                Long cardinality2 = componentRepository.computeComponentCardinality(userComponent.getShape(), userComponent.getName(), iteration);
+                Long ofCD1InCD2 = componentRepository.computeComplementCardinality(cohesionComponent.getShape(), cohesionComponent.getName(), userComponent.getShape(), userComponent.getName(), iteration);
+                Long ofCD2InCD1 = componentRepository.computeComplementCardinality(userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), iteration);
+                double alpha = 0.8;
+                double beta = 0.6;
+                Double tversky = intersection.doubleValue() / (intersection + beta * (alpha * Math.min(ofCD2InCD1, ofCD1InCD2) + (1 - alpha) * Math.max(ofCD2InCD1, ofCD1InCD2)));
+                System.out.println("Jaccard: " + jaccard);
+                System.out.println("Cardinality 1: " + cardinality1);
+                System.out.println("Cardinality 2: " + cardinality2);
+                System.out.println("Intersection: " + intersection);
+                System.out.println("Tversky: " + tversky);
+
+                // todo combine components
+                // todo explore cohesion components recursively
+
+                this.xoManager.currentTransaction().commit();
+            }
+        }
+        return cohesionResult;
     }
 
     public void exportResults(Set<ComponentDescriptor> components) {
