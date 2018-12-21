@@ -26,6 +26,7 @@ import com.buschmais.xo.api.XOManagerFactory;
 import com.buschmais.xo.api.bootstrap.XO;
 import com.buschmais.xo.api.bootstrap.XOUnit;
 import com.buschmais.xo.neo4j.embedded.api.EmbeddedNeo4jXOProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -83,6 +84,11 @@ public class DatabaseHelper {
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
         LOG.info("Setting up Database Successful");
         return factory.createXOManager();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 
 }
