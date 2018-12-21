@@ -7,9 +7,6 @@ import com.buschmais.sarf.plugin.api.*;
 import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleXmlMapper;
-import com.buschmais.sarf.plugin.packagenaming.PackageNamingCriterionDescriptor;
-import com.buschmais.sarf.plugin.packagenaming.PackageNamingRuleDescriptor;
-import com.buschmais.sarf.plugin.packagenaming.PackageNamingRuleXmlMapper;
 import com.buschmais.xo.api.XOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,12 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import javax.el.MethodNotFoundException;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,7 +51,7 @@ public class ClassificationConfigurationMaterializer {
             mapper.definedComponents.stream().map(this::materializeComponent).collect(Collectors.toSet());
         classificationConfigurationDescriptor.getDefinedComponents().addAll(componentDescriptors);
         // create criteria for all rules
-        Map<Class<? extends RuleBasedCriterionDescriptor>, Set<RuleDescriptor>> aggregatedRules =
+        Map<Class<? extends RuleBasedCriterionDescriptor<? extends RuleDescriptor>>, Set<RuleDescriptor>> aggregatedRules =
             new HashMap<>();
         for (RuleDescriptor ruleDescriptor : flattenRules(componentDescriptors)) {
             ContainedIn containedIn =
@@ -69,7 +60,7 @@ public class ClassificationConfigurationMaterializer {
             aggregatedRules.get(containedIn.value()).add(ruleDescriptor);
         }
         aggregatedRules.forEach((k, v) -> {
-            RuleBasedCriterionDescriptor classificationCriterion = this.xoManager.create(k);
+            RuleBasedCriterionDescriptor<? extends RuleDescriptor> classificationCriterion = this.xoManager.create(k);
             classificationCriterion.getRules().addAll(v);
             classificationConfigurationDescriptor.getClassificationCriteria().add(classificationCriterion);
         });
