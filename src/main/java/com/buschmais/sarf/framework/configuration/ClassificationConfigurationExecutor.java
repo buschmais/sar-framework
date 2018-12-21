@@ -31,6 +31,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -264,8 +268,21 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     }
 
     public void exportResults(Set<ComponentDescriptor> components) {
+        DateTimeFormatter resultFileFormatter = new DateTimeFormatterBuilder()
+            .appendLiteral("Result_")
+            .appendValue(ChronoField.YEAR, 4)
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+            .appendValue(ChronoField.DAY_OF_MONTH, 2)
+            .appendLiteral('_')
+            .appendValue(ChronoField.HOUR_OF_DAY, 2)
+            .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+            .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+            .appendLiteral(".zip")
+            .toFormatter();
+
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream("Result_" + System.currentTimeMillis() + ".zip");
+            FileOutputStream fileOutputStream =
+                new FileOutputStream(LocalDateTime.now().format(resultFileFormatter));
             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
             // add resource files
             List<String> resources = Arrays.asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js", "chord-diagram.html", "chord-jsonMapper.js", "chord-jsonScript.js", "chord-style.css");
