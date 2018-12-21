@@ -1,7 +1,7 @@
 d3.json("dendrogram-data.json").then(radial);
 
 function radial(data) {
-    const width = 932;
+    const width = window.innerWidth;
     const radius = width / 2;
     const tree = d3.cluster().size([2 * Math.PI, radius - 100]);
 

@@ -1,7 +1,7 @@
 d3.json("dendrogram-data.json").then(interactive);
 
 function interactive(data) {
-    const width = 1200;
+    const width = window.innerWidth;
     const dx = 10;
     const dy = width / 6;
     const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
