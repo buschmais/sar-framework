@@ -3,6 +3,7 @@ package com.buschmais.sarf.framework.configuration;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.framework.repository.AnnotationResolver;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.api.ExecutedBy;
@@ -10,6 +11,7 @@ import com.buschmais.sarf.plugin.api.Executor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionExecutor;
 import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionExecutor;
 import com.buschmais.sarf.plugin.chorddiagram.ChordDiagramExporter;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionExecutor;
@@ -101,12 +103,18 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         Set<ClassificationCriterionDescriptor> classificationCriteria = executableDescriptor.getClassificationCriteria();
         for (ClassificationCriterionDescriptor cC : classificationCriteria) {
             if (cC instanceof RuleBasedCriterionDescriptor) {
-                Class<? extends Executor> executorClass = cC.getClass().getAnnotation(ExecutedBy.class).value();
+                ExecutedBy executedBy = AnnotationResolver.resolveAnnotation(cC.getClass(), ExecutedBy.class);
+                Class<? extends Executor> executorClass = executedBy.value();
                 if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
                     @SuppressWarnings("unchecked")
                     ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
                         this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
                     components.addAll(executor.execute(cC));
+                } else if (executorClass.isAssignableFrom(RuleBasedCriterionExecutor.class)) {
+                    @SuppressWarnings("unchecked")
+                    RuleBasedCriterionExecutor<RuleBasedCriterionDescriptor> executor =
+                        this.beanFactory.getBean((Class<RuleBasedCriterionExecutor>) executorClass);
+                    components.addAll(executor.execute((RuleBasedCriterionDescriptor) cC));
                 }
             } else {
                 cohesionCriterionDescriptor = (CohesionCriterionDescriptor) cC;
