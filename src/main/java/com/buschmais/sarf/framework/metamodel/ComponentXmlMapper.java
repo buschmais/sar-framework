@@ -1,5 +1,12 @@
 package com.buschmais.sarf.framework.metamodel;
 
+import java.util.Set;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlID;
+
 import com.buschmais.sarf.plugin.api.Materializable;
 import com.buschmais.sarf.plugin.api.XmlMapper;
 import com.buschmais.sarf.plugin.api.criterion.RuleXmlMapper;
@@ -9,10 +16,6 @@ import com.buschmais.sarf.plugin.dependency.ExtendsRuleXmlMapper;
 import com.buschmais.sarf.plugin.dependency.ImplementsRuleXmlMapper;
 import com.buschmais.sarf.plugin.packagenaming.PackageNamingRuleXmlMapper;
 import com.buschmais.sarf.plugin.typenaming.TypeNamingRuleXmlMapper;
-import lombok.Getter;
-
-import javax.xml.bind.annotation.*;
-import java.util.Set;
 
 /**
  * @author Stephan Pirnbaum
@@ -20,21 +23,17 @@ import java.util.Set;
 @Materializable(ComponentDescriptor.class)
 public class ComponentXmlMapper implements XmlMapper {
 
-    @Getter
     @XmlID
     @XmlAttribute(name = "shape")
-    private String shape;
+    public String shape;
 
-    @Getter
     @XmlID
     @XmlAttribute(name = "name")
-    private String name;
+    public String name;
 
-    @Getter
     @XmlElement(name = "Component")
-    private Set<ComponentXmlMapper> containedComponents;
+    public Set<ComponentXmlMapper> containedComponents;
 
-    @Getter
     @XmlElementWrapper(name = "Rules")
     @XmlElements(
             {
@@ -46,6 +45,6 @@ public class ComponentXmlMapper implements XmlMapper {
                     @XmlElement(name = "Implements", type = ImplementsRuleXmlMapper.class)
             }
     )
-    Set<RuleXmlMapper> identifyingRules;
+    public Set<RuleXmlMapper> identifyingRules;
 
 }

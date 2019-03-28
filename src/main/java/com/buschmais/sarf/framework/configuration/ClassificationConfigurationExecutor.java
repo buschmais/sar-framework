@@ -3,6 +3,7 @@ package com.buschmais.sarf.framework.configuration;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
+import com.buschmais.sarf.framework.repository.AnnotationResolver;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.api.ExecutedBy;
@@ -10,9 +11,11 @@ import com.buschmais.sarf.plugin.api.Executor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionExecutor;
 import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionExecutor;
 import com.buschmais.sarf.plugin.chorddiagram.ChordDiagramExporter;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionExecutor;
+import com.buschmais.sarf.plugin.treediagram.DendrogramExporter;
 import com.buschmais.xo.api.CompositeObject;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
@@ -27,10 +30,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -51,12 +57,15 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     private XOManager xoManager;
     private BeanFactory beanFactory;
     private ChordDiagramExporter chordDiagramExporter;
+    private DendrogramExporter dendrogramExporter;
 
     @Autowired
-    public ClassificationConfigurationExecutor(XOManager xoManager, BeanFactory beanFactory, ChordDiagramExporter chordDiagramExporter) {
+    public ClassificationConfigurationExecutor(XOManager xoManager, BeanFactory beanFactory,
+        ChordDiagramExporter chordDiagramExporter, DendrogramExporter dendrogramExporter) {
         this.xoManager = xoManager;
         this.beanFactory = beanFactory;
         this.chordDiagramExporter = chordDiagramExporter;
+        this.dendrogramExporter = dendrogramExporter;
     }
 
     /**
@@ -328,11 +337,28 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     }
 
     public void exportResults(Set<ComponentDescriptor> components) {
+        DateTimeFormatter resultFileFormatter = new DateTimeFormatterBuilder()
+            .appendLiteral("Result_")
+            .appendValue(ChronoField.YEAR, 4)
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+            .appendValue(ChronoField.DAY_OF_MONTH, 2)
+            .appendLiteral('_')
+            .appendValue(ChronoField.HOUR_OF_DAY, 2)
+            .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+            .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+            .appendLiteral(".zip")
+            .toFormatter();
+
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream("Result_" + System.currentTimeMillis() + ".zip");
+            FileOutputStream fileOutputStream =
+                new FileOutputStream(LocalDateTime.now().format(resultFileFormatter));
             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
             // add resource files
-            List<String> resources = Arrays.asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js", "chord-diagram.html", "chord-jsonMapper.js", "chord-jsonScript.js", "chord-style.css");
+            List<String> resources = Arrays
+                .asList("circle-packing.html", "circle-packing-convert.js", "d3.min.js", "chord-diagram.html",
+                    "chord-jsonMapper.js", "chord-jsonScript.js", "chord-style.css",
+                    "dendrogram-interactive.html", "dendrogram-interactive.js",
+                    "dendrogram-radial.html", "dendrogram-radial.js", "index.html");
             for (String resource : resources) {
                 ZipEntry entry = new ZipEntry(resource);
                 InputStream in = SARFRunner.class.getClassLoader().getResourceAsStream(resource);
@@ -368,10 +394,13 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             entry = new ZipEntry("chord-data.json");
             zipOutputStream.putNextEntry(entry);
             zipOutputStream.write(this.chordDiagramExporter.export(components).getBytes());
+            // write tree diagram data
+            entry = new ZipEntry("dendrogram-data.json");
+            zipOutputStream.putNextEntry(entry);
+            zipOutputStream.write(this.dendrogramExporter.export(components).getBytes());
+            // close streams
             zipOutputStream.close();
             fileOutputStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
