@@ -14,9 +14,8 @@ import com.buschmais.sarf.plugin.cohesion.evolution.Problem;
 import com.buschmais.xo.api.Query;
 import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -28,9 +27,8 @@ import java.util.*;
  */
 @Service
 @Lazy
+@Slf4j
 public final class CohesionCriterionExecutor implements ClassificationCriterionExecutor<CohesionCriterionDescriptor> {
-
-    private static final Logger LOG = LogManager.getLogger(CohesionCriterionExecutor.class);
 
     private XOManager xOManager;
 
@@ -55,7 +53,7 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
     }
 
     private Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor, Map<Long, Set<Long>> initialPartitioning) {
-        LOG.info("Partitioning the System");
+        LOGGER.info("Partitioning the System");
         ClassificationConfigurationRepository classificationConfigurationRepository =
             this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         ClassificationConfigurationDescriptor currentConfiguration = classificationConfigurationRepository.getCurrentConfiguration();
@@ -73,7 +71,7 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
 
         int componentLevel = 0;
         do {
-            LOG.info("Computing Level " + componentLevel + " Components");
+            LOGGER.info("Computing Level " + componentLevel + " Components");
             createProblem(ids, similarityBased);
             this.xOManager.currentTransaction().begin();
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, generations, populationSize, similarityBased);
@@ -104,14 +102,14 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         this.xOManager.currentTransaction().begin();
         ComponentDescriptor result = this.xOManager.findById(ComponentDescriptor.class, ids[0]);
         this.xOManager.currentTransaction().commit();
-        LOG.info("Partitioning Finished");
+        LOGGER.info("Partitioning Finished");
         return Sets.newHashSet(result);
     }
 
     private Problem createProblem(long[] ids, boolean similarityBased) {
         int maxId = (int) Arrays.stream(ids).max().orElse(0);
         Problem p = Problem.newInstance(maxId + 1, maxId + 1, similarityBased);
-        LOG.info("Creating Problem");
+        LOGGER.info("Creating Problem");
         Query<Query.Result.CompositeRowObject> query;
         if (similarityBased) {
             query = this.xOManager.createQuery(
@@ -133,7 +131,7 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
         try (Query.Result<Query.Result.CompositeRowObject> res = query.execute()) {
             res.forEach(r -> p.addRelation(r.get("t", Long.class).intValue(), r.get("d", Long.class).intValue(), r.get("r", Double.class)));
         }
-        LOG.info("Creating Problem Successful");
+        LOGGER.info("Creating Problem Successful");
         return p;
     }
 

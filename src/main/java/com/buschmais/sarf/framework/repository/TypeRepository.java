@@ -23,6 +23,8 @@ public interface TypeRepository extends TypedNeo4jRepository<TypeDescriptor> {
             "  p.fqn =~ {basePackage}" +
             "    AND" +
             "  t.name =~ {typeName} " +
+            "WITH" +
+            "  DISTINCT t " +
             "SET" +
             "  t:Internal " +
             "RETURN" +

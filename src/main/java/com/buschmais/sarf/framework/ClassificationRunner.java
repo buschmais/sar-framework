@@ -97,9 +97,10 @@ public class ClassificationRunner implements AbstractRunner {
             this.xOManager.getRepository(ClassificationConfigurationRepository.class);
         if (descriptor.getIteration() == 1) {
             LOGGER.info("Preparing Data Set");
-            this.xOManager.getRepository(TypeRepository.class)
+            Long internalTypes = this.xOManager.getRepository(TypeRepository.class)
                 .markAllInternalTypes(descriptor.getTypeName(), descriptor.getBasePackage(),
                     descriptor.getArtifact());
+            LOGGER.info("Marked {} types as internal", internalTypes);
             this.xOManager.currentTransaction().commit();
             this.typeCouplingEnricher.enrich();
         } else if (descriptor.getIteration() <= classificationConfigurationRepository

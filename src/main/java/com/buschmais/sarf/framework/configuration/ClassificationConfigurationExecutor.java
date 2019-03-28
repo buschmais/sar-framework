@@ -119,7 +119,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
 
         // Step 6: Export the result
         exportResults(components);
-
+        LOGGER.info("Finished computation and export of results");
         return components;
     }
 
