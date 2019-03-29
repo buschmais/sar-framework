@@ -29,30 +29,24 @@ public abstract class RelationMutator extends Mutator<LongGene, Vec<double[]>> {
         int mutated = 0;
         LongObjectiveChromosome chromosome = (LongObjectiveChromosome) genotype.getChromosome();
         MSeq<LongGene> seq = chromosome.newInstance().toSeq().asMSeq();
-        long[] componentIds = seq.stream().mapToLong(i -> i.getAllele()).distinct().toArray();
         Multimap<Long, Long> componentToTypes = HashMultimap.create();
         for (int i = 0; i < seq.length(); i++) {
             componentToTypes.put(seq.get(i).getAllele(), Partitioner.ids[i]);
         }
         for (int i = 0; i < seq.size(); i++) {
             Long componentId = seq.get(i).getAllele();
-            Double maxCoupling = 0d;
-            if (RandomRegistry.getRandom().nextDouble() < (0.008 * Math.log10(Partitioner.ids.length) / Math.log10(2)) || componentToTypes.get(componentId).size() == 1 ||
-                (maxCoupling = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], componentToTypes.get(componentId))) == 0) {
-                // mutate gene
-                // compute coupling to elements in same component
-                Long maxComponent = componentId;
-                // the coupling to another component can be higher, find the component with the highest coupling
-                for (long l : componentIds) {
-                    Double coup = Problem.getInstance().computeCouplingTo(Partitioner.ids[i], componentToTypes.get(l));
-                    if (coup > maxCoupling) {
-                        maxCoupling = coup;
-                        maxComponent = l;
+            long elementId = Partitioner.ids[i];
+            boolean probabilityMatch = RandomRegistry.getRandom().nextDouble() < (0.008 * Math.log10(Partitioner.ids.length) / Math.log10(2));
+            boolean sizeMatch = componentToTypes.get(componentId).size() == 1;
+            boolean couplingMatch = Problem.getInstance().computeCouplingTo(elementId, componentToTypes.get(componentId)) == 0;
+            if (probabilityMatch || sizeMatch || couplingMatch) {
+                long strongestCoupledElement = Problem.getInstance().getStrongestCoupledElement(elementId);
+                if (strongestCoupledElement != -1) {
+                    long newComponentId = chromosome.getElementToComponent().get(strongestCoupledElement);
+                    if (!Objects.equals(componentId, newComponentId)) {
+                        seq.set(i, LongGene.of(newComponentId, seq.get(i).getMin(), seq.get(i).getMax()));
+                        mutated++;
                     }
-                }
-                if (!Objects.equals(maxComponent, componentId)) {
-                    seq.set(i, LongGene.of(maxComponent, seq.get(i).getMin(), seq.get(i).getMax()));
-                    mutated++;
                 }
             }
         }

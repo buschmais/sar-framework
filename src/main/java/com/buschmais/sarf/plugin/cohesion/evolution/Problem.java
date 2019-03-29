@@ -6,9 +6,6 @@ import com.buschmais.sarf.plugin.cohesion.evolution.similarity.SimilarityProblem
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import mikera.matrixx.AMatrix;
 import mikera.matrixx.impl.SparseRowMatrix;
 
@@ -25,6 +22,12 @@ public abstract class Problem {
     protected AMatrix relations;
 
     protected Map<ElementCoupling, ElementCoupling> couplings;
+
+    /**
+     * Mapping from an element which is referenced by its id as in {@link Partitioner#ids} to the element to which it is
+     * coupled the most.
+     */
+    private Map<Long, ElementCoupling> highestCoupling = new HashMap<>();
 
     private static Problem instance;
 
@@ -45,9 +48,18 @@ public abstract class Problem {
         return Problem.instance;
     }
 
-    public void addRelation(int from, int to, double coupling) {
-        this.relations.set(from, to, coupling);
+    public void addRelation(long from, long to, double coupling) {
+        this.relations.set((int) from, (int) to, coupling);
         ElementCoupling eC = new ElementCoupling(from, coupling, to);
+        // todo multiple best coupled elements?
+        // todo bi-directionality?
+        if (this.highestCoupling.containsKey(from)) {
+            if (this.highestCoupling.get(from).getCoupling() < coupling) {
+                this.highestCoupling.put(from, eC);
+            }
+        } else {
+            this.highestCoupling.put(from, eC);
+        }
         this.couplings.put(eC, eC);
     }
 
@@ -57,10 +69,10 @@ public abstract class Problem {
 
     public abstract Double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2);
 
-    public Multimap<Integer, Long> connectedComponents(Collection<Long> ids) {
+    public Multimap<Long, Long> connectedComponents(Collection<Long> ids) {
         Collection<Long> idCopy = Sets.newHashSet(ids);
-        Multimap<Integer, Long> connectedComponents = HashMultimap.create();
-        Integer compId = 0;
+        Multimap<Long, Long> connectedComponents = HashMultimap.create();
+        long compId = 0;
         while (connectedComponents.size() < ids.size()) {
             Long id = idCopy.iterator().next();
             Set<Long> identified = Sets.newHashSet(id);
@@ -70,12 +82,6 @@ public abstract class Problem {
             compId++;
         }
         return connectedComponents;
-    }
-
-    public boolean isFullyConnected(Collection<Long> ids) {
-        Set<Long> connectedNodes = Sets.newHashSet(ids.iterator().next());
-        getConnectedNodes(ids.iterator().next(), ids, connectedNodes);
-        return connectedNodes.size() == ids.size();
     }
 
     public void getConnectedNodes(long from, Collection<Long> ids, Set<Long> identified) {
@@ -95,23 +101,7 @@ public abstract class Problem {
         return this.relations.get(id1, id2) > 0 || this.relations.get(id2, id1) > 0;
     }
 
-    @EqualsAndHashCode(of = {"source", "target"})
-    @RequiredArgsConstructor
-    public class TypeCoupling implements Comparable<TypeCoupling> {
-
-        @Getter
-        private final long source;
-        @Getter
-        private final double coupling;
-        @Getter
-        private final long target;
-
-        @Override
-        public int compareTo(TypeCoupling o) {
-            if (this.source == o.source) {
-                return Long.compare(this.target, o.target);
-            }
-            return Long.compare(this.source, o.source);
-        }
+    public long getStrongestCoupledElement(long forElement) {
+        return this.highestCoupling.get(forElement) != null ? this.highestCoupling.get(forElement).getTarget() : -1;
     }
 }

@@ -10,6 +10,7 @@ import io.jenetics.LongChromosome;
 import io.jenetics.LongGene;
 import io.jenetics.util.ISeq;
 import io.jenetics.util.IntRange;
+import lombok.Getter;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -39,22 +40,25 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
 
     private Map<ElementCoupling, ElementCoupling> components = new HashMap<>();
 
-    private Map<Long, ElementCoupling> highestCoupling = new HashMap<>();
+    @Getter
+    private final Map<Long, Long> elementToComponent = new HashMap<>();
 
     protected LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes, IntRange.of(genes.length()));
+        init();
     }
 
     public LongObjectiveChromosome(Long min, Long max, int length) {
         super(min, max, length);
+        init();
     }
 
     public LongObjectiveChromosome(Long min, Long max) {
         super(min, max);
+        init();
     }
 
     private void init() {
-        final Map<Long, Long> elementToComponent = new HashMap<>();
         final Multimap<Long, Long> componentToElements = HashMultimap.create();
         for (int i = 0; i < this.length(); i++) {
             long componentId = this.getGene(i).getAllele();
@@ -86,7 +90,6 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
     }
 
     private void evaluate() {
-        init();
         // mapping from component id to a set of type ids
         Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
         for (int i = 0; i < this.length(); i++) {

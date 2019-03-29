@@ -3,7 +3,6 @@ package com.buschmais.sarf.framework.configuration;
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.SARFRunner;
 import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
-import com.buschmais.sarf.framework.repository.AnnotationResolver;
 import com.buschmais.sarf.framework.repository.ComponentRepository;
 import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.api.ExecutedBy;
@@ -11,7 +10,6 @@ import com.buschmais.sarf.plugin.api.Executor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.ClassificationCriterionExecutor;
 import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
-import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionExecutor;
 import com.buschmais.sarf.plugin.chorddiagram.ChordDiagramExporter;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionExecutor;
@@ -22,9 +20,8 @@ import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -50,9 +47,8 @@ import java.util.zip.ZipOutputStream;
  */
 @Service
 @Lazy
+@Slf4j
 public class ClassificationConfigurationExecutor implements Executor<ClassificationConfigurationDescriptor, ComponentDescriptor> {
-
-    private Logger LOG = LogManager.getLogger(ClassificationConfigurationExecutor.class);
 
     private XOManager xoManager;
     private BeanFactory beanFactory;
@@ -87,10 +83,54 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
      */
     @Override
     public Set<ComponentDescriptor> execute(ClassificationConfigurationDescriptor executableDescriptor) {
-        LOG.info("Executing Classification");
+        LOGGER.info("Executing Classification");
         this.xoManager.currentTransaction().begin();
         final int iteration = executableDescriptor.getIteration();
         this.xoManager.currentTransaction().commit();
+        this.xoManager.currentTransaction().begin();
+
+        Set<RuleBasedCriterionDescriptor> ruleBasedCriteria = new HashSet<>();
+        CohesionCriterionDescriptor cohesionCriterionDescriptor = null;
+
+        Set<ClassificationCriterionDescriptor> classificationCriteria = executableDescriptor.getClassificationCriteria();
+        for (ClassificationCriterionDescriptor cC : classificationCriteria) {
+            if (cC instanceof RuleBasedCriterionDescriptor) {
+                ruleBasedCriteria.add((RuleBasedCriterionDescriptor) cC);
+            } else {
+                cohesionCriterionDescriptor = (CohesionCriterionDescriptor) cC;
+            }
+        }
+
+        // Step 1: Execute the user defined rules
+        Set<ComponentDescriptor> components = executeRuleBaseCriteria(ruleBasedCriteria);
+
+        // Step 2: Remove ambiguities from the result
+        removeAmbiguities(components, iteration);
+
+        // Step 3: Intersect the user defined components shape-wise
+        createIntersectingComponents(components);
+
+        if (cohesionCriterionDescriptor != null) {
+            // Step 4: Execute the cohesion criterion
+            Set<ComponentDescriptor> cohesionResult = executeCohesionCriterion(cohesionCriterionDescriptor, components);
+            // Step 5: Merge user components with the result of the cohesion based classification
+            components = mergeComponents(cohesionResult, components, iteration);
+        }
+
+        // Step 6: Export the result
+        exportResults(components);
+        LOGGER.info("Finished computation and export of results");
+        return components;
+    }
+
+    /**
+     * Method executing all user specified {@link RuleBasedCriterionDescriptor}s.
+     *
+     * @param ruleBasedCriteria The {@link RuleBasedCriterionDescriptor}s to execute.
+     *
+     * @return The created {@link ComponentDescriptor}s.
+     */
+    private Set<ComponentDescriptor> executeRuleBaseCriteria(Set<RuleBasedCriterionDescriptor> ruleBasedCriteria) {
         Set<ComponentDescriptor> components = new TreeSet<>((c1, c2) -> {
             int res = 0;
             if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
@@ -98,63 +138,34 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             }
             return res;
         });
-        CohesionCriterionDescriptor cohesionCriterionDescriptor = null;
-        this.xoManager.currentTransaction().begin();
-        Set<ClassificationCriterionDescriptor> classificationCriteria = executableDescriptor.getClassificationCriteria();
-        for (ClassificationCriterionDescriptor cC : classificationCriteria) {
-            if (cC instanceof RuleBasedCriterionDescriptor) {
-                ExecutedBy executedBy = AnnotationResolver.resolveAnnotation(cC.getClass(), ExecutedBy.class);
-                Class<? extends Executor> executorClass = executedBy.value();
-                if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
-                    @SuppressWarnings("unchecked")
-                    ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
-                        this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
-                    components.addAll(executor.execute(cC));
-                } else if (executorClass.isAssignableFrom(RuleBasedCriterionExecutor.class)) {
-                    @SuppressWarnings("unchecked")
-                    RuleBasedCriterionExecutor<RuleBasedCriterionDescriptor> executor =
-                        this.beanFactory.getBean((Class<RuleBasedCriterionExecutor>) executorClass);
-                    components.addAll(executor.execute((RuleBasedCriterionDescriptor) cC));
-                }
-            } else {
-                cohesionCriterionDescriptor = (CohesionCriterionDescriptor) cC;
+
+        for (RuleBasedCriterionDescriptor ruleBasedCriterion : ruleBasedCriteria) {
+            Class<? extends Executor> executorClass = ruleBasedCriteria.getClass().getAnnotation(ExecutedBy.class).value();
+            if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
+                @SuppressWarnings("unchecked")
+                ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
+                    this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
+                components.addAll(executor.execute(ruleBasedCriterion));
             }
         }
+
         this.xoManager.currentTransaction().commit();
-        removeAmbiguities(components, iteration);
 
-        //combine(components);
-        Set<ComponentDescriptor> cohesionResult = null;
-        if (cohesionCriterionDescriptor != null)
-
-        {
-            CohesionCriterionExecutor cohesionCriterionExecutor = this.beanFactory.getBean(CohesionCriterionExecutor.class);
-            if (CollectionUtils.isNotEmpty(components)) {
-                cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor, components);
-            } else {
-                cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
-            }
-            // match with manual classification
-            components = cohesionResult;
-        } else
-
-        {
-            components = createIntersectingComponents(components);
-        }
-        //finalize(components);
-
-        this.xoManager.currentTransaction().
-
-            begin();
-        LOG.info("Pretty Printing the Result");
-
-        exportResults(components);
-        this.xoManager.currentTransaction().commit();
         return components;
     }
 
+    /**
+     * Method identifying ambiguously assignments from {@link TypeDescriptor}s to {@link ComponentDescriptor}s. An assignment is
+     * ambiguous if there is at least another assignment of the same {@link TypeDescriptor} to a {@link ComponentDescriptor} of the
+     * same {@link ComponentDescriptor#getShape()}.
+     *
+     * The assignment with the higher probability is kept, all others are removed.
+     *
+     * @param components The {@link ComponentDescriptor}s to check for ambiguities.
+     * @param iteration The current iteration.
+     */
     private void removeAmbiguities(Collection<ComponentDescriptor> components, Integer iteration) {
-        LOG.info("Removing Ambiguities from Pre-Partitioning");
+        LOGGER.info("Removing Ambiguities from Pre-Partitioning");
         this.xoManager.currentTransaction().begin();
         TypeRepository typeRepository = this.xoManager.getRepository(TypeRepository.class);
         int removed = 0;
@@ -167,12 +178,12 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                     for (TypeDescriptor type : types) {
                         Double weightC1 = typeRepository.getAssignmentWeight(this.xoManager.getId(type), id1, iteration);
                         Double weightC2 = typeRepository.getAssignmentWeight(this.xoManager.getId(type), id2, iteration);
-                        if (weightC1 - weightC2 < 1 || weightC2 - weightC1 > 1) { // TODO: 04.07.2017 change threshold for productive usage
-                            LOG.info("\tDetected Ambiguity:");
-                            LOG.info("\t\tFQN: " + type.getFullQualifiedName());
-                            LOG.info("\t\tComponent 1: " + component1.getShape() + " - " + component1.getName() + " Weight: " + weightC1);
-                            LOG.info("\t\tComponent 2: " + component2.getShape() + " - " + component2.getName() + " Weight: " + weightC2);
-                            LOG.info("\t\tRemoving Assignment to: " + (weightC1 < weightC2 ? component1.getShape() + " - " + component1.getName()
+                        if (weightC1 < weightC2 || weightC2 < weightC1) {
+                            LOGGER.info("\tDetected Ambiguity:");
+                            LOGGER.info("\t\tFQN: " + type.getFullQualifiedName());
+                            LOGGER.info("\t\tComponent 1: " + component1.getShape() + " - " + component1.getName() + " Weight: " + weightC1);
+                            LOGGER.info("\t\tComponent 2: " + component2.getShape() + " - " + component2.getName() + " Weight: " + weightC2);
+                            LOGGER.info("\t\tRemoving Assignment to: " + (weightC1 < weightC2 ? component1.getShape() + " - " + component1.getName()
                                 : component2.getShape() + " - " + component2.getName()));
                         }
                         if (weightC1 < weightC2) {
@@ -187,9 +198,19 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             }
         }
         this.xoManager.currentTransaction().commit();
-        LOG.info("\tRemoved " + removed + " Assignments");
+        LOGGER.info("\tRemoved " + removed + " Assignments");
     }
 
+    /**
+     * Intersect the {@link ComponentDescriptor}s which resulted from the execution of the user rules. Intersecting components is done
+     * by taking the {@link ComponentDescriptor#getShape()} and the contained {@link TypeDescriptor}s into account. If one
+     * {@link TypeDescriptor} is part of multiple {@link ComponentDescriptor}s, then these {@link ComponentDescriptor}s
+     * will be intersected.
+     *
+     * @param components The {@link ComponentDescriptor}s to intersect.
+     *
+     * @return The intersected {@link ComponentDescriptor}s.
+     */
     private Set<ComponentDescriptor> createIntersectingComponents(Collection<ComponentDescriptor> components) {
         ArrayListMultimap<Collection<Long>, Long> inverse = intersectComponents(components);
         Set<ComponentDescriptor> result = new HashSet<>();
@@ -227,23 +248,8 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         return result;
     }
 
-    /**
-     * @param components
-     * @return Mapping from component id (ranges from 0 to the number of identified components) to type ids (actual ids from the graph database)
-     */
-    private Map<Long, Collection<Long>> identifyIntersectingComponents(Collection<ComponentDescriptor> components) {
-        Map<Long, Collection<Long>> componentMappings = new HashMap<>();
-        Long componentId = 0L;
-        ArrayListMultimap<Collection<Long>, Long> inverse = intersectComponents(components);
-        for (Collection<Long> componentIds : inverse.keys().elementSet()) {
-            componentMappings.put(componentId, Sets.newHashSet(inverse.get(componentIds)));
-            componentId++;
-        }
-        return componentMappings;
-    }
-
     private ArrayListMultimap<Collection<Long>, Long> intersectComponents(Collection<ComponentDescriptor> components) {
-        LOG.info("Creating Intersecting Components");
+        LOGGER.info("Creating Intersecting Components");
         this.xoManager.currentTransaction().begin();
         ComponentRepository componentRepository = this.xoManager.getRepository(ComponentRepository.class);
         // Type ID -> Component IDs
@@ -278,7 +284,80 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         return inverse;
     }
 
-    public void exportResults(Set<ComponentDescriptor> components) {
+    /**
+     * Execute the {@link CohesionCriterionDescriptor} with the given components as the start partitioning. If no start components are specified,
+     * the package structure will be used.
+     *
+     * @param cohesionCriterionDescriptor The {@link CohesionCriterionDescriptor} to execute.
+     * @param components The {@link ComponentDescriptor}s providing information for the start generation.
+     */
+    private Set<ComponentDescriptor> executeCohesionCriterion(CohesionCriterionDescriptor cohesionCriterionDescriptor, Set<ComponentDescriptor> components) {
+        Set<ComponentDescriptor> cohesionResult;
+        CohesionCriterionExecutor cohesionCriterionExecutor = this.beanFactory.getBean(CohesionCriterionExecutor.class);
+        if (CollectionUtils.isNotEmpty(components)) {
+            cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor, components);
+        } else {
+            cohesionResult = cohesionCriterionExecutor.execute(cohesionCriterionDescriptor);
+        }
+        return cohesionResult;
+    }
+
+
+    private Set<ComponentDescriptor> mergeComponents(Set<ComponentDescriptor> cohesionResult, Set<ComponentDescriptor> userResult, Integer iteration) {
+        //so we have several solutions, time to make one out of them :)
+        // 2 types of identified components exist:
+        // -user-defined ones
+        // -self-created ones (start with a hash # sign)
+        //
+        ComponentRepository componentRepository = this.xoManager.getRepository(ComponentRepository.class);
+        for (ComponentDescriptor userComponent : userResult) {
+            for (ComponentDescriptor cohesionComponent : cohesionResult) {
+                this.xoManager.currentTransaction().begin();
+                LOGGER.debug("Trying to merge user component: {}:{} with cohesion component: {}:{}",
+                    userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName());
+                Double tversky = computeTverskyIndex(componentRepository, userComponent, cohesionComponent, iteration);
+                if (tversky > 0.75) {
+                    LOGGER.info("Merging user component {}:{} with cohesion component: {}:{} (Tversky Index: {})",
+                        userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), tversky);
+                    cohesionComponent.setShape(userComponent.getShape());
+                    cohesionComponent.setName(userComponent.getName());
+                }
+                this.xoManager.currentTransaction().commit();
+
+                // check for contained components
+                mergeComponents(cohesionComponent.getContainedComponents(), userResult, iteration);
+            }
+        }
+        return cohesionResult;
+    }
+
+    private Double computeTverskyIndex(ComponentRepository componentRepository, ComponentDescriptor userComponent, ComponentDescriptor cohesionComponent, Integer iteration) {
+        double jaccard = componentRepository.computeJaccardSimilarity(
+            cohesionComponent.getShape(), cohesionComponent.getName(),
+            userComponent.getShape(), userComponent.getName(),
+            iteration);
+        Long intersection = componentRepository.computeComponentIntersectionCardinality(
+            cohesionComponent.getShape(), cohesionComponent.getName(),
+            userComponent.getShape(), userComponent.getName(),
+            iteration);
+        Long cohesionComponentCardinality = componentRepository.computeComponentCardinality(cohesionComponent.getShape(), cohesionComponent.getName(), iteration);
+        Long userComponentCardinality = componentRepository.computeComponentCardinality(userComponent.getShape(), userComponent.getName(), iteration);
+        Long ofCD1InCD2 = componentRepository.computeComplementCardinality(cohesionComponent.getShape(), cohesionComponent.getName(), userComponent.getShape(), userComponent.getName(), iteration);
+        Long ofCD2InCD1 = componentRepository.computeComplementCardinality(userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), iteration);
+        double alpha = 0.8;
+        double beta = 0.6;
+        Double tversky = intersection.doubleValue() / (intersection + beta * (alpha * Math.min(ofCD2InCD1, ofCD1InCD2) + (1 - alpha) * Math.max(ofCD2InCD1, ofCD1InCD2)));
+        LOGGER.debug("Jaccard: {}", jaccard);
+        LOGGER.debug("Cardinality 1: {}", cohesionComponentCardinality);
+        LOGGER.debug("Cardinality 2: {}", userComponentCardinality);
+        LOGGER.debug("Intersection: {}", intersection);
+        LOGGER.debug("Tversky: {}", + tversky);
+        return tversky;
+    }
+
+    private void exportResults(Set<ComponentDescriptor> components) {
+        this.xoManager.currentTransaction().begin();
+        LOGGER.info("Pretty Printing the Result");
         DateTimeFormatter resultFileFormatter = new DateTimeFormatterBuilder()
             .appendLiteral("Result_")
             .appendValue(ChronoField.YEAR, 4)
@@ -346,9 +425,10 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         } catch (IOException e) {
             e.printStackTrace();
         }
+        this.xoManager.currentTransaction().commit();
     }
 
-    public void prettyPrint(Collection<ComponentDescriptor> components, String indentation, StringBuilder builder) throws IOException {
+    private void prettyPrint(Collection<ComponentDescriptor> components, String indentation, StringBuilder builder) throws IOException {
         for (ComponentDescriptor component : components) {
             builder.append(indentation + " " + component.getName() + " " + Arrays.toString(component.getTopWords()) + "\n");
             Result<Result.CompositeRowObject> res = this.xoManager.createQuery("MATCH (c) WHERE ID(c) = " + this.xoManager.getId(component) + " " +
@@ -372,7 +452,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         }
     }
 
-    public String formatEntry(Map m) {
+    private String formatEntry(Map m) {
         StringBuilder formatted = new StringBuilder();
         formatted.append("\t{\n");
         formatted.append("\t\t\"entry\" : [\n");
