@@ -5,7 +5,7 @@ import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.plugin.api.Executor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -18,14 +18,10 @@ import java.util.TreeSet;
  */
 @Component
 @Lazy
+@RequiredArgsConstructor
 public abstract class RuleExecutor<E extends RuleDescriptor> implements Executor<E, TypeDescriptor> {
 
     protected final XOManager xoManager;
-
-    @Autowired
-    public RuleExecutor(XOManager xoManager) {
-        this.xoManager = xoManager;
-    }
 
     @Override
     public Set<TypeDescriptor> execute(E executableDescriptor) {

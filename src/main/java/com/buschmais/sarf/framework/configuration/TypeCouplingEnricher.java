@@ -1,14 +1,12 @@
 package com.buschmais.sarf.framework.configuration;
 
 import com.buschmais.sarf.framework.repository.MetricRepository;
-import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -20,73 +18,64 @@ import java.util.Map;
  */
 @Service
 @Lazy
+@RequiredArgsConstructor
 public class TypeCouplingEnricher {
 
     private static final Logger LOG = LogManager.getLogger(TypeCouplingEnricher.class);
 
-    private XOManager xoManager;
-    private TypeSimilarityEnricher typeSimilarityEnricher;
-
-    private MetricRepository mR;
-    private TypeRepository tR;
-
-    @Autowired
-    public TypeCouplingEnricher(XOManager xoManager, TypeSimilarityEnricher typeSimilarityEnricher){
-        this.xoManager = xoManager;
-        this.typeSimilarityEnricher = typeSimilarityEnricher;
-        this.mR = this.xoManager.getRepository(MetricRepository.class);
-        this.tR = this.xoManager.getRepository(TypeRepository.class);
-    }
+    private final XOManager xoManager;
+    private final TypeSimilarityEnricher typeSimilarityEnricher;
+    private final MetricRepository metricRepository;
 
     public void enrich() {
         LOG.info("Computing Coupling between Types");
         this.xoManager.currentTransaction().begin();
         Map<TypeCoupling, TypeCoupling> couplings = new HashMap<>();
-        try (Result<Map> couplingAbstract = this.mR.computeCouplingInvokesAbstract()) {
+        try (Result<Map> couplingAbstract = this.metricRepository.computeCouplingInvokesAbstract()) {
             addCouplings(couplingAbstract, couplings, WeightConstants.INVOKES_ABSTRACT_WEIGHT);
         }
-        try (Result<Map> couplingInvokes = this.mR.computeCouplingInvokes()) {
+        try (Result<Map> couplingInvokes = this.metricRepository.computeCouplingInvokes()) {
             addCouplings(couplingInvokes, couplings, WeightConstants.INVOKES_WEIGHT);
         }
-        try (Result<Map> couplingInvokesStatic = this.mR.computeCouplingInvokesStatic()) {
+        try (Result<Map> couplingInvokesStatic = this.metricRepository.computeCouplingInvokesStatic()) {
             addCouplings(couplingInvokesStatic, couplings, WeightConstants.INVOKES_STATIC_WEIGHT);
         }
-        try (Result<Map> couplingExtends = this.mR.computeCouplingExtends()) {
+        try (Result<Map> couplingExtends = this.metricRepository.computeCouplingExtends()) {
             addCouplings(couplingExtends, couplings, WeightConstants.EXTENDS_WEIGHT);
         }
-        try (Result<Map> couplingImplements = this.mR.computeCouplingImplements()) {
+        try (Result<Map> couplingImplements = this.metricRepository.computeCouplingImplements()) {
             addCouplings(couplingImplements, couplings, WeightConstants.IMPLEMENTS_WEIGHT);
         }
-        try (Result<Map> couplingReturns = this.mR.computeCouplingReturns()) {
+        try (Result<Map> couplingReturns = this.metricRepository.computeCouplingReturns()) {
             addCouplings(couplingReturns, couplings, WeightConstants.RETURNS_WEIGHT);
         }
-        try (Result<Map> couplingParameters = this.mR.computeCouplingParameterized()) {
+        try (Result<Map> couplingParameters = this.metricRepository.computeCouplingParameterized()) {
             addCouplings(couplingParameters, couplings, WeightConstants.PARAMETER_WEIGHT);
         }
-        try (Result<Map> couplingComposes = this.mR.computeCouplingComposes()) {
+        try (Result<Map> couplingComposes = this.metricRepository.computeCouplingComposes()) {
             addCouplings(couplingComposes, couplings, WeightConstants.COMPOSES_WEIGHT);
         }
-        try (Result<Map> couplingInnerClass = this.mR.computeCouplingDeclaresInnerClass()) {
+        try (Result<Map> couplingInnerClass = this.metricRepository.computeCouplingDeclaresInnerClass()) {
             addCouplings(couplingInnerClass, couplings, WeightConstants.INNER_CLASSES_WEIGHT);
         }
-        try (Result<Map> couplingDependsOn = this.mR.computeCouplingDependsOn()) {
+        try (Result<Map> couplingDependsOn = this.metricRepository.computeCouplingDependsOn()) {
             addCouplings(couplingDependsOn, couplings, WeightConstants.DEPENDS_ON_WEIGHT);
         }
-        try (Result<Map> couplingReads = this.mR.computeCouplingReads()) {
+        try (Result<Map> couplingReads = this.metricRepository.computeCouplingReads()) {
             addCouplings(couplingReads, couplings, WeightConstants.READS_WEIGHT);
         }
-        try (Result<Map> couplingReadsStatic = this.mR.computeCouplingReadsStatic()) {
+        try (Result<Map> couplingReadsStatic = this.metricRepository.computeCouplingReadsStatic()) {
             addCouplings(couplingReadsStatic, couplings, WeightConstants.READS_STATIC_WEIGHT);
         }
-        try (Result<Map> couplingWrites = this.mR.computeCouplingWrites()) {
+        try (Result<Map> couplingWrites = this.metricRepository.computeCouplingWrites()) {
             addCouplings(couplingWrites, couplings, WeightConstants.WRITES_WEIGHT);
         }
-        try (Result<Map> couplingWritesStatic = this.mR.computeCouplingWritesStatic()) {
+        try (Result<Map> couplingWritesStatic = this.metricRepository.computeCouplingWritesStatic()) {
             addCouplings(couplingWritesStatic, couplings, WeightConstants.WRITES_STATIC_WEIGHT);
         }
         normalizeCouplings(couplings);
         for (TypeCoupling coupling : couplings.values()) {
-            this.mR.setCoupling(coupling.source, coupling.target, coupling.coupling);
+            this.metricRepository.setCoupling(coupling.source, coupling.target, coupling.coupling);
         }
         LOG.info("Coupling between Types Successfully Computed");
         this.xoManager.currentTransaction().commit();

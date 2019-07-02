@@ -5,7 +5,6 @@ import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.plugin.api.DiagramExporter;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -20,14 +19,17 @@ import java.util.stream.StreamSupport;
 @Lazy
 public class ChordDiagramExporter implements DiagramExporter {
 
-    @Autowired
-    private XOManager xoManager;
+    private final XOManager xoManager;
 
-    private DiagramRepository diagramRepository;
+    private final DiagramRepository diagramRepository;
+
+    public ChordDiagramExporter(XOManager xoManager, DiagramRepository diagramRepository) {
+        this.xoManager = xoManager;
+        this.diagramRepository = diagramRepository;
+    }
 
     @Override
     public String export(Set<ComponentDescriptor> components) {
-        this.diagramRepository = this.xoManager.getRepository(DiagramRepository.class);
         StringBuilder builder = new StringBuilder();
         builder.append("[\n")
             .append(components.stream()

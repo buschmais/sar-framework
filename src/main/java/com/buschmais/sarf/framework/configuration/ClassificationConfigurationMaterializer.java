@@ -8,9 +8,9 @@ import com.buschmais.sarf.plugin.api.criterion.RuleBasedCriterionDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleXmlMapper;
 import com.buschmais.xo.api.XOManager;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +22,12 @@ import java.util.stream.Collectors;
  */
 @Service
 @Lazy
+@RequiredArgsConstructor
 public class ClassificationConfigurationMaterializer {
 
     private final Logger LOG = LogManager.getLogger(ClassificationConfigurationMaterializer.class);
 
-    private XOManager xoManager;
-
-    @Autowired
-    public ClassificationConfigurationMaterializer(XOManager xoManager) {
-        this.xoManager = xoManager;
-    }
+    private final XOManager xoManager;
 
     public ClassificationConfigurationDescriptor materialize(ClassificationConfigurationXmlMapper mapper) {
         ClassificationConfigurationDescriptor classificationConfigurationDescriptor =

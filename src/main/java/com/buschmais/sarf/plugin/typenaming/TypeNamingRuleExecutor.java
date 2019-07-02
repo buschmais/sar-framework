@@ -14,14 +14,16 @@ import org.springframework.stereotype.Service;
 @Lazy
 public class TypeNamingRuleExecutor extends RuleExecutor<TypeNamingRuleDescriptor> {
 
-    public TypeNamingRuleExecutor(XOManager xoManager) {
+    private final TypeNamingRepository typeNamingRepository;
+
+    public TypeNamingRuleExecutor(XOManager xoManager, TypeNamingRepository typeNamingRepository) {
         super(xoManager);
+        this.typeNamingRepository = typeNamingRepository;
     }
 
     @Override
     protected Result<TypeDescriptor> getMatchingTypes(TypeNamingRuleDescriptor executableDescriptor) {
-        TypeNamingRepository repository = this.xoManager.getRepository(TypeNamingRepository.class);
-        return repository.getAllInternalTypesByNameLike(executableDescriptor.getRule());
+        return this.typeNamingRepository.getAllInternalTypesByNameLike(executableDescriptor.getRule());
     }
 
 

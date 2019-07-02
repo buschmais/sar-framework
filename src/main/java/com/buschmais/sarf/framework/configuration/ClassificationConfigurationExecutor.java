@@ -20,10 +20,10 @@ import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -48,21 +48,15 @@ import java.util.zip.ZipOutputStream;
 @Service
 @Lazy
 @Slf4j
+@RequiredArgsConstructor
 public class ClassificationConfigurationExecutor implements Executor<ClassificationConfigurationDescriptor, ComponentDescriptor> {
 
-    private XOManager xoManager;
-    private BeanFactory beanFactory;
-    private ChordDiagramExporter chordDiagramExporter;
-    private DendrogramExporter dendrogramExporter;
-
-    @Autowired
-    public ClassificationConfigurationExecutor(XOManager xoManager, BeanFactory beanFactory,
-        ChordDiagramExporter chordDiagramExporter, DendrogramExporter dendrogramExporter) {
-        this.xoManager = xoManager;
-        this.beanFactory = beanFactory;
-        this.chordDiagramExporter = chordDiagramExporter;
-        this.dendrogramExporter = dendrogramExporter;
-    }
+    private final XOManager xoManager;
+    private final BeanFactory beanFactory;
+    private final ChordDiagramExporter chordDiagramExporter;
+    private final DendrogramExporter dendrogramExporter;
+    private final TypeRepository typeRepository;
+    private final ComponentRepository componentRepository;
 
     /**
      * Executes the given {@link ClassificationConfigurationDescriptor} by executing following steps:
@@ -167,7 +161,6 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     private void removeAmbiguities(Collection<ComponentDescriptor> components, Integer iteration) {
         LOGGER.info("Removing Ambiguities from Pre-Partitioning");
         this.xoManager.currentTransaction().begin();
-        TypeRepository typeRepository = this.xoManager.getRepository(TypeRepository.class);
         int removed = 0;
         for (ComponentDescriptor component1 : components) {
             Long id1 = this.xoManager.getId(component1);
@@ -243,7 +236,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
                 result.add(singleComponent);
             }
         }
-        this.xoManager.getRepository(ComponentRepository.class).computeCouplingBetweenComponents(ids.stream().mapToLong(l -> l).toArray());
+        this.componentRepository.computeCouplingBetweenComponents(ids.stream().mapToLong(l -> l).toArray());
         this.xoManager.currentTransaction().commit();
         return result;
     }
@@ -251,12 +244,11 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     private ArrayListMultimap<Collection<Long>, Long> intersectComponents(Collection<ComponentDescriptor> components) {
         LOGGER.info("Creating Intersecting Components");
         this.xoManager.currentTransaction().begin();
-        ComponentRepository componentRepository = this.xoManager.getRepository(ComponentRepository.class);
         // Type ID -> Component IDs
         Map<Long, Collection<Long>> typeToComponents = new HashMap<>();
         Set<String> shapes = components.stream().map(ComponentDescriptor::getShape).collect(Collectors.toSet());
         List<TypeDescriptor> types = new ArrayList<>();
-        try (Result<TypeDescriptor> descriptors = this.xoManager.getRepository(TypeRepository.class).getAllInternalTypes()) {
+        try (Result<TypeDescriptor> descriptors = this.typeRepository.getAllInternalTypes()) {
             for (TypeDescriptor t : descriptors) {
                 types.add(t);
             }
@@ -309,7 +301,6 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         // -user-defined ones
         // -self-created ones (start with a hash # sign)
         //
-        ComponentRepository componentRepository = this.xoManager.getRepository(ComponentRepository.class);
         for (ComponentDescriptor userComponent : userResult) {
             for (ComponentDescriptor cohesionComponent : cohesionResult) {
                 this.xoManager.currentTransaction().begin();
@@ -399,9 +390,8 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             zipOutputStream.write(formatted.toString().getBytes());
             // write json
             entry = new ZipEntry("sarf.json");
-            ComponentRepository repository = this.xoManager.getRepository(ComponentRepository.class);
             Result<Map> result
-                = repository.getDecomposition(components.stream().mapToLong(c -> this.xoManager.getId(c)).toArray());
+                = componentRepository.getDecomposition(components.stream().mapToLong(c -> this.xoManager.getId(c)).toArray());
             zipOutputStream.putNextEntry(entry);
             formatted = new StringBuilder();
             zipOutputStream.write(("[\n").getBytes());

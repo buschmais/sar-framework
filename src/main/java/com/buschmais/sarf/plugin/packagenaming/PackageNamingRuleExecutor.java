@@ -4,7 +4,6 @@ import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleExecutor;
 import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -15,14 +14,15 @@ import org.springframework.stereotype.Service;
 @Lazy
 public class PackageNamingRuleExecutor extends RuleExecutor<PackageNamingRuleDescriptor> {
 
-    @Autowired
-    public PackageNamingRuleExecutor(XOManager xoManager) {
+    private final PackageNamingRepository packageNamingRepository;
+
+    public PackageNamingRuleExecutor(XOManager xoManager, PackageNamingRepository packageNamingRepository) {
         super(xoManager);
+        this.packageNamingRepository = packageNamingRepository;
     }
 
     @Override
     protected Result<TypeDescriptor> getMatchingTypes(PackageNamingRuleDescriptor executableDescriptor) {
-        PackageNamingRepository repository = this.xoManager.getRepository(PackageNamingRepository.class);
-        return repository.getAllInternalTypesInPackageLike(executableDescriptor.getRule());
+        return this.packageNamingRepository.getAllInternalTypesInPackageLike(executableDescriptor.getRule());
     }
 }

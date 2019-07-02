@@ -5,8 +5,8 @@ import com.buschmais.sarf.framework.configuration.*;
 import com.buschmais.sarf.framework.repository.TypeRepository;
 import com.buschmais.sarf.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.xo.api.XOManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
@@ -25,24 +25,16 @@ import java.net.URL;
 @Service
 @Lazy
 @Slf4j
+@RequiredArgsConstructor
 public class ClassificationRunner implements AbstractRunner {
 
-    private XOManager xOManager;
+    private final XOManager xOManager;
 
-    private ClassificationConfigurationMaterializer materializer;
+    private final ClassificationConfigurationMaterializer materializer;
 
-    private ClassificationConfigurationExecutor executor;
+    private final ClassificationConfigurationExecutor executor;
 
-    private TypeCouplingEnricher typeCouplingEnricher;
-
-    @Autowired
-    public ClassificationRunner(XOManager xOManager, ClassificationConfigurationMaterializer materializer,
-        ClassificationConfigurationExecutor executor, TypeCouplingEnricher typeCouplingEnricher) {
-        this.xOManager = xOManager;
-        this.materializer = materializer;
-        this.executor = executor;
-        this.typeCouplingEnricher = typeCouplingEnricher;
-    }
+    private final TypeCouplingEnricher typeCouplingEnricher;
 
     @Override
     public Double run(URL configUrl) {

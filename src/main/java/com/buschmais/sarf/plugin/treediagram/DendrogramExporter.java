@@ -12,7 +12,7 @@ import com.buschmais.sarf.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.plugin.api.DiagramExporter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +23,10 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Lazy
+@RequiredArgsConstructor
 public class DendrogramExporter implements DiagramExporter {
 
     private final ObjectMapper objectMapper;
-
-    @Autowired
-    public DendrogramExporter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public String export(Set<ComponentDescriptor> components) {

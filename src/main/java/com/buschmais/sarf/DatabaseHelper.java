@@ -87,6 +87,48 @@ public class DatabaseHelper {
     }
 
     @Bean
+    @Lazy
+    public MetricRepository metricRepository(XOManager xoManager) {
+        return xoManager.getRepository(MetricRepository.class);
+    }
+
+    @Bean
+    @Lazy
+    public TypeRepository typeRepository(XOManager xoManager) {
+        return xoManager.getRepository(TypeRepository.class);
+    }
+
+    @Bean
+    @Lazy
+    public ComponentRepository componentRepository(XOManager xoManager) {
+        return xoManager.getRepository(ComponentRepository.class);
+    }
+
+    @Bean
+    @Lazy
+    public TypeNamingRepository typeNamingRepository(XOManager xoManager) {
+        return xoManager.getRepository(TypeNamingRepository.class);
+    }
+
+    @Bean
+    @Lazy
+    public PackageNamingRepository packageNamingRepository(XOManager xoManager) {
+        return xoManager.getRepository(PackageNamingRepository.class);
+    }
+
+    @Bean
+    @Lazy
+    public DependencyRepository dependencyRepository(XOManager xoManager) {
+        return xoManager.getRepository(DependencyRepository.class);
+    }
+
+    @Bean
+    @Lazy
+    public DiagramRepository diagramRepository(XOManager xoManager) {
+        return xoManager.getRepository(DiagramRepository.class);
+    }
+
+    @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }

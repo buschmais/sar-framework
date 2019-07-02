@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -18,6 +19,7 @@ import java.net.URISyntaxException;
  * @author Stephan Pirnbaum
  */
 @Controller
+@RequiredArgsConstructor
 public class DatabaseConnectionController extends AbstractController {
 
     @FXML
@@ -32,10 +34,10 @@ public class DatabaseConnectionController extends AbstractController {
     @FXML
     private TextField storePath;
 
-    @Autowired
-    private BeanFactory beanFactory;
+    private final BeanFactory beanFactory;
 
-    @Autowired @Lazy
+    @Autowired
+    @Lazy
     private XOManager xoManager;
 
     @FXML
