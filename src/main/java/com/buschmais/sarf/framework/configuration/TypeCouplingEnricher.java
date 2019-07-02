@@ -5,8 +5,7 @@ import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +18,15 @@ import java.util.Map;
 @Service
 @Lazy
 @RequiredArgsConstructor
+@Slf4j
 public class TypeCouplingEnricher {
-
-    private static final Logger LOG = LogManager.getLogger(TypeCouplingEnricher.class);
 
     private final XOManager xoManager;
     private final TypeSimilarityEnricher typeSimilarityEnricher;
     private final MetricRepository metricRepository;
 
     public void enrich() {
-        LOG.info("Computing Coupling between Types");
+        LOGGER.info("Computing Coupling between Types");
         this.xoManager.currentTransaction().begin();
         Map<TypeCoupling, TypeCoupling> couplings = new HashMap<>();
         try (Result<Map> couplingAbstract = this.metricRepository.computeCouplingInvokesAbstract()) {
@@ -77,7 +75,7 @@ public class TypeCouplingEnricher {
         for (TypeCoupling coupling : couplings.values()) {
             this.metricRepository.setCoupling(coupling.source, coupling.target, coupling.coupling);
         }
-        LOG.info("Coupling between Types Successfully Computed");
+        LOGGER.info("Coupling between Types Successfully Computed");
         this.xoManager.currentTransaction().commit();
         this.typeSimilarityEnricher.enrich();
     }

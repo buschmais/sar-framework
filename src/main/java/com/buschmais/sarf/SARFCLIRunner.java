@@ -7,6 +7,7 @@ import java.net.URL;
 
 import com.buschmais.sarf.framework.ClassificationRunner;
 import com.buschmais.xo.api.XOManager;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -15,8 +16,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -25,9 +24,8 @@ import org.springframework.context.ConfigurableApplicationContext;
  * Created by steph on 04.05.2017.
  */
 @SpringBootApplication
+@Slf4j
 public class SARFCLIRunner {
-
-    private static final Logger LOG = LogManager.getLogger(SARFCLIRunner.class);
 
     public static void main(String[] args) throws URISyntaxException {
         ConfigurableApplicationContext springContext = SpringApplication.run(SARFCLIRunner.class);
@@ -62,11 +60,11 @@ public class SARFCLIRunner {
             ClassificationRunner runner = springContext.getBean(ClassificationRunner.class);
             runner.startNewIteration(configUrl);
         } catch (ParseException e) {
-            LOG.error(e.getMessage());
+            LOGGER.error(e.getMessage());
             formatter.printHelp("java -jar sarf.jar", options);
             System.exit(1);
         } catch (MalformedURLException e) {
-            LOG.error("Configuration file not found");
+            LOGGER.error("Configuration file not found");
             System.exit(1);
         }
         System.exit(0);

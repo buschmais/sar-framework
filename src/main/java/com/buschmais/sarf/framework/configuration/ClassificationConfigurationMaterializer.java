@@ -9,8 +9,6 @@ import com.buschmais.sarf.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.sarf.plugin.api.criterion.RuleXmlMapper;
 import com.buschmais.xo.api.XOManager;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +22,6 @@ import java.util.stream.Collectors;
 @Lazy
 @RequiredArgsConstructor
 public class ClassificationConfigurationMaterializer {
-
-    private final Logger LOG = LogManager.getLogger(ClassificationConfigurationMaterializer.class);
 
     private final XOManager xoManager;
 

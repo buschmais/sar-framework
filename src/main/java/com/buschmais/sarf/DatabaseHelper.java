@@ -27,8 +27,7 @@ import com.buschmais.xo.api.bootstrap.XO;
 import com.buschmais.xo.api.bootstrap.XOUnit;
 import com.buschmais.xo.neo4j.embedded.api.EmbeddedNeo4jXOProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -40,14 +39,13 @@ import java.util.Properties;
  * @author Stephan Pirnbaum
  */
 @Configuration
+@Slf4j
 public class DatabaseHelper {
-
-    private static final Logger LOG = LogManager.getLogger(DatabaseHelper.class);
 
     @Bean
     @Lazy
     public XOManager xOManager(URI storeUri) {
-        LOG.info("Setting up Database");
+        LOGGER.info("Setting up Database");
         Properties p = new Properties();
         p.put("neo4j.dbms.allow_format_migration", "true");
         XOUnit xoUnit = XOUnit.builder()
@@ -82,7 +80,7 @@ public class DatabaseHelper {
             .uri(storeUri)
             .build();
         XOManagerFactory factory = XO.createXOManagerFactory(xoUnit);
-        LOG.info("Setting up Database Successful");
+        LOGGER.info("Setting up Database Successful");
         return factory.createXOManager();
     }
 

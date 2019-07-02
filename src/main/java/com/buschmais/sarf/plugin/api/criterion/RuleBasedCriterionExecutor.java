@@ -12,6 +12,7 @@ import com.buschmais.xo.api.Query.Result;
 import com.buschmais.xo.api.XOManager;
 import com.google.common.collect.Sets;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
@@ -29,9 +30,8 @@ import java.util.TreeSet;
 @Service
 @Lazy
 @RequiredArgsConstructor
+@Slf4j
 public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor> implements Executor<C, ComponentDescriptor> {
-
-    private static final Logger LOG = LogManager.getLogger(RuleBasedCriterionExecutor.class);
 
     private final XOManager xoManager;
     private final BeanFactory beanFactory;
@@ -40,7 +40,7 @@ public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor> 
 
     @Override
     public Set<ComponentDescriptor> execute(C executableDescriptor) {
-        LOG.info("Executing " + this.getClass().getSimpleName());
+        LOGGER.info("Executing " + this.getClass().getSimpleName());
         Set<ComponentDescriptor> componentDescriptors = new TreeSet<>((c1, c2) -> {
             int res = 0;
             if ((res = c1.getShape().compareTo(c2.getShape())) == 0) {
@@ -92,10 +92,10 @@ public class RuleBasedCriterionExecutor<C extends RuleBasedCriterionDescriptor> 
             }
         }
  //       this.xoManager.currentTransaction().commit();
-        LOG.info("Executed " + rules.size() + " Rules");
-        LOG.info("\tIdentified " + componentDescriptors.size() + " Components");
-        LOG.info("\tCoverage = " + (mappedTypes.size() / (double) internalTypes));
-        LOG.info("\tQuality = " + (1 - multipleMatched / (double) mappedTypes.size()));
+        LOGGER.info("Executed " + rules.size() + " Rules");
+        LOGGER.info("\tIdentified " + componentDescriptors.size() + " Components");
+        LOGGER.info("\tCoverage = " + (mappedTypes.size() / (double) internalTypes));
+        LOGGER.info("\tQuality = " + (1 - multipleMatched / (double) mappedTypes.size()));
         return componentDescriptors;
     }
 
