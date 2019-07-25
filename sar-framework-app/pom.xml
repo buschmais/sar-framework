@@ -16,6 +16,11 @@
             <groupId>com.buschmais.sarf</groupId>
             <artifactId>sar-framework-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.buschmais.xo</groupId>
+            <artifactId>xo.neo4j.embedded</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

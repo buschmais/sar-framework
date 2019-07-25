@@ -1,24 +1,17 @@
-package com.buschmais.sarf.cli;
+package com.buschmais.sarf;
+
+import com.buschmais.sarf.core.framework.ClassificationRunner;
+import com.buschmais.xo.api.XOManager;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.cli.*;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import com.buschmais.sarf.core.framework.ClassificationRunner;
-import com.buschmais.xo.api.XOManager;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * Created by steph on 04.05.2017.
