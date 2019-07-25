@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
-<BorderPane fx:id="pane" maxHeight="-Infinity" maxWidth="430.0" minHeight="-Infinity" minWidth="430.0" prefHeight="315.0" prefWidth="430.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.core.framework.ui.RootController">
+<BorderPane fx:id="pane" maxHeight="-Infinity" maxWidth="430.0" minHeight="-Infinity" minWidth="430.0" prefHeight="315.0" prefWidth="430.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.app.ui.RootController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>

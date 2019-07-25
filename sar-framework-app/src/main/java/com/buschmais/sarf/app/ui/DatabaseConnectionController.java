@@ -1,4 +1,4 @@
-package com.buschmais.sarf.core.framework.ui;
+package com.buschmais.sarf.app.ui;
 
 import com.buschmais.xo.api.XOManager;
 import javafx.fxml.FXML;

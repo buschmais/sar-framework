@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<AnchorPane maxWidth="426.0" minWidth="426.0" prefHeight="79.0" prefWidth="426.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.core.framework.ui.DatabaseConnectionController">
+<AnchorPane maxWidth="426.0" minWidth="426.0" prefHeight="79.0" prefWidth="426.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buschmais.sarf.app.ui.DatabaseConnectionController">
    <children>
       <VBox prefHeight="63.0" prefWidth="440.0" spacing="10.0">
          <children>

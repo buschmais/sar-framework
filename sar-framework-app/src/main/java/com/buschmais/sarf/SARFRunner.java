@@ -1,4 +1,4 @@
-package com.buschmais.sarf.app;
+package com.buschmais.sarf;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

@@ -1,4 +1,4 @@
-package com.buschmais.sarf.core.framework.ui;
+package com.buschmais.sarf.app.ui;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
