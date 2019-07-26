@@ -9,9 +9,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.stage.FileChooser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
+
+import java.io.File;
 
 /**
  * @author Stephan Pirnbaum
@@ -49,6 +52,12 @@ public class ConfigurationDialogController extends AbstractController {
     @FXML
     private TextField populationSize;
 
+    @FXML
+    private TextField architecturePath;
+
+    @FXML
+    private Button chooseArchitecture;
+
     @Autowired
     @Lazy
     ClassificationRunner classificationRunner;
@@ -69,8 +78,8 @@ public class ConfigurationDialogController extends AbstractController {
                 generations.setText(newValue.replaceAll("[^\\d]", ""));
             }
         }));
+        this.chooseArchitecture.setOnAction(e -> this.selectArchitecture());
     }
-
 
     private void execute() {
         this.execute.setDisable(true);
@@ -92,6 +101,16 @@ public class ConfigurationDialogController extends AbstractController {
             showExceptionDialog("Execution Error", "An error occured during decomposing the system!", "", e);
         }
         this.execute.setDisable(false);
+    }
+
+    private void selectArchitecture() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select Architecture Model");
+        File f;
+        chooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("xml", "xml"));
+        if ((f = chooser.showOpenDialog(this.chooseArchitecture.getScene().getWindow())) != null) {
+            this.architecturePath.setText(f.toURI().toString());
+        }
     }
 
 }
