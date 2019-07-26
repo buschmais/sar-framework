@@ -7,7 +7,9 @@ import org.apache.commons.cli.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -58,6 +60,9 @@ public class SARFCLIRunner {
             System.exit(1);
         } catch (MalformedURLException e) {
             LOGGER.error("Configuration file not found");
+            System.exit(1);
+        } catch (JAXBException | SAXException e) {
+            LOGGER.error("Configuration file could not be parsed", e);
             System.exit(1);
         }
         System.exit(0);
