@@ -1,16 +1,11 @@
 package com.buschmais.sarf.core.plugin.cohesion.evolution;
 
+import com.buschmais.sarf.core.plugin.cohesion.evolution.coupling.CouplingBasedFitnessFunction;
 import com.buschmais.sarf.core.plugin.cohesion.evolution.coupling.CouplingDrivenMutator;
-import com.buschmais.sarf.core.plugin.cohesion.evolution.coupling.LongObjectiveCouplingChromosome;
-import com.buschmais.sarf.core.plugin.cohesion.evolution.similarity.LongObjectiveSimilarityChromosome;
+import com.buschmais.sarf.core.plugin.cohesion.evolution.similarity.SimilarityBasedFitnessFunction;
 import com.buschmais.sarf.core.plugin.cohesion.evolution.similarity.SimilarityDrivenMutator;
 import com.google.common.collect.Sets;
-import io.jenetics.Chromosome;
-import io.jenetics.GaussianMutator;
-import io.jenetics.Genotype;
-import io.jenetics.LongGene;
-import io.jenetics.Phenotype;
-import io.jenetics.SinglePointCrossover;
+import io.jenetics.*;
 import io.jenetics.engine.Engine;
 import io.jenetics.engine.EvolutionResult;
 import io.jenetics.engine.EvolutionStatistics;
@@ -23,14 +18,7 @@ import io.jenetics.util.ISeq;
 import io.jenetics.util.RandomRegistry;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Stephan Pirnbaum
@@ -40,25 +28,56 @@ public class Partitioner {
 
     static long[] ids;
 
-    static int generations;
-
-    static long lastGeneration = 0;
-
     public static Map<Long, Set<Long>> partition(long[] ids, Map<Long, Set<Long>> initialPartitioning, int generations, int populationSize, boolean similarityBased) {
         Partitioner.ids = ids;
-        Partitioner.generations = generations;
-        Genotype<LongGene> genotype = createGenotype(initialPartitioning, similarityBased);
-        final Engine<LongGene, Vec<double[]>> engine = Engine
-            .builder(i -> {
-                LongObjectiveChromosome chromosome = (LongObjectiveChromosome) i.getChromosome();
-                return Vec.of(
-                    chromosome.getCohesionObjective(),
-                    chromosome.getCouplingObjective()/*,
-                        chromosome.getCohesiveComponentObjective(),
-                        chromosome.getComponentRangeObjective(),
-                        chromosome.getComponentSizeObjective()*/
-                );
-            }, genotype)
+        Genotype<LongGene> genotype = createGenotype(initialPartitioning);
+
+        FitnessFunction fitnessFunction = similarityBased ?
+            new SimilarityBasedFitnessFunction() :
+            new CouplingBasedFitnessFunction();
+
+        final Engine<LongGene, Vec<double[]>> engine = createEngine(ids, populationSize, similarityBased, genotype, fitnessFunction);
+
+        List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
+
+        EvolutionStatistics<Vec<double[]>, MinMax<Vec<double[]>>> statistics = EvolutionStatistics.ofComparable();
+
+        ISeq<Phenotype<LongGene, Vec<double[]>>> r = executeEvolution(generations, engine, genotypes, statistics);
+
+        System.out.println(statistics);
+
+        Phenotype<LongGene, Vec<double[]>> best = r.stream()
+            .max(Comparator.comparingDouble(p -> sumFitness(p.getFitness()))).orElse(null);
+
+        Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
+
+        assert best != null;
+
+        for (int i = 0; i < best.getGenotype().getChromosome().length(); i++) {
+            identifiedComponents.merge(
+                best.getGenotype().getChromosome().getGene(i).getAllele(),
+                Sets.newHashSet(ids[i]),
+                (s1, s2) -> {
+                    s1.addAll(s2);
+                    return s1;
+                });
+        }
+
+        return identifiedComponents;
+    }
+
+    private static ISeq<Phenotype<LongGene, Vec<double[]>>> executeEvolution(int generations, Engine<LongGene, Vec<double[]>> engine, List<Genotype<LongGene>> genotypes, EvolutionStatistics<Vec<double[]>, MinMax<Vec<double[]>>> statistics) {
+        return RandomRegistry.with(new Random(456), a -> engine
+            .stream(genotypes)
+            .limit(generations)
+            .peek(statistics)
+            .peek(Partitioner::update)
+            .collect(MOEA.toParetoSet()));
+    }
+
+    private static Engine<LongGene, Vec<double[]>> createEngine(long[] ids, int populationSize, boolean similarityBased, Genotype<LongGene> genotype, FitnessFunction fitnessFunction) {
+        return Engine
+            .builder(fitnessFunction::evaluate, genotype)
             .offspringFraction(0.7)
             .survivorsSelector(NSGA2Selector.ofVec())
             .offspringSelector(new UFTournamentSelector<>(Vec::dominance, Vec::compare, Vec::distance, Vec::length))
@@ -73,30 +92,6 @@ public class Partitioner {
             .executor(Runnable::run)
             .maximizing()
             .build();
-        List<Genotype<LongGene>> genotypes = Arrays.asList(genotype);
-        EvolutionStatistics<Vec<double[]>, MinMax<Vec<double[]>>> statistics = EvolutionStatistics.ofComparable();
-        ISeq<Phenotype<LongGene, Vec<double[]>>> r = RandomRegistry.with(new Random(456), a -> engine
-            .stream(genotypes)
-            .limit(generations)
-            .peek(statistics)
-            .peek(Partitioner::update)
-            .collect(MOEA.toParetoSet()));
-        System.out.println(statistics);
-        Phenotype<LongGene, Vec<double[]>> best = r.stream()
-            .max(Comparator.comparingDouble(p -> sumFitness(p.getFitness()))).orElse(null);
-        Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
-        assert best != null;
-        for (int i = 0; i < best.getGenotype().getChromosome().length(); i++) {
-            identifiedComponents.merge(
-                best.getGenotype().getChromosome().getGene(i).getAllele(),
-                Sets.newHashSet(ids[i]),
-                (s1, s2) -> {
-                    s1.addAll(s2);
-                    return s1;
-                });
-        }
-        return identifiedComponents;
-
     }
 
     private static void update(EvolutionResult<LongGene, Vec<double[]>> evolutionResult) {
@@ -114,7 +109,7 @@ public class Partitioner {
         LOGGER.info(updateString.toString());
     }
 
-    private static Genotype<LongGene> createGenotype(Map<Long, Set<Long>> initialPartitioning, boolean similarityBased) {
+    private static Genotype<LongGene> createGenotype(Map<Long, Set<Long>> initialPartitioning) {
         List<LongGene> genes = new LinkedList<>();
         for (Long id : ids) {
             int compId = 0;
@@ -130,10 +125,8 @@ public class Partitioner {
                 genes.add(LongGene.of(compId, 0, ids.length / 2 - 1));
             }
         }
-        Chromosome<LongGene> chromosome =
-            similarityBased ?
-                LongObjectiveSimilarityChromosome.of(genes.toArray(new LongGene[genes.size()])) :
-                LongObjectiveCouplingChromosome.of(genes.toArray(new LongGene[genes.size()]));
+        Chromosome<LongGene> chromosome = new LongObjectiveChromosome(ISeq.of(genes));
+
         return Genotype.of(chromosome);
     }
 

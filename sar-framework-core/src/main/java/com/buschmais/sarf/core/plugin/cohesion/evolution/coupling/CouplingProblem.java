@@ -14,7 +14,7 @@ public class CouplingProblem extends Problem {
     }
 
     @Override
-    public Double computeCouplingTo(long from, Collection<Long> to) {
+    public double computeCouplingTo(long from, Collection<Long> to) {
         double coupling = 0;
         for (long id : to) {
             coupling += this.relations.get(from, id);
@@ -24,7 +24,7 @@ public class CouplingProblem extends Problem {
     }
 
     @Override
-    public Double computeCohesionInComponent(Collection<Long> ids) {
+    public double computeCohesionInComponent(Collection<Long> ids) {
         double coupling = 0;
         for (long id : ids) {
             coupling += computeCouplingTo(id, ids);
@@ -33,7 +33,7 @@ public class CouplingProblem extends Problem {
     }
 
     @Override
-    public Double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2) {
+    public double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2) {
         double coupling = 0;
         for (long id1 : ids1) {
             coupling += computeCouplingTo(id1, ids2);
