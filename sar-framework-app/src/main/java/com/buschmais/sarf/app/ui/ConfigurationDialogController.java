@@ -18,8 +18,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * @author Stephan Pirnbaum
@@ -93,7 +92,7 @@ public class ConfigurationDialogController extends AbstractController {
         this.execute.setDisable(true);
         try {
             if (this.architecturePath.getText() != null && !this.architecturePath.getText().isEmpty()) {
-                URL configUrl = new URL(this.architecturePath.getText());
+                URI configUrl = new URI(this.architecturePath.getText());
                 this.classificationRunner.startNewIteration(configUrl);
             } else {
                 ClassificationConfigurationXmlMapper classificationConfiguration =
@@ -122,7 +121,7 @@ public class ConfigurationDialogController extends AbstractController {
         chooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("xml", "xml"));
         if ((f = chooser.showOpenDialog(this.chooseArchitecture.getScene().getWindow())) != null) {
             try {
-                ClassificationConfigurationXmlMapper classificationConfigurationXmlMapper = this.configurationParser.readConfiguration(new URL(f.getAbsolutePath()));
+                ClassificationConfigurationXmlMapper classificationConfigurationXmlMapper = this.configurationParser.readConfiguration(f.toURI());
                 this.architecturePath.setText(f.toURI().toString());
                 this.artifact.setText(classificationConfigurationXmlMapper.artifact);
                 this.artifact.setDisable(true);
@@ -134,7 +133,7 @@ public class ConfigurationDialogController extends AbstractController {
                 this.populationSize.setDisable(true);
                 this.generations.setText(String.valueOf(classificationConfigurationXmlMapper.generations));
                 this.generations.setDisable(true);
-            } catch (MalformedURLException | JAXBException | SAXException e) {
+            } catch (JAXBException | SAXException e) {
                 e.printStackTrace();
                 showExceptionDialog("Setup Error", "An error occured during opening the configuration!", "", e);
             }

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * @author Stephan Pirnbaum
@@ -48,8 +48,8 @@ public class ClassificationRunner {
         this.executor.execute(descriptor);
     }
 
-    public void startNewIteration(URL configUrl) throws JAXBException, SAXException {
-        startNewIteration(this.configurationParser.readConfiguration(configUrl));
+    public void startNewIteration(URI configUri) throws JAXBException, SAXException {
+        startNewIteration(this.configurationParser.readConfiguration(configUri));
     }
 
     private void setUpData(ClassificationConfigurationDescriptor descriptor) {
