@@ -19,6 +19,10 @@ import java.util.Map;
 public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescriptor> {
 
     @ResultOf
+    @Cypher("MATCH (c:SARF:Component) RETURN c")
+    Result<ComponentDescriptor> findAll();
+
+    @ResultOf
     @Cypher("MATCH" +
             "  (conf:ClassificationConfiguration) " +
             "WITH" +
@@ -73,7 +77,7 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "  rows AS row\n" +
             "RETURN\n" +
             "  toFloat(intersection)/count(DISTINCT row)")
-    double computeJaccardSimilarity(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
+    Double computeJaccardSimilarity(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
                                     @Parameter("shape2") String shape2, @Parameter("name2") String nam2,
                                     @Parameter("iteration") Integer iteration);
 

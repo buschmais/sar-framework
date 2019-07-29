@@ -4,11 +4,10 @@ import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
 import com.buschmais.sarf.core.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.core.framework.repository.ComponentRepository;
 import com.buschmais.sarf.core.framework.repository.TypeRepository;
-import com.buschmais.sarf.core.plugin.api.ExecutedBy;
 import com.buschmais.sarf.core.plugin.api.Executor;
 import com.buschmais.sarf.core.plugin.api.criterion.ClassificationCriterionDescriptor;
-import com.buschmais.sarf.core.plugin.api.criterion.ClassificationCriterionExecutor;
 import com.buschmais.sarf.core.plugin.api.criterion.RuleBasedCriterionDescriptor;
+import com.buschmais.sarf.core.plugin.api.criterion.RuleBasedCriterionExecutor;
 import com.buschmais.sarf.core.plugin.chorddiagram.ChordDiagramExporter;
 import com.buschmais.sarf.core.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.sarf.core.plugin.cohesion.CohesionCriterionExecutor;
@@ -56,6 +55,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     private final DendrogramExporter dendrogramExporter;
     private final TypeRepository typeRepository;
     private final ComponentRepository componentRepository;
+    private final RuleBasedCriterionExecutor ruleBasedCriterionExecutor;
 
     /**
      * Executes the given {@link ClassificationConfigurationDescriptor} by executing following steps:
@@ -133,13 +133,8 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         });
 
         for (RuleBasedCriterionDescriptor ruleBasedCriterion : ruleBasedCriteria) {
-            Class<? extends Executor> executorClass = ruleBasedCriteria.getClass().getAnnotation(ExecutedBy.class).value();
-            if (executorClass.isAssignableFrom(ClassificationCriterionExecutor.class)) {
-                @SuppressWarnings("unchecked")
-                ClassificationCriterionExecutor<ClassificationCriterionDescriptor> executor =
-                    this.beanFactory.getBean((Class<ClassificationCriterionExecutor>) executorClass);
-                components.addAll(executor.execute(ruleBasedCriterion));
-            }
+            Set<ComponentDescriptor> componentDescriptors = ruleBasedCriterionExecutor.execute(ruleBasedCriterion);
+            components.addAll(componentDescriptors);
         }
 
         this.xoManager.currentTransaction().commit();
@@ -296,33 +291,45 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
 
     private Set<ComponentDescriptor> mergeComponents(Set<ComponentDescriptor> cohesionResult, Set<ComponentDescriptor> userResult, Integer iteration) {
         //so we have several solutions, time to make one out of them :)
-        // 2 types of identified components exist:
-        // -user-defined ones
-        // -self-created ones (start with a hash # sign)
-        //
-        for (ComponentDescriptor userComponent : userResult) {
-            for (ComponentDescriptor cohesionComponent : cohesionResult) {
-                this.xoManager.currentTransaction().begin();
-                LOGGER.debug("Trying to merge user component: {}:{} with cohesion component: {}:{}",
-                    userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName());
-                Double tversky = computeTverskyIndex(componentRepository, userComponent, cohesionComponent, iteration);
-                if (tversky > 0.75) {
-                    LOGGER.info("Merging user component {}:{} with cohesion component: {}:{} (Tversky Index: {})",
-                        userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), tversky);
-                    cohesionComponent.setShape(userComponent.getShape());
-                    cohesionComponent.setName(userComponent.getName());
-                }
-                this.xoManager.currentTransaction().commit();
+        this.xoManager.currentTransaction().begin();
 
-                // check for contained components
-                mergeComponents(cohesionComponent.getContainedComponents(), userResult, iteration);
+        Set<ComponentDescriptor> cohesionComponents = getComponentHierarchy(cohesionResult);
+
+        for (ComponentDescriptor cohesionComponent : cohesionComponents) {
+            ComponentDescriptor bestUserComponent = null;
+            Double bestUserComponentSimilarity = 0.75;
+            for (ComponentDescriptor userComponent : userResult) {
+                Double similarity = computeTverskyIndex(userComponent, cohesionComponent, iteration);
+                System.out.println(similarity);
+                if (similarity > bestUserComponentSimilarity) {
+                    bestUserComponent = userComponent;
+                    bestUserComponentSimilarity = similarity;
+                }
+            }
+            if (bestUserComponent != null) {
+                LOGGER.info("Merging user component {}:{} with cohesion component: {}:{} (Tversky Index: {})",
+                    bestUserComponent.getShape(), bestUserComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), bestUserComponentSimilarity);
             }
         }
+
+        this.xoManager.currentTransaction().commit();
         return cohesionResult;
     }
 
-    private Double computeTverskyIndex(ComponentRepository componentRepository, ComponentDescriptor userComponent, ComponentDescriptor cohesionComponent, Integer iteration) {
-        double jaccard = componentRepository.computeJaccardSimilarity(
+    private Set<ComponentDescriptor> getComponentHierarchy(Set<ComponentDescriptor> componentDescriptors) {
+        Set<ComponentDescriptor> childs = new HashSet<>();
+        for (Object o : componentDescriptors) {
+            if (o instanceof ComponentDescriptor) {
+                ComponentDescriptor c = (ComponentDescriptor) o;
+                childs.add(c);
+                childs.addAll(getComponentHierarchy(c.getContainedComponents()));
+            }
+        }
+        return childs;
+    }
+
+    private Double computeTverskyIndex(ComponentDescriptor userComponent, ComponentDescriptor cohesionComponent, Integer iteration) {
+        Double jaccard = componentRepository.computeJaccardSimilarity(
             cohesionComponent.getShape(), cohesionComponent.getName(),
             userComponent.getShape(), userComponent.getName(),
             iteration);
