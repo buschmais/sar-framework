@@ -1,7 +1,5 @@
 package com.buschmais.sarf.core.plugin.cohesion.evolution;
 
-import com.buschmais.sarf.core.plugin.cohesion.evolution.coupling.LongObjectiveCouplingChromosome;
-import com.buschmais.sarf.core.plugin.cohesion.evolution.similarity.LongObjectiveSimilarityChromosome;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.jenetics.Genotype;
@@ -50,9 +48,8 @@ public abstract class RelationMutator extends Mutator<LongGene, Vec<double[]>> {
                 }
             }
         }
-        LongObjectiveChromosome newChromosome = chromosome instanceof LongObjectiveCouplingChromosome ?
-            LongObjectiveCouplingChromosome.of(seq.toArray(new LongGene[seq.length()])) :
-            LongObjectiveSimilarityChromosome.of(seq.toArray(new LongGene[seq.length()]));
+        LongObjectiveChromosome newChromosome = new LongObjectiveChromosome(seq.asISeq());
+
         return MutatorResult.of(Genotype.of(newChromosome), mutated);
     }
 }

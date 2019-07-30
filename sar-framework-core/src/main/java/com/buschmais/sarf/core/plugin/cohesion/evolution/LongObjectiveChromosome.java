@@ -3,52 +3,39 @@ package com.buschmais.sarf.core.plugin.cohesion.evolution;
 import com.buschmais.sarf.core.plugin.cohesion.ElementCoupling;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import io.jenetics.LongChromosome;
 import io.jenetics.LongGene;
+import io.jenetics.internal.math.random;
 import io.jenetics.util.ISeq;
 import io.jenetics.util.IntRange;
+import io.jenetics.util.MSeq;
 import lombok.Getter;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.Random;
+
+import static io.jenetics.util.RandomRegistry.getRandom;
+import static java.lang.String.format;
 
 /**
  * @author Stephan Pirnbaum
  */
-public abstract class LongObjectiveChromosome extends LongChromosome {
+public final class LongObjectiveChromosome extends LongChromosome {
 
-    private boolean evaluated = false;
-
-    private double cohesionObjective = 0d;
-
-    private double couplingObjective = 0d;
-
-    private double componentSizeObjective = 0d;
-
-    private double componentRangeObjective = 0d;
-
-    private double cohesiveComponentObjective = 0d;
-
+    @Getter
     private Map<ElementCoupling, ElementCoupling> components = new HashMap<>();
 
     @Getter
     private final Map<Long, Long> elementToComponent = new HashMap<>();
 
-    protected LongObjectiveChromosome(ISeq<LongGene> genes) {
+    /**
+     * Creates a new {@link LongObjectiveChromosome} from the given {@link LongGene}s.
+     *
+     * @param genes The {@link LongGene}s.
+     */
+    LongObjectiveChromosome(ISeq<LongGene> genes) {
         super(genes, IntRange.of(genes.length()));
-        init();
-    }
-
-    public LongObjectiveChromosome(Long min, Long max, int length) {
-        super(min, max, length);
-        init();
-    }
-
-    public LongObjectiveChromosome(Long min, Long max) {
-        super(min, max);
         init();
     }
 
@@ -79,76 +66,93 @@ public abstract class LongObjectiveChromosome extends LongChromosome {
             int targetComponentSize = componentToElements.get(componentCoupling.getTarget()).size();
             int denominator = sourceComponentSize * targetComponentSize;
             componentCoupling.normalizeCoupling(denominator);
-
         }
     }
 
-    private void evaluate() {
-        // mapping from component id to a set of type ids
-        Map<Long, Set<Long>> identifiedComponents = new HashMap<>();
-        for (int i = 0; i < this.length(); i++) {
-            identifiedComponents.merge(
-                this.getGene(i).getAllele(),
-                Sets.newHashSet(Partitioner.ids[i]),
-                (s1, s2) -> {
-                    s1.addAll(s2);
-                    return s1;
-                });
+    @Override
+    public LongObjectiveChromosome newInstance(ISeq<LongGene> genes) {
+        return new LongObjectiveChromosome(genes);
+    }
+
+    @Override
+    public LongObjectiveChromosome newInstance() {
+        final Random r = getRandom();
+        ISeq<LongGene> longGenes = MSeq.<LongGene>ofLength(random.nextInt(IntRange.of(this.length()), r))
+            .fill(() -> LongGene.of(nextLong(r, this.getMin(), this.getMax()), this.getMin(), this.getMax()))
+            .toISeq();
+        return new LongObjectiveChromosome(longGenes);
+    }
+
+    /**
+     * Returns a pseudo-random, uniformly distributed int value between min
+     * and max (min and max included).
+     *
+     * @param random the random engine to use for calculating the random
+     *        long value
+     * @param min lower bound for generated long integer
+     * @param max upper bound for generated long integer
+     * @return a random long integer greater than or equal to {@code min}
+     *         and less than or equal to {@code max}
+     * @throws IllegalArgumentException if {@code min > max}
+     * @throws NullPointerException if the given {@code random}
+     *         engine is {@code null}.
+     */
+    private static long nextLong(
+        final Random random,
+        final long min, final long max
+    ) {
+        if (min > max) {
+            throw new IllegalArgumentException(format(
+                "min >= max: %d >= %d.", min, max
+            ));
         }
-        int uncohesiveComponents = 0;
-        int subComponents = 0;
-        int totalSubComponents = 0;
-        // compute fitness for intra-edge coupling (cohesiveness of components)
-        for (Map.Entry<Long, Set<Long>> component1 : identifiedComponents.entrySet()) {
-            this.cohesionObjective += computeCohesion(component1.getValue());
-            if ((subComponents = Problem.getInstance().connectedComponents(component1.getValue()).keySet().size()) > 1) {
-                uncohesiveComponents++;
-                totalSubComponents += subComponents;
-            }
+
+        final long diff = (max - min) + 1;
+        long result = 0;
+
+        if (diff <= 0) {
+            do {
+                result = random.nextLong();
+            } while (result < min || result > max);
+        } else if (diff < Integer.MAX_VALUE) {
+            result = random.nextInt((int)diff) + min;
+        } else {
+            result = nextLong(random, diff) + min;
         }
-        for (Map.Entry<ElementCoupling, ElementCoupling> elementCoupling : this.components.entrySet()) {
-            this.couplingObjective -= elementCoupling.getValue().getCoupling();
+
+        return result;
+    }
+
+    /**
+     * Returns a pseudo-random, uniformly distributed int value between 0
+     * (inclusive) and the specified value (exclusive), drawn from the given
+     * random number generator's sequence.
+     *
+     * @param random the random engine used for creating the random number.
+     * @param n the bound on the random number to be returned. Must be
+     *        positive.
+     * @return the next pseudo-random, uniformly distributed int value
+     *         between 0 (inclusive) and n (exclusive) from the given random
+     *         number generator's sequence
+     * @throws IllegalArgumentException if n is smaller than 1.
+     * @throws NullPointerException if the given {@code random}
+     *         engine is {@code null}.
+     */
+    private static long nextLong(final Random random, final long n) {
+        if (n <= 0) {
+            throw new IllegalArgumentException(format(
+                "n is smaller than one: %d", n
+            ));
         }
-        this.couplingObjective = normalizeCoupling(this.couplingObjective, identifiedComponents.size());
-        this.cohesionObjective /= identifiedComponents.size();
-        // minimize the difference between min and max component size
-        this.componentRangeObjective = ((double) (identifiedComponents.values().stream().mapToInt(Set::size).min().orElse(0) -
-            identifiedComponents.values().stream().mapToInt(Set::size).max().orElse(0))) / (Partitioner.ids.length - 1);
-        // punish one-type only components
-        //punish un-cohesive components
-        this.cohesiveComponentObjective = uncohesiveComponents == 0 ? 1 : (totalSubComponents > identifiedComponents.size() ? 0 : (1 - ((double) totalSubComponents) / identifiedComponents.size()));
-        this.componentSizeObjective = -identifiedComponents.values().stream().mapToInt(Set::size).filter(i -> i == 1).count() / (double) identifiedComponents.size();
-        this.evaluated = true;
 
-    }
+        long bits;
+        long result;
+        do {
+            bits = random.nextLong() & 0x7fffffffffffffffL;
+            result = bits%n;
+        } while (bits - result + (n - 1) < 0);
 
-    protected abstract double computeCohesion(Collection<Long> ids);
-
-    protected abstract double normalizeCoupling(Double coupling, int components);
-
-    protected double getCohesionObjective() {
-        if (!this.evaluated) evaluate();
-        return this.cohesionObjective;
-    }
-
-    protected double getCouplingObjective() {
-        if (!this.evaluated) evaluate();
-        return this.couplingObjective;
-    }
-
-    protected double getComponentSizeObjective() {
-        if (!this.evaluated) evaluate();
-        return this.componentSizeObjective;
-    }
-
-    protected double getComponentRangeObjective() {
-        if (!this.evaluated) evaluate();
-        return this.componentRangeObjective;
-    }
-
-    protected double getCohesiveComponentObjective() {
-        if (!this.evaluated) evaluate();
-        return this.cohesiveComponentObjective;
+        return result;
     }
 
 }

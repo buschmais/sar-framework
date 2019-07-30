@@ -63,11 +63,11 @@ public abstract class Problem {
         this.couplings.put(eC, eC);
     }
 
-    public abstract Double computeCouplingTo(long from, Collection<Long> to);
+    public abstract double computeCouplingTo(long from, Collection<Long> to);
 
-    public abstract Double computeCohesionInComponent(Collection<Long> ids);
+    public abstract double computeCohesionInComponent(Collection<Long> ids);
 
-    public abstract Double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2);
+    public abstract double computeCouplingBetweenComponents(Collection<Long> ids1, Collection<Long> ids2);
 
     public Multimap<Long, Long> connectedComponents(Collection<Long> ids) {
         Collection<Long> idCopy = Sets.newHashSet(ids);
