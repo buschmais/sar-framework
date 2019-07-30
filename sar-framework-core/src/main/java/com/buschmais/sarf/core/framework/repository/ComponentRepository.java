@@ -19,22 +19,6 @@ import java.util.Map;
 public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescriptor> {
 
     @ResultOf
-    @Cypher("MATCH (c:SARF:Component) RETURN c")
-    Result<ComponentDescriptor> findAll();
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (conf:ClassificationConfiguration) " +
-            "WITH" +
-            "  max(conf.iteration) AS current " +
-            "MATCH" +
-            "  (:ClassificationConfiguration{iteration: current})-[:CONTAINS]->(:ClassificationCriterion)" +
-            "    -[:CREATED]->(:ClassificationInfo)-[:MAPS]->(c:Component)" +
-            "RETURN" +
-            "  DISTINCT c")
-    Result<ComponentDescriptor> getComponentsOfCurrentIteration();
-
-    @ResultOf
     @Cypher("MATCH" +
             "  (conf:ClassificationConfiguration) " +
             "WITH" +
@@ -51,86 +35,6 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "RETURN " +
             "  DISTINCT c")
     Result<ComponentDescriptor> getComponentOfCurrentIteration(@Parameter("shape") String shape, @Parameter("name") String name);
-
-    @ResultOf
-    @Cypher("MATCH\n" +
-            "  (:SARF:Component {shape:{shape2}, name:{name2}})" +
-            "    <-[:MAPS]-(info2:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
-            "  (type1:Type:Internal)" +
-            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
-            "  (:SARF:Component {shape:{shape1}, name:{name1}})\n" +
-            "WITH \n" +
-            "  count(DISTINCT type1) AS intersection\n" +
-            "MATCH\n" +
-            "  (type1:Type:Internal)" +
-            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
-            "  (comp1:SARF:Component {shape:{shape1}, name:{name1}})\n" +
-            "WITH\n" +
-            "  intersection, collect(type1) AS types\n" +
-            "MATCH\n" +
-            "  (type2:Type:Internal)" +
-            "    <-[:CLASSIFIES]-(info2:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
-            "  (comp2:SARF:Component {shape:{shape2}, name:{name2}})\n" +
-            "WITH \n" +
-            "  intersection, types + collect(type2) AS rows\n" +
-            "UNWIND \n" +
-            "  rows AS row\n" +
-            "RETURN\n" +
-            "  toFloat(intersection)/count(DISTINCT row)")
-    Double computeJaccardSimilarity(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
-                                    @Parameter("shape2") String shape2, @Parameter("name2") String nam2,
-                                    @Parameter("iteration") Integer iteration);
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (:SARF:Component{shape:{shape}, name:{name}})" +
-            "    <-[:MAPS]-(:ClassificationInfo{iteration:{iteration}})-[:CLASSIFIES]->" +
-            "  (t:Type) " +
-            "RETURN" +
-            "  count(DISTINCT t)")
-    Long computeComponentCardinality(@Parameter("shape") String shape, @Parameter("name") String string,
-                                       @Parameter("iteration") Integer iteration);
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (:SARF:Component {shape:{shape2}, name:{name2}})" +
-            "    <-[:MAPS]-(info2:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
-            "  (type:Type:Internal)" +
-            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
-            "  (:SARF:Component {shape:{shape1}, name:{name1}})" +
-            "RETURN" +
-            "  count(DISTINCT type)")
-    Long computeComponentIntersectionCardinality(@Parameter("shape1") String shape1, @Parameter("name1") String name1,
-                                                   @Parameter("shape2") String shape2, @Parameter("name2") String name2,
-                                                   @Parameter("iteration") Integer iteration);
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (:SARF:Component {shape:{shape2}, name:{name2}})" +
-            "    <-[:MAPS]-(:ClassificationInfo {iteration:{iteration}})-[:CLASSIFIES]->" +
-            "  (type:Type:Internal) " +
-            "WITH" +
-            "  type " +
-            "OPTIONAL MATCH" +
-            "  (type)" +
-            "    <-[:CLASSIFIES]-(info1:ClassificationInfo {iteration:{iteration}})-[:MAPS]->" +
-            "  (:SARF:Component {shape:{shape1}, name:{name1}}) " +
-            "WHERE" +
-            "  info1 IS NULL " +
-            "RETURN" +
-            "  count(DISTINCT type)")
-    Long computeComplementCardinality(@Parameter("shape1") String ofShape, @Parameter("name1") String ofName,
-                                      @Parameter("shape2") String inShape, @Parameter("name2") String inName,
-                                      @Parameter("iteration") Integer iteration);
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (c:SARF:Component)<-[:MAPS]-(info:ClassificationInfo) " +
-            "WHERE" +
-            "  ID(c) = {id} " +
-            "RETURN" +
-            "  info")
-    Result<ClassificationInfoDescriptor> getCandidateTypes(@Parameter("id") Long componentId);
 
     @ResultOf
     @Cypher("MATCH" +
@@ -168,15 +72,6 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
     Long getBestComponentForShape(@Parameter("ids") long[] longs, @Parameter("shape") String shape, @Parameter("tid") Long typeId);
 
     @ResultOf
-    @Cypher("MATCH" +
-            "  (c:Component:SARF) " +
-            "WHERE" +
-            "  ID(c) IN {ids} " +
-            "RETURN" +
-            "  c")
-    Result<ComponentDescriptor> getComponentsWithId(@Parameter("ids") long[] longs);
-
-    @ResultOf
     @Cypher("MATCH\n" +
             "  (c1:Component:SARF)-[cont1:CONTAINS]->(e1)-[coup:COUPLES]->(e2)<-[:CONTAINS]-(c2:Component:SARF) \n" +
             "WHERE\n" +
@@ -196,16 +91,6 @@ public interface ComponentRepository extends TypedNeo4jRepository<ComponentDescr
             "MERGE\n" +
             "  (c1)-[:COUPLES{coupling:relCoupling}]->(c2)")
     void computeCouplingBetweenComponents(@Parameter("ids") long[] ids);
-
-    @ResultOf
-    @Cypher("MATCH" +
-            "  (c:Component:SARF)," +
-            "  (t:Type) " +
-            "WHERE" +
-            "  ID(c) = {cId} AND ID(t) = {tId} " +
-            "RETURN" +
-            "  exists((c)-[:CONTAINS]->(t))")
-    boolean containsType(@Parameter("cId") Long cId, @Parameter("tId") Long tId);
 
     @ResultOf
     @Cypher("MATCH\n" +

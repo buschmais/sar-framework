@@ -107,7 +107,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             // Step 4: Execute the cohesion criterion
             Set<ComponentDescriptor> cohesionResult = executeCohesionCriterion(cohesionCriterionDescriptor, components);
             // Step 5: Merge user components with the result of the cohesion based classification
-            components = mergeComponents(cohesionResult, components, iteration);
+            components = mergeComponents(cohesionResult, components);
         }
 
         // Step 6: Export the result
@@ -289,7 +289,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
     }
 
 
-    private Set<ComponentDescriptor> mergeComponents(Set<ComponentDescriptor> cohesionResult, Set<ComponentDescriptor> userResult, Integer iteration) {
+    private Set<ComponentDescriptor> mergeComponents(Set<ComponentDescriptor> cohesionResult, Set<ComponentDescriptor> userResult) {
         //so we have several solutions, time to make one out of them :)
         this.xoManager.currentTransaction().begin();
 
@@ -299,8 +299,7 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             ComponentDescriptor bestUserComponent = null;
             Double bestUserComponentSimilarity = 0.75;
             for (ComponentDescriptor userComponent : userResult) {
-                Double similarity = computeTverskyIndex(userComponent, cohesionComponent, iteration);
-                System.out.println(similarity);
+                Double similarity = computeTverskyIndex(userComponent, cohesionComponent);
                 if (similarity > bestUserComponentSimilarity) {
                     bestUserComponent = userComponent;
                     bestUserComponentSimilarity = similarity;
@@ -309,6 +308,8 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
             if (bestUserComponent != null) {
                 LOGGER.info("Merging user component {}:{} with cohesion component: {}:{} (Tversky Index: {})",
                     bestUserComponent.getShape(), bestUserComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), bestUserComponentSimilarity);
+                cohesionComponent.setShape(bestUserComponent.getShape());
+                cohesionComponent.setName(bestUserComponent.getName());
             }
         }
 
@@ -328,27 +329,36 @@ public class ClassificationConfigurationExecutor implements Executor<Classificat
         return childs;
     }
 
-    private Double computeTverskyIndex(ComponentDescriptor userComponent, ComponentDescriptor cohesionComponent, Integer iteration) {
-        Double jaccard = componentRepository.computeJaccardSimilarity(
-            cohesionComponent.getShape(), cohesionComponent.getName(),
-            userComponent.getShape(), userComponent.getName(),
-            iteration);
-        Long intersection = componentRepository.computeComponentIntersectionCardinality(
-            cohesionComponent.getShape(), cohesionComponent.getName(),
-            userComponent.getShape(), userComponent.getName(),
-            iteration);
-        Long cohesionComponentCardinality = componentRepository.computeComponentCardinality(cohesionComponent.getShape(), cohesionComponent.getName(), iteration);
-        Long userComponentCardinality = componentRepository.computeComponentCardinality(userComponent.getShape(), userComponent.getName(), iteration);
-        Long ofCD1InCD2 = componentRepository.computeComplementCardinality(cohesionComponent.getShape(), cohesionComponent.getName(), userComponent.getShape(), userComponent.getName(), iteration);
-        Long ofCD2InCD1 = componentRepository.computeComplementCardinality(userComponent.getShape(), userComponent.getName(), cohesionComponent.getShape(), cohesionComponent.getName(), iteration);
+    private Double computeTverskyIndex(ComponentDescriptor userComponent, ComponentDescriptor cohesionComponent) {
+        Result<TypeDescriptor> cohesionTypes = componentRepository.getContainedTypesRecursively(this.xoManager.getId(cohesionComponent));
+        Set<Long> cohesionTypeIds = new HashSet<>();
+        cohesionTypes.forEach(c -> cohesionTypeIds.add(c.getId()));
+        Set<Long> userTypeIds = userComponent.getContainedTypes().stream().map(t -> (Long) t.getId()).collect(Collectors.toSet());
+
         double alpha = 0.8;
         double beta = 0.6;
-        Double tversky = intersection.doubleValue() / (intersection + beta * (alpha * Math.min(ofCD2InCD1, ofCD1InCD2) + (1 - alpha) * Math.max(ofCD2InCD1, ofCD1InCD2)));
-        LOGGER.debug("Jaccard: {}", jaccard);
-        LOGGER.debug("Cardinality 1: {}", cohesionComponentCardinality);
-        LOGGER.debug("Cardinality 2: {}", userComponentCardinality);
-        LOGGER.debug("Intersection: {}", intersection);
+
+        Set<Long> intersectionSet = new HashSet<>(cohesionTypeIds);
+        intersectionSet.retainAll(userTypeIds);
+
+        Set<Long> aWithoutBSet = new HashSet<>(cohesionTypeIds);
+        aWithoutBSet.removeAll(userTypeIds);
+
+        Set<Long> bWithoutASet = new HashSet<>(userTypeIds);
+        bWithoutASet.removeAll(cohesionTypeIds);
+
+        int a = Math.min(aWithoutBSet.size(), bWithoutASet.size());
+        int b = Math.max(aWithoutBSet.size(), bWithoutASet.size());
+
+        Double intersectionCardinality = Double.valueOf(intersectionSet.size());
+
+        double tversky = intersectionCardinality / (intersectionCardinality + beta * (alpha * a + (1 - alpha) * b));
+
+        LOGGER.debug("A: {}", a);
+        LOGGER.debug("B: {}", b);
+        LOGGER.debug("Intersection: {}", intersectionCardinality);
         LOGGER.debug("Tversky: {}", + tversky);
+
         return tversky;
     }
 
