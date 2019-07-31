@@ -2,7 +2,6 @@ package com.buschmais.sarf.core.framework;
 
 import com.buschmais.sarf.core.framework.configuration.*;
 import com.buschmais.sarf.core.framework.repository.TypeRepository;
-import com.buschmais.sarf.core.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.xo.api.XOManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,6 @@ public class ClassificationRunner {
             this.xOManager.createQuery("MATCH (t:Type:Internal) REMOVE t:Internal").execute();
         }
         ClassificationConfigurationDescriptor descriptor = materializer.materialize(configuration);
-        descriptor.getClassificationCriteria().add(this.xOManager.create(CohesionCriterionDescriptor.class));
         this.xOManager.currentTransaction().commit();
         this.setUpData(descriptor);
         this.executor.execute(descriptor);

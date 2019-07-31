@@ -27,22 +27,6 @@ public interface ClassificationConfigurationDescriptor extends SARFDescriptor {
 
     Integer getIteration();
 
-    void setDecomposition(Decomposition decomposition);
-
-    Decomposition getDecomposition();
-
-    void setOptimization(Optimization optimization);
-
-    Optimization getOptimization();
-
-    void setGenerations(Integer generations);
-
-    Integer getGenerations();
-
-    void setPopulationSize(Integer populationSize);
-
-    Integer getPopulationSize();
-
     void setTypeName(String typeName);
 
     String getTypeName();
@@ -54,6 +38,5 @@ public interface ClassificationConfigurationDescriptor extends SARFDescriptor {
     void setArtifact(String artifact);
 
     String getArtifact();
-
 
 }

@@ -3,10 +3,12 @@ package com.buschmais.sarf.core.framework.configuration;
 import com.buschmais.sarf.core.framework.metamodel.ComponentDescriptor;
 import com.buschmais.sarf.core.framework.metamodel.ComponentXmlMapper;
 import com.buschmais.sarf.core.framework.repository.AnnotationResolver;
-import com.buschmais.sarf.core.plugin.api.*;
+import com.buschmais.sarf.core.plugin.api.ContainedIn;
+import com.buschmais.sarf.core.plugin.api.Materializable;
 import com.buschmais.sarf.core.plugin.api.criterion.RuleBasedCriterionDescriptor;
 import com.buschmais.sarf.core.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.sarf.core.plugin.api.criterion.RuleXmlMapper;
+import com.buschmais.sarf.core.plugin.cohesion.CohesionCriterionDescriptor;
 import com.buschmais.xo.api.XOManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
@@ -33,10 +35,6 @@ public class ClassificationConfigurationMaterializer {
         classificationConfigurationDescriptor.setBasePackage(mapper.basePackage);
         classificationConfigurationDescriptor.setTypeName(mapper.typeName);
         classificationConfigurationDescriptor.setArtifact(mapper.artifact);
-        classificationConfigurationDescriptor.setGenerations(mapper.generations);
-        classificationConfigurationDescriptor.setPopulationSize(mapper.populationSize);
-        classificationConfigurationDescriptor.setDecomposition(mapper.decomposition);
-        classificationConfigurationDescriptor.setOptimization(mapper.optimization);
 
         // materialize components
         Set<ComponentDescriptor> componentDescriptors =
@@ -56,6 +54,15 @@ public class ClassificationConfigurationMaterializer {
             classificationCriterion.getRules().addAll(v);
             classificationConfigurationDescriptor.getClassificationCriteria().add(classificationCriterion);
         });
+        // create cohesion criterion if configured
+        if (mapper.optimization != Optimization.NONE) {
+            CohesionCriterionDescriptor cohesionCriterionDescriptor = this.xoManager.create(CohesionCriterionDescriptor.class);
+            cohesionCriterionDescriptor.setGenerations(mapper.generations);
+            cohesionCriterionDescriptor.setPopulationSize(mapper.populationSize);
+            cohesionCriterionDescriptor.setDecomposition(mapper.decomposition);
+            cohesionCriterionDescriptor.setOptimization(mapper.optimization);
+            classificationConfigurationDescriptor.getClassificationCriteria().add(cohesionCriterionDescriptor);
+        }
         return classificationConfigurationDescriptor;
     }
 

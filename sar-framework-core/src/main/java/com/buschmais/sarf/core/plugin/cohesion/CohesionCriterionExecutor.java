@@ -1,8 +1,6 @@
 package com.buschmais.sarf.core.plugin.cohesion;
 
 import com.buschmais.jqassistant.plugin.java.api.model.TypeDescriptor;
-import com.buschmais.sarf.core.framework.configuration.ClassificationConfigurationDescriptor;
-import com.buschmais.sarf.core.framework.configuration.ClassificationConfigurationRepository;
 import com.buschmais.sarf.core.framework.configuration.Decomposition;
 import com.buschmais.sarf.core.framework.configuration.Optimization;
 import com.buschmais.sarf.core.framework.metamodel.ComponentDescriptor;
@@ -50,14 +48,10 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
 
     private Set<ComponentDescriptor> execute(CohesionCriterionDescriptor descriptor, Map<Long, Set<Long>> initialPartitioning) {
         LOGGER.info("Partitioning the System");
-        ClassificationConfigurationRepository classificationConfigurationRepository =
-            this.xOManager.getRepository(ClassificationConfigurationRepository.class);
-        ClassificationConfigurationDescriptor currentConfiguration = classificationConfigurationRepository.getCurrentConfiguration();
-        Integer iteration = currentConfiguration.getIteration();
-        boolean similarityBased = currentConfiguration.getOptimization() == Optimization.SIMILARITY;
-        boolean hierarchical = currentConfiguration.getDecomposition() == Decomposition.DEEP;
-        Integer generations = currentConfiguration.getGenerations();
-        Integer populationSize = currentConfiguration.getPopulationSize();
+        boolean similarityBased = descriptor.getOptimization() == Optimization.SIMILARITY;
+        boolean hierarchical = descriptor.getDecomposition() == Decomposition.DEEP;
+        Integer generations = descriptor.getGenerations();
+        Integer populationSize = descriptor.getPopulationSize();
 
         List<Long> tIds = getTypeIds();
         long[] ids = tIds.stream().mapToLong(l -> l).toArray();
@@ -72,7 +66,7 @@ public final class CohesionCriterionExecutor implements ClassificationCriterionE
             this.xOManager.currentTransaction().begin();
             Map<Long, Set<Long>> partitioning = Partitioner.partition(ids, initialPartitioning, generations, populationSize, similarityBased);
             this.xOManager.currentTransaction().commit();
-            Set<Long> identifiedGroups = materializeGroups(partitioning, iteration, componentLevel, !hierarchical);
+            Set<Long> identifiedGroups = materializeGroups(partitioning, descriptor.getIteration(), componentLevel, !hierarchical);
             if (!hierarchical) {
                 this.xOManager.currentTransaction().begin();
                 Set<ComponentDescriptor> res = new HashSet<>();
