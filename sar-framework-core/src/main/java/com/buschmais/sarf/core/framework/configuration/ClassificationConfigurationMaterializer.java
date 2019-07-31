@@ -9,6 +9,7 @@ import com.buschmais.sarf.core.plugin.api.criterion.RuleBasedCriterionDescriptor
 import com.buschmais.sarf.core.plugin.api.criterion.RuleDescriptor;
 import com.buschmais.sarf.core.plugin.api.criterion.RuleXmlMapper;
 import com.buschmais.sarf.core.plugin.cohesion.CohesionCriterionDescriptor;
+import com.buschmais.sarf.core.plugin.cohesion.EvolutionXmlMapper;
 import com.buschmais.xo.api.XOManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
@@ -55,12 +56,8 @@ public class ClassificationConfigurationMaterializer {
             classificationConfigurationDescriptor.getClassificationCriteria().add(classificationCriterion);
         });
         // create cohesion criterion if configured
-        if (mapper.optimization != Optimization.NONE) {
-            CohesionCriterionDescriptor cohesionCriterionDescriptor = this.xoManager.create(CohesionCriterionDescriptor.class);
-            cohesionCriterionDescriptor.setGenerations(mapper.generations);
-            cohesionCriterionDescriptor.setPopulationSize(mapper.populationSize);
-            cohesionCriterionDescriptor.setDecomposition(mapper.decomposition);
-            cohesionCriterionDescriptor.setOptimization(mapper.optimization);
+        if (mapper.evolution != null) {
+            CohesionCriterionDescriptor cohesionCriterionDescriptor = materializeEvolution(mapper.evolution);
             classificationConfigurationDescriptor.getClassificationCriteria().add(cohesionCriterionDescriptor);
         }
         return classificationConfigurationDescriptor;
@@ -98,6 +95,15 @@ public class ClassificationConfigurationMaterializer {
         rule.setRule(mapper.rule);
         rule.setWeight(mapper.weight);
         return rule;
+    }
+
+    private CohesionCriterionDescriptor materializeEvolution(EvolutionXmlMapper evolution) {
+        CohesionCriterionDescriptor cohesionCriterionDescriptor = this.xoManager.create(CohesionCriterionDescriptor.class);
+        cohesionCriterionDescriptor.setGenerations(evolution.generations);
+        cohesionCriterionDescriptor.setPopulationSize(evolution.populationSize);
+        cohesionCriterionDescriptor.setDecomposition(evolution.decomposition);
+        cohesionCriterionDescriptor.setOptimization(evolution.optimization);
+        return cohesionCriterionDescriptor;
     }
 
     private Set<RuleDescriptor> flattenRules(Set<ComponentDescriptor> components) {

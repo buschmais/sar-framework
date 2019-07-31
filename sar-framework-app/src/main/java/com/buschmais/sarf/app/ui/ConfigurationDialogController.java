@@ -5,6 +5,7 @@ import com.buschmais.sarf.core.framework.configuration.ClassificationConfigurati
 import com.buschmais.sarf.core.framework.configuration.ConfigurationParser;
 import com.buschmais.sarf.core.framework.configuration.Decomposition;
 import com.buschmais.sarf.core.framework.configuration.Optimization;
+import com.buschmais.sarf.core.plugin.cohesion.EvolutionXmlMapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -101,10 +102,12 @@ public class ConfigurationDialogController extends AbstractController {
                 classificationConfiguration.artifact = this.artifact.getText();
                 classificationConfiguration.basePackage = this.basePackage.getText();
                 classificationConfiguration.typeName = this.typeName.getText();
-                classificationConfiguration.generations = Integer.valueOf(this.generations.getText());
-                classificationConfiguration.populationSize = Integer.valueOf(this.populationSize.getText());
-                classificationConfiguration.decomposition = Decomposition.DEEP;
-                classificationConfiguration.optimization = Optimization.COUPLING;
+                EvolutionXmlMapper evolutionXmlMapper = new EvolutionXmlMapper();
+                evolutionXmlMapper.generations = Integer.valueOf(this.generations.getText());
+                evolutionXmlMapper.populationSize = Integer.valueOf(this.populationSize.getText());
+                evolutionXmlMapper.decomposition = Decomposition.DEEP;
+                evolutionXmlMapper.optimization = Optimization.COUPLING;
+                classificationConfiguration.evolution = evolutionXmlMapper;
                 this.classificationRunner.startNewIteration(classificationConfiguration);
             }
         } catch (Exception e) {
@@ -129,9 +132,9 @@ public class ConfigurationDialogController extends AbstractController {
                 this.basePackage.setDisable(true);
                 this.typeName.setText(classificationConfigurationXmlMapper.typeName);
                 this.typeName.setDisable(true);
-                this.populationSize.setText(String.valueOf(classificationConfigurationXmlMapper.populationSize));
+                this.populationSize.setText(String.valueOf(classificationConfigurationXmlMapper.evolution.populationSize));
                 this.populationSize.setDisable(true);
-                this.generations.setText(String.valueOf(classificationConfigurationXmlMapper.generations));
+                this.generations.setText(String.valueOf(classificationConfigurationXmlMapper.evolution.generations));
                 this.generations.setDisable(true);
             } catch (JAXBException | SAXException e) {
                 e.printStackTrace();

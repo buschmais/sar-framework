@@ -8,6 +8,5 @@ import javax.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum Optimization {
     @XmlEnumValue("similarity") SIMILARITY,
-    @XmlEnumValue("coupling") COUPLING,
-    @XmlEnumValue("none") NONE
+    @XmlEnumValue("coupling") COUPLING
 }
