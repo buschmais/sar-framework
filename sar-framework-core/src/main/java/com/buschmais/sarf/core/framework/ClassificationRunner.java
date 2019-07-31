@@ -10,13 +10,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import java.net.URL;
+import java.net.URI;
 
 /**
  * @author Stephan Pirnbaum
@@ -35,10 +30,7 @@ public class ClassificationRunner {
 
     private final TypeCouplingEnricher typeCouplingEnricher;
 
-    public Double run(URL configUrl) {
-        startNewIteration(configUrl);
-        return 0d;
-    }
+    private final ConfigurationParser configurationParser;
 
     public void startNewIteration(ClassificationConfigurationXmlMapper configuration) {
         this.xOManager.currentTransaction().begin();
@@ -56,29 +48,8 @@ public class ClassificationRunner {
         this.executor.execute(descriptor);
     }
 
-    public void startNewIteration(URL configUrl) {
-        startNewIteration(readConfiguration(configUrl));
-    }
-
-    private ClassificationConfigurationXmlMapper readConfiguration(URL configUrl) {
-        LOGGER.info("Reading XML Configuration");
-        try {
-            URL schemaUrl = ClassificationRunner.class.getClassLoader().getResource("schema.xsd");
-            JAXBContext jaxbContext = JAXBContext.newInstance(ClassificationConfigurationXmlMapper.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = sf.newSchema(schemaUrl);
-            jaxbUnmarshaller.setSchema(schema);
-            LOGGER.info("Unmarshalling XML Configuration");
-            ClassificationConfigurationXmlMapper mapper =
-                (ClassificationConfigurationXmlMapper) jaxbUnmarshaller.unmarshal(configUrl);
-            LOGGER.info("Unmarshalling XML Configuration Successful");
-            return mapper;
-        } catch (JAXBException | SAXException e) {
-            LOGGER.error("Unable to read configuration", e);
-            System.exit(1);
-            return null;
-        }
+    public void startNewIteration(URI configUri) throws JAXBException, SAXException {
+        startNewIteration(this.configurationParser.readConfiguration(configUri));
     }
 
     private void setUpData(ClassificationConfigurationDescriptor descriptor) {

@@ -7,11 +7,11 @@ import org.apache.commons.cli.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.xml.sax.SAXException;
 
-import java.net.MalformedURLException;
+import javax.xml.bind.JAXBException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * Created by steph on 04.05.2017.
@@ -45,19 +45,19 @@ public class SARFCLIRunner {
         try {
             CommandLine cmd = parser.parse(options, args);
             URI storeUri = new URI(cmd.getOptionValue("s"));
-            URL configUrl = cmd.hasOption("c") ? new URL(cmd.getOptionValue("c")) : null;
+            URI configUri = cmd.hasOption("c") ? new URI(cmd.getOptionValue("c")) : null;
             Integer iteration = cmd.hasOption("l") ? Integer.valueOf(cmd.getOptionValue("l")) : null;
-            URL benchUrl = cmd.hasOption("b") ? new URL(cmd.getOptionValue("b")) : null;
+            URI benchUri = cmd.hasOption("b") ? new URI(cmd.getOptionValue("b")) : null;
 
             springContext.getBean(XOManager.class, storeUri);
             ClassificationRunner runner = springContext.getBean(ClassificationRunner.class);
-            runner.startNewIteration(configUrl);
+            runner.startNewIteration(configUri);
         } catch (ParseException e) {
             LOGGER.error(e.getMessage());
             formatter.printHelp("java -jar sarf.jar", options);
             System.exit(1);
-        } catch (MalformedURLException e) {
-            LOGGER.error("Configuration file not found");
+        } catch (JAXBException | SAXException e) {
+            LOGGER.error("Configuration file could not be parsed", e);
             System.exit(1);
         }
         System.exit(0);
