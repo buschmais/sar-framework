@@ -25,7 +25,7 @@
         <com.buschmais.jqassistant_version>1.6.0</com.buschmais.jqassistant_version>
         <com.buschmais.xo_version>0.11.0</com.buschmais.xo_version>
         <org.hibernate-validator_version>5.2.1.Final</org.hibernate-validator_version>
-        <com.fasterxml.jackson.version>2.9.7</com.fasterxml.jackson.version>
+        <com.fasterxml.jackson.version>2.12.7.1</com.fasterxml.jackson.version>
         <jenetics.version>5.0.0</jenetics.version>
         <guava.version>22.0</guava.version>
     </properties>
